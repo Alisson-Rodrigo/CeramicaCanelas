@@ -461,10 +461,23 @@ async function fetchAndRenderHistory(page = 1) {
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar histórico (Status: ${response.status})`);
 
-        const paginatedData = await response.json();
-        historyItemsCache = paginatedData.items;
-        renderHistoryTable(paginatedData.items);
-        renderHistoryPagination(paginatedData);
+        const api = await response.json();
+
+        // usa exatamente o que veio da API (sem calcular no front)
+        const data = {
+            page: api.page ?? api.Page ?? 1,
+            pageSize: api.pageSize ?? api.PageSize ?? 10,
+            totalPages: api.totalPages ?? api.TotalPages ?? 1,
+            items: api.items ?? api.Items ?? []
+        };
+
+        // mantém a página atual
+        currentHistoryPage = data.page;
+
+        historyItemsCache = data.items;
+        renderHistoryTable(data.items);
+        renderHistoryPagination(data);
+
     } catch (error) {
         showErrorModal({ title: "Erro ao Listar Histórico", detail: error.message });
         tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">${error.message}</td></tr>`;
@@ -504,36 +517,35 @@ function renderHistoryTable(items) {
     });
 }
 
-function renderHistoryPagination(paginationData) {
+function renderHistoryPagination({ page, totalPages }) {
     const controlsContainer = document.getElementById('historyPaginationControls');
-    if (!controlsContainer || !paginationData.totalPages || paginationData.totalPages <= 1) {
-        if (controlsContainer) controlsContainer.innerHTML = '';
-        return;
-    }
+    if (!controlsContainer) return;
 
-    const hasPreviousPage = paginationData.page > 1;
-    const hasNextPage = paginationData.page < paginationData.totalPages;
+    controlsContainer.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const hasPrev = page > 1;
+    const hasNext = page < totalPages;
 
     const prevButton = document.createElement('button');
     prevButton.textContent = 'Anterior';
     prevButton.className = 'pagination-btn';
-    prevButton.disabled = !hasPreviousPage;
-    prevButton.addEventListener('click', () => fetchAndRenderHistory(paginationData.page - 1));
+    prevButton.disabled = !hasPrev;
+    prevButton.addEventListener('click', () => fetchAndRenderHistory(page - 1));
 
     const pageInfo = document.createElement('span');
-    pageInfo.textContent = `Página ${paginationData.page} de ${paginationData.totalPages}`;
+    pageInfo.className = 'pagination-info';
+    pageInfo.textContent = `Página ${page} de ${totalPages}`;
 
     const nextButton = document.createElement('button');
     nextButton.textContent = 'Próxima';
     nextButton.className = 'pagination-btn';
-    nextButton.disabled = !hasNextPage;
-    nextButton.addEventListener('click', () => fetchAndRenderHistory(paginationData.page + 1));
+    nextButton.disabled = !hasNext;
+    nextButton.addEventListener('click', () => fetchAndRenderHistory(page + 1));
 
-    controlsContainer.innerHTML = '';
-    controlsContainer.appendChild(prevButton);
-    controlsContainer.appendChild(pageInfo);
-    controlsContainer.appendChild(nextButton);
+    controlsContainer.append(prevButton, pageInfo, nextButton);
 }
+
 
 window.deleteHistoryItem = async (exitId) => {
     if (!confirm('Tem certeza que deseja excluir este registro? A ação não pode ser desfeita.')) return;
