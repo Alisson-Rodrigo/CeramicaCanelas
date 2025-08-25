@@ -24,6 +24,11 @@ public class DefaultContext : IdentityDbContext<User>
     public DbSet<LaunchCategory> LaunchCategories { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
 
+    // Vendas
+    public DbSet<Sale> Sales { get; set; } = null!;
+    public DbSet<SaleItem> SaleItems { get; set; } = null!;
+
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasPostgresExtension("uuid-ossp");
@@ -149,6 +154,62 @@ public class DefaultContext : IdentityDbContext<User>
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Id).HasDefaultValueSql("uuid_generate_v4()");
         });
+
+        // ================= VENDAS =================
+        builder.Entity<Sale>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Id).HasDefaultValueSql("uuid_generate_v4()");
+
+            // Soft-delete: default TRUE no banco
+            entity.Property(s => s.IsActive).HasDefaultValue(true);
+
+            // Índice único para NoteNumber apenas quando ativo (partial unique index)
+            // Npgsql: use HasFilter com expressão booleana do PostgreSQL
+            entity.HasIndex(s => s.NoteNumber)
+                  .IsUnique()
+                  .HasFilter("\"IsActive\" = TRUE");
+
+            // Campos de texto
+            entity.Property(s => s.City).HasMaxLength(80);
+            entity.Property(s => s.State).HasMaxLength(2);
+            entity.Property(s => s.CustomerName).HasMaxLength(120);
+            entity.Property(s => s.CustomerAddress).HasMaxLength(200);
+            entity.Property(s => s.CustomerPhone).HasMaxLength(30);
+
+            // Precisões monetárias
+            entity.Property(s => s.TotalGross).HasPrecision(18, 2);
+            entity.Property(s => s.TotalNet).HasPrecision(18, 2);
+            entity.Property(s => s.Discount).HasPrecision(18, 2);
+
+            // Relacionamento 1:N Sale -> SaleItem (cascade ao deletar de fato)
+            entity.HasMany(s => s.Items)
+                  .WithOne()
+                  .HasForeignKey(i => i.SaleId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Índice por data
+            entity.HasIndex(s => s.Date);
+
+            // Filtro global: por padrão só traz vendas ativas
+            entity.HasQueryFilter(s => s.IsActive);
+        });
+
+        builder.Entity<SaleItem>(entity =>
+        {
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.Id).HasDefaultValueSql("uuid_generate_v4()");
+
+            // Precisões
+            entity.Property(i => i.UnitPrice).HasPrecision(18, 2);
+            entity.Property(i => i.Quantity).HasPrecision(18, 3);
+
+            // Enum de produto (ProductType) como int (padrão); se preferir string, troque para .HasConversion<string>()
+            entity.Property(i => i.Product).HasConversion<int>();
+
+            entity.HasIndex(i => i.SaleId);
+        });
+
 
         // --- FIM DAS NOVAS CONFIGURAÇÕES ---
 
