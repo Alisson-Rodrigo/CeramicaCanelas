@@ -1,4 +1,5 @@
 ﻿using CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesCommand;
+using CeramicaCanelas.Application.Features.Sales.Commands.DeleteSalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -37,6 +38,16 @@ namespace CeramicaCanelas.WebApi.Controllers
             await _mediator.Send(command, cancellationToken);
             return NoContent();
         }
+
+        [Authorize(Roles = "Financial,Admin")]
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteSale(Guid id, CancellationToken cancellationToken)
+        {
+            var command = new DeleteSalesCommand { Id = id };
+            await _mediator.Send(command, cancellationToken);
+            return NoContent();
+        }
+
 
     }
 }

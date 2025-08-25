@@ -26,5 +26,21 @@ namespace CeramicaCanelas.Persistence.Repositories
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
+        public async Task DeactivateAsync(Guid id, CancellationToken ct = default)
+        {
+            // Ignora o filtro global para conseguir achar registros já inativos também
+            var sale = await Context.Sales
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(s => s.Id == id, ct);
+
+            if (sale is null) return;          // ou lance uma exceção, se preferir
+            if (!sale.IsActive) return;        // já está inativa
+
+            sale.IsActive = false;
+            sale.ModifiedOn = DateTime.UtcNow;
+
+            await Context.SaveChangesAsync(ct);
+        }
+
     }
 }
