@@ -19,8 +19,4 @@
     <ProjectReference Include="..\CeramicaCanelas.Domain\CeramicaCanelas.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Features\Sales\Queries\Pages\" />
-  </ItemGroup>
-
 </Project>

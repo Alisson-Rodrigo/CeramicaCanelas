@@ -26,6 +26,19 @@ namespace CeramicaCanelas.Persistence.Repositories
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
+        public IQueryable<Sale> QueryAllWithIncludes(bool includeInactive = false)
+        {
+            var q = Context.Sales
+                .Include(s => s.Items)
+                .AsNoTracking();
+
+            if (includeInactive)
+                q = q.IgnoreQueryFilters();
+
+            return q;
+        }
+
+
         public async Task DeactivateAsync(Guid id, CancellationToken ct = default)
         {
             // Ignora o filtro global para conseguir achar registros já inativos também

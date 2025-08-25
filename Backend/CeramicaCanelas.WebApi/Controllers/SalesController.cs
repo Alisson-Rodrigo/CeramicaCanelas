@@ -1,6 +1,9 @@
 ﻿using CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Commands.DeleteSalesCommand;
+using CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand;
+using CeramicaCanelas.Application.Features.Sales.Queries.Pages;
+using CeramicaCanelas.Domain.Enums.Sales;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -47,6 +50,39 @@ namespace CeramicaCanelas.WebApi.Controllers
             await _mediator.Send(command, cancellationToken);
             return NoContent();
         }
+
+        [Authorize(Roles = "Financial,Admin")]
+        [HttpPost("{id:guid}/pay")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Pay(Guid id, CancellationToken cancellationToken)
+        {
+            await _mediator.Send(new PaySalesCommand { Id = id }, cancellationToken);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Financial,Admin")]
+        [HttpGet("paged")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetPagedSales([FromQuery] PagedRequestSales query, CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(query, cancellationToken);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Financial,Admin")]
+        [HttpGet("pending/paged")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetPagedPendingSales([FromQuery] PagedRequestSales query, CancellationToken ct)
+        {
+            query.Status = SaleStatus.Pending; // força no servidor
+            var result = await _mediator.Send(query, ct);
+            return Ok(result);
+        }
+
 
 
     }

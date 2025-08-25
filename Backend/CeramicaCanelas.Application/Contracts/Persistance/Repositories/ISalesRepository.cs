@@ -12,6 +12,7 @@ namespace CeramicaCanelas.Application.Contracts.Persistance.Repositories
         Task<bool> ExistsActiveNoteNumberAsync(int noteNumber, CancellationToken ct = default);
 
         Task<Sale?> GetByIdAsync(Guid? id);
+        IQueryable<Sale> QueryAllWithIncludes(bool includeInactive = false);
 
         Task DeactivateAsync(Guid id, CancellationToken ct = default);
 
