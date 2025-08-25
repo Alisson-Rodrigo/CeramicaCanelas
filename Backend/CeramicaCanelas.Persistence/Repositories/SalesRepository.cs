@@ -18,5 +18,13 @@ namespace CeramicaCanelas.Persistence.Repositories
                 .AnyAsync(s => s.NoteNumber == noteNumber && s.IsActive, ct);
         }
 
+        public async Task<Sale?> GetByIdAsync(Guid? id)
+        {
+            return await Context.Sales
+                .Include(s => s.Items)               // inclui os itens da venda
+                .ThenInclude(i => i.Product)         // inclui o produto de cada item
+                .FirstOrDefaultAsync(s => s.Id == id);
+        }
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesCommand;
+using CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -25,5 +26,17 @@ namespace CeramicaCanelas.WebApi.Controllers
             await _mediator.Send(command, cancellationToken);
             return NoContent();
         }
+
+        [Authorize(Roles = "Financial,Admin")]
+        [HttpPut]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> UpdateSale([FromBody] UpdateSalesCommand command, CancellationToken cancellationToken)
+        {
+            await _mediator.Send(command, cancellationToken);
+            return NoContent();
+        }
+
     }
 }
