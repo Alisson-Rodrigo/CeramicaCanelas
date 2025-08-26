@@ -23,7 +23,7 @@ namespace CeramicaCanelas.WebApi.Controllers
         private readonly IMediator _mediator = mediator;
 
         // CREATE
-        [Authorize(Roles = "Financial,Admin")]
+        [Authorize(Roles = "Sales,Financial,Admin")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -34,7 +34,7 @@ namespace CeramicaCanelas.WebApi.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Financial,Admin")]
+        [Authorize(Roles = "Sales,Financial,Admin")]
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -45,7 +45,7 @@ namespace CeramicaCanelas.WebApi.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Financial,Admin")]
+        [Authorize(Roles = "Sales,Financial,Admin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteSale(Guid id, CancellationToken cancellationToken)
         {
@@ -54,7 +54,7 @@ namespace CeramicaCanelas.WebApi.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Financial,Admin")]
+        [Authorize(Roles = "Sales,Financial,Admin")]
         [HttpPost("{id:guid}/pay")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -65,7 +65,7 @@ namespace CeramicaCanelas.WebApi.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Financial,Admin")]
+        [Authorize(Roles = "Sales,Financial,Admin")]
         [HttpGet("paged")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -75,7 +75,7 @@ namespace CeramicaCanelas.WebApi.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Financial,Admin")]
+        [Authorize(Roles = "Sales,Financial,Admin")]
         [HttpGet("pending/paged")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -86,6 +86,7 @@ namespace CeramicaCanelas.WebApi.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Sales,Financial,Admin")]
         [HttpGet("items/pdf")]
         [Produces("application/pdf")]
         public async Task<IActionResult> GetProductItemsPdf(
@@ -96,6 +97,7 @@ namespace CeramicaCanelas.WebApi.Controllers
             return File(bytes, "application/pdf", fileName);
         }
 
+        [Authorize(Roles = "Sales,Financial,Admin")]
         [HttpGet("items/paged")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetProductItemsPaged([FromQuery] PagedRequestProductItems query, CancellationToken ct)

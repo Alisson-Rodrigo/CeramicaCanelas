@@ -10,5 +10,7 @@ public enum UserRoles {
     Financial = 2,
     [Description("Almoxarifado")]
     Almoxarifado = 3,
+    [Description("Sales")]
+    Sales = 4
 
 }
