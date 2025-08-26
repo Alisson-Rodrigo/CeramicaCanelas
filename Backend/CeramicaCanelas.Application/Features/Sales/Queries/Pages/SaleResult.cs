@@ -13,7 +13,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
     {
         public Guid Id { get; set; }
         public int NoteNumber { get; set; }
-        public DateOnly SaleDate { get; set; }
+        public DateTime  SaleDate { get; set; }
         public string City { get; set; } = string.Empty;
         public string State { get; set; } = string.Empty;
         public string? CustomerName { get; set; }
@@ -29,7 +29,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
         {
             Id = s.Id;
             NoteNumber = s.NoteNumber;
-            SaleDate = DateOnly.FromDateTime(s.Date);
+            SaleDate = s.Date;
             City = s.City;
             State = s.State;
             CustomerName = s.CustomerName;
