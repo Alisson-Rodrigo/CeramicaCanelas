@@ -19,6 +19,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
         // Pagamento
         public PaymentMethod PaymentMethod { get; set; }
 
+        public SaleStatus SaleStatus { get; set; }
+
         // Desconto (R$)
         public decimal Discount { get; set; } = 0m;
 
@@ -40,7 +42,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                 CustomerAddress = CustomerAddress,
                 CustomerPhone = CustomerPhone,
                 PaymentMethod = PaymentMethod,
-                Status = SaleStatus.Confirmed,   // ajuste se quiser começar como Pending
+                Status = SaleStatus,   // ajuste se quiser começar como Pending
                 IsActive = true,
                 CreatedOn = DateTime.UtcNow,
                 ModifiedOn = DateTime.UtcNow,
