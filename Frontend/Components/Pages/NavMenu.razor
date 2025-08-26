@@ -99,7 +99,6 @@
             </div>
 
             <div class="submenu-container expanded" id="financeiro-submenu">
-                <!-- SEÇÃO CADASTROS -->
                  <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicioFinancial'); setActive(this); closeMobileMenu();">
                         <svg class="menu-icon" viewBox="0 0 24 24"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" /></svg>
                         <span class="menu-text">Início</span>
@@ -132,7 +131,6 @@
                     </a>
                 </div>
 
-                <!-- SEÇÃO RELATÓRIOS -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Relatórios e Balancetes</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('movimentocaixa'); setActive(this); closeMobileMenu();">
@@ -162,7 +160,39 @@
                 </div>
             </div>
         </div>
-
+        
+        <div class="menu-section" id="vendas-section" style="display: none;">
+            <div class="menu-title expandable" onclick="toggleSubmenu(this)">
+                <svg class="expand-icon" viewBox="0 0 24 24">
+                    <path d="M7,10L12,15L17,10H7Z" />
+                </svg>
+                <span>Vendas</span>
+            </div>
+            <div class="submenu-container expanded" id="vendas-submenu">
+                <div class="menu-subsection">
+                    <div class="menu-subtitle">Dashboards e Lançamentos</div>
+                    <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicioVendas'); setActive(this); closeMobileMenu();">
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" /></svg>
+                        <span class="menu-text">Início Vendas</span>
+                    </a>
+                    <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('registrarVenda'); setActive(this); closeMobileMenu();">
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M5,6H23V18H5V6M14,9A3,3 0 0,1 17,12A3,3 0 0,1 14,15A3,3 0 0,1 11,12A3,3 0 0,1 14,9M9,8A2,2 0 0,1 7,10V14A2,2 0 0,1 9,16H19A2,2 0 0,1 21,14V10A2,2 0 0,1 19,8H9M1,10H3V20H19V22H1V10Z" /></svg>
+                        <span class="menu-text">Registrar Venda</span>
+                    </a>
+                </div>
+                <div class="menu-subsection">
+                    <div class="menu-subtitle">Relatórios</div>
+                    <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('relatorioVendas'); setActive(this); closeMobileMenu();">
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" /></svg>
+                        <span class="menu-text">Relatório de Vendas</span>
+                    </a>
+                    <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('relatorioComissoes'); setActive(this); closeMobileMenu();">
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" /></svg>
+                        <span class="menu-text">Relatório de Comissões</span>
+                    </a>
+                </div>
+            </div>
+        </div>
         <div class="menu-section logout-section">
             <a href="#" class="menu-item admin-only" id="userSystemMenu" onclick="event.preventDefault(); loadForm('usersys'); setActive(this); closeMobileMenu();" style="display: none;">
                 <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1M12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7M12 13C13.37 13 15.14 13.5 16 14.38V11C16 9.67 12.33 9 12 9S8 9.67 8 11V14.38C8.86 13.5 10.63 13 12 13Z" /></svg>
@@ -202,7 +232,7 @@
             
             if (!token) {
                 console.log("Nenhum token encontrado, usando modo demonstração");
-                showMenusByRole(true, true, true); // Para demonstração, mostra tudo
+                showMenusByRole(true, true, true, true); // Para demonstração, mostra tudo
                 return;
             }
 
@@ -212,10 +242,12 @@
             if (decodedToken && decodedToken.role) {
                 const isAdmin = decodedToken.role === 'Admin';
                 const isAlmoxarifado = decodedToken.role === 'Almoxarifado';
-                const isFinancial = decodedToken.role === 'Financial'; // <-- Adicionado
+                const isFinancial = decodedToken.role === 'Financial';
+                const isVendas = decodedToken.role === 'Vendas'; // Adicionado
 
                 const hasAlmoxarifadoAccess = isAdmin || isAlmoxarifado;
-                const hasFinancialAccess = isAdmin || isFinancial; // <-- Adicionado
+                const hasFinancialAccess = isAdmin || isFinancial;
+                const hasVendasAccess = isAdmin || isVendas; // Adicionado
                 
                 console.log(`=== INFORMAÇÕES DO USUÁRIO ===`);
                 console.log(`Usuário: ${decodedToken.unique_name || 'Não definido'}`);
@@ -223,34 +255,38 @@
                 console.log(`Role: ${decodedToken.role}`);
                 console.log(`É Admin: ${isAdmin}`);
                 console.log(`É Almoxarifado: ${isAlmoxarifado}`);
-                console.log(`É Financeiro: ${isFinancial}`); // <-- Adicionado
+                console.log(`É Financeiro: ${isFinancial}`);
+                console.log(`É Vendas: ${isVendas}`); // Adicionado
                 console.log(`Tem acesso ao Almoxarifado: ${hasAlmoxarifadoAccess}`);
-                console.log(`Tem acesso ao Financeiro: ${hasFinancialAccess}`); // <-- Adicionado
+                console.log(`Tem acesso ao Financeiro: ${hasFinancialAccess}`);
+                console.log(`Tem acesso a Vendas: ${hasVendasAccess}`); // Adicionado
                 console.log(`=== FIM DAS INFORMAÇÕES ===`);
                 
                 // Controla a exibição dos menus baseado nas permissões
-                showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess); // <-- Atualizado
+                showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess, hasVendasAccess); // Atualizado
             } else {
                 console.log("Token inválido ou sem role definida");
                 console.log("Dados do token:", decodedToken);
-                showMenusByRole(false, false, false); // <-- Atualizado
+                showMenusByRole(false, false, false, false); // Atualizado
             }
         } catch (error) {
             console.error("Erro ao verificar role do usuário:", error);
-            showMenusByRole(false, false, false); // <-- Atualizado
+            showMenusByRole(false, false, false, false); // Atualizado
         }
     }
 
     // FUNÇÃO PARA MOSTRAR/OCULTAR MENUS BASEADO NA PERMISSÃO
-    function showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess) { // <-- Assinatura atualizada
+    function showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess, hasVendasAccess) { // Assinatura atualizada
         const userSystemMenu = document.getElementById('userSystemMenu');
         const almoxarifadoSection = document.getElementById('almoxarifado-section');
-        const financeiroSection = document.getElementById('financeiro-section'); // <-- Adicionado
+        const financeiroSection = document.getElementById('financeiro-section');
+        const vendasSection = document.getElementById('vendas-section'); // Adicionado
 
         console.log("=== CONTROLE DE MENUS ===");
         console.log(`Deve mostrar menu Admin: ${isAdmin}`);
         console.log(`Deve mostrar Almoxarifado: ${hasAlmoxarifadoAccess}`);
-        console.log(`Deve mostrar Financeiro: ${hasFinancialAccess}`); // <-- Adicionado
+        console.log(`Deve mostrar Financeiro: ${hasFinancialAccess}`);
+        console.log(`Deve mostrar Vendas: ${hasVendasAccess}`); // Adicionado
         
         // Menu "Usuários do Sistema" - só para Admin
         if (userSystemMenu) {
@@ -264,10 +300,16 @@
             console.log(`Seção Almoxarifado definida como: ${hasAlmoxarifadoAccess ? 'VISÍVEL' : 'OCULTA'}`);
         }
         
-        // Seção "Financeiro" - para Admin e Financial (NOVA LÓGICA)
+        // Seção "Financeiro" - para Admin e Financial
         if (financeiroSection) {
             financeiroSection.style.display = hasFinancialAccess ? 'block' : 'none';
             console.log(`Seção Financeiro definida como: ${hasFinancialAccess ? 'VISÍVEL' : 'OCULTA'}`);
+        }
+
+        // Seção "Vendas" - para Admin e Vendas (NOVA LÓGICA)
+        if (vendasSection) {
+            vendasSection.style.display = hasVendasAccess ? 'block' : 'none';
+            console.log(`Seção Vendas definida como: ${hasVendasAccess ? 'VISÍVEL' : 'OCULTA'}`);
         }
         
         console.log("=== FIM CONTROLE DE MENUS ===");
@@ -286,7 +328,7 @@
             }
         } catch (error) {
             console.error("Erro na verificação do token:", error);
-            showMenusByRole(false, false, false); // <-- Atualizado
+            showMenusByRole(false, false, false, false); // Atualizado
         }
     }
 

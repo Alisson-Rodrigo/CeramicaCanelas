@@ -1,0 +1,126 @@
+<div class="container">
+    <h2 class="form-title">Registrar Nova Venda</h2>
+    <div class="form-container">
+        <form id="saleForm">
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customerName">Nome do Cliente</label>
+                        <input type="text" id="customerName" name="customerName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="noteNumber">Número da Nota</label>
+                        <input type="number" id="noteNumber" name="noteNumber" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="customerAddress">Endereço do Cliente</label>
+                    <input type="text" id="customerAddress" name="customerAddress" class="form-input">
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="city">Cidade</label><input type="text" id="city" name="city" class="form-input"></div>
+                    <div class="form-group"><label for="state">Estado</label><input type="text" id="state" name="state" class="form-input"></div>
+                    <div class="form-group"><label for="customerPhone">Telefone</label><input type="text" id="customerPhone" name="customerPhone" class="form-input"></div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="add-item-section">
+                <h3>Adicionar Item à Venda</h3>
+                <div class="form-row">
+                    <div class="form-group product-select-group">
+                        <label for="product-select">Produto</label>
+                        <select id="product-select" class="form-input"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-quantity">Quantidade</label>
+                        <input type="number" id="sale-quantity" class="form-input" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-unit-price">Preço Unitário (R$)</label>
+                        <input type="number" id="sale-unit-price" class="form-input" step="0.01" value="0.00">
+                    </div>
+                </div>
+                <button type="button" id="add-sale-item-btn" class="add-item-btn">Adicionar Item</button>
+            </div>
+
+            <hr class="section-divider">
+
+            <h3>Itens da Venda</h3>
+            <div class="table-responsive">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Preço Unit.</th>
+                            <th>Subtotal</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="saleItemsTbody">
+                        <tr id="placeholder-row"><td colspan="5">Nenhum item adicionado.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-section">
+                <div class="financial-summary">
+                    <div class="summary-row"><span>Subtotal:</span><span id="subtotal">R$ 0,00</span></div>
+                    <div class="summary-row"><label for="discount">Desconto (R$):</label><input type="number" id="discount" name="discount" class="form-input discount-input" value="0" step="0.01"></div>
+                    <div class="summary-row total"><span>Total a Pagar:</span><span id="total">R$ 0,00</span></div>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">Método de Pagamento</label>
+                    <select id="paymentMethod" name="paymentMethod" class="form-input" required></select>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Finalizar Venda</button>
+        </form>
+    </div>
+
+    <hr class="section-divider">
+    <h2>Vendas Realizadas</h2>
+
+    <div class="filter-bar">
+        <div class="filter-group large">
+            <label for="historySearch">Buscar por Cliente/Nota:</label>
+            <input type="text" id="historySearch" class="form-input">
+        </div>
+        <div class="filter-group">
+            <label for="historyStatus">Status:</label>
+            <select id="historyStatus" class="form-input"></select>
+        </div>
+        <div class="filter-group">
+            <label for="historyStartDate">Data Inicial:</label>
+            <input type="date" id="historyStartDate" class="form-input">
+        </div>
+        <div class="filter-group">
+            <label for="historyEndDate">Data Final:</label>
+            <input type="date" id="historyEndDate" class="form-input">
+        </div>
+        <div class="filter-group-buttons">
+            <button type="button" id="historyFilterBtn" class="search-btn">Filtrar</button>
+            <button type="button" id="historyClearBtn" class="btn-cancel">Limpar</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Nº Nota</th>
+                    <th>Cliente</th>
+                    <th>Data</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="sales-history-body"></tbody>
+        </table>
+    </div>
+    <div id="pagination-controls" class="pagination-controls"></div>
+</div>

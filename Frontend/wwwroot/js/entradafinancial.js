@@ -64,9 +64,9 @@ async function fetchReportData(page = 1) {
 
     } catch (error) {
         if(typeof showErrorModal === 'function') {
-            showErrorModal({ title: "Erro na Pesquisa", detail: error.message });
+           
         } else {
-            alert(`Erro na Pesquisa: ${error.message}`);
+            
         }
     } finally {
         if(loadingDiv) loadingDiv.style.display = 'none';
