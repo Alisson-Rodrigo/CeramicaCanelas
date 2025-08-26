@@ -1,48 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
-namespace CeramicaCanelas.Domain.Enums.Sales
+public enum ProductType
 {
-    public enum ProductType
-    {
-        [Display(Name = "Tijolos de 1ª 06 Furos")]
-        Brick1_6 = 0,
+    [Description("Tijolos de 1ª 06 Furos")]
+    Brick1_6 = 0,
 
-        [Display(Name = "Tijolos de 2ª 06 Furos")]
-        Brick2_6 = 1,
+    [Description("Tijolos de 2ª 06 Furos")]
+    Brick2_6 = 1,
 
-        [Display(Name = "Tijolos de 1ª 08 Furos")]
-        Brick1_8 = 2,
+    [Description("Tijolos de 1ª 08 Furos")]
+    Brick1_8 = 2,
 
-        [Display(Name = "Tijolos de 2ª 08 Furos")]
-        Brick2_8 = 3,
+    [Description("Tijolos de 2ª 08 Furos")]
+    Brick2_8 = 3,
 
-        [Display(Name = "Tijolos de 08 Furos G")]
-        Brick8G = 4,
+    [Description("Tijolos de 08 Furos G")]
+    Brick8G = 4,
 
-        [Display(Name = "Blocos de 9 Furos")]
-            Block9 = 5,
+    [Description("Blocos de 9 Furos")]
+    Block9 = 5,
 
-        [Display(Name = "Blocos de 9 Furos Duplo")]
-            Block9Double = 6,
+    [Description("Blocos de 9 Furos Duplo")]
+    Block9Double = 6,
 
-        [Display(Name = "Bandas")]
-        Bands = 7,
+    [Description("Bandas")]
+    Bands = 7,
 
-        [Display(Name = "Telhas de 1ª")]
-        RoofTile1 = 8,
+    [Description("Telhas de 1ª")]
+    RoofTile1 = 8,
 
-        [Display(Name = "Telhas de 2ª")]
-        RoofTile2 = 9,
+    [Description("Telhas de 2ª")]
+    RoofTile2 = 9,
 
-        [Display(Name = "Lajotas")]
-        Slabs = 10,
+    [Description("Lajotas")]
+    Slabs = 10,
 
-        [Display(Name = "Tijolos para churrasqueira")]
-        GrillBricks = 11
-    }
+    [Description("Tijolos para churrasqueira")]
+    GrillBricks = 11
 }

@@ -1,5 +1,6 @@
 ﻿using CeramicaCanelas.Application;
 using CeramicaCanelas.Application.IoC;
+using CeramicaCanelas.Application.Services.Reports;
 using CeramicaCanelas.Infrastructure.IoC;
 using CeramicaCanelas.Persistence.IoC;
 using CeramicaCanelas.WebApi.Middleware;
@@ -72,6 +73,9 @@ public class Program
         {
             serverOptions.Limits.MaxRequestBodySize = 20971520; // 20 MB em bytes (20 * 1024 * 1024)
         });
+
+        builder.Services.Configure<CompanyProfile>(
+            builder.Configuration.GetSection("CompanyProfile"));
 
 
 

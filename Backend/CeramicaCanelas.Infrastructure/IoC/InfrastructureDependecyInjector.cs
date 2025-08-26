@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
+﻿using CeramicaCanelas.Application.Contracts.Application.Services;
 using CeramicaCanelas.Application.Contracts.Infrastructure;
+using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
+using CeramicaCanelas.Application.Services.Reports;
 using CeramicaCanelas.Domain.Entities;
 using CeramicaCanelas.Infrastructure.Abstractions;
+using CeramicaCanelas.Infrastructure.Reports;
 using CeramicaCanelas.Persistence;
-using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Persistence.Repositories;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CeramicaCanelas.Infrastructure.IoC;
 
@@ -38,6 +41,9 @@ public static class InfrastructureDependecyInjector {
         services.AddScoped<ILaunchCategoryRepository, LaunchCategoryRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ISalesRepository, SalesRepository>();
+
+        services.AddScoped<IPdfReportService, PdfReportService>();
+
 
 
         return services;

@@ -2,7 +2,10 @@
 using CeramicaCanelas.Application.Features.Sales.Commands.DeleteSalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand;
+using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.GetProductItemsReportPdfQuery;
+using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.PagedRequestProductItems;
 using CeramicaCanelas.Application.Features.Sales.Queries.Pages;
+using CeramicaCanelas.Application.Services.Reports;
 using CeramicaCanelas.Domain.Enums.Sales;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -82,6 +85,26 @@ namespace CeramicaCanelas.WebApi.Controllers
             var result = await _mediator.Send(query, ct);
             return Ok(result);
         }
+
+        [HttpGet("items/pdf")]
+        [Produces("application/pdf")]
+        public async Task<IActionResult> GetProductItemsPdf(
+            [FromQuery] GetProductItemsReportPdfQuery query, CancellationToken ct)
+        {
+            var bytes = await _mediator.Send(query, ct);
+            var fileName = $"itens_produtos_{query.StartDate:yyyyMMdd}_{query.EndDate:yyyyMMdd}.pdf";
+            return File(bytes, "application/pdf", fileName);
+        }
+
+        [HttpGet("items/paged")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetProductItemsPaged([FromQuery] PagedRequestProductItems query, CancellationToken ct)
+        {
+            var result = await _mediator.Send(query, ct);
+            return Ok(result);
+        }
+
+
 
 
 
