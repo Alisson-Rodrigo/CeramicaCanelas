@@ -28,4 +28,9 @@
     <Folder Include="wwwroot\employees\images\" />
   </ItemGroup>
 
+	<ItemGroup>
+		<Folder Include="wwwroot\base\" />
+	</ItemGroup>
+
+
 </Project>
