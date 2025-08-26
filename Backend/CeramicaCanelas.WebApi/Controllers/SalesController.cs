@@ -15,7 +15,7 @@ using NSwag.Annotations;
 
 namespace CeramicaCanelas.WebApi.Controllers
 {
-    [Route("api/financial/sales")]
+    [Route("api/sales")]
     [OpenApiTags("Sales")]
     [ApiController]
     public class SalesController(IMediator mediator) : ControllerBase
