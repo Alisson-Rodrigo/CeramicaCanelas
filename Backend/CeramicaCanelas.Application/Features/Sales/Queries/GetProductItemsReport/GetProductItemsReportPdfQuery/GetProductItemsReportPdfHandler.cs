@@ -3,11 +3,8 @@ using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.GetProductItemsReportPdfQuery;
 using CeramicaCanelas.Application.Services.Reports;
 using MediatR;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using System.IO;
-using System.Linq;
+
 
 public class GetProductItemsReportPdfHandler
     : IRequestHandler<GetProductItemsReportPdfQuery, byte[]>

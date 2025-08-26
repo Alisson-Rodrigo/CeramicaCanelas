@@ -3,15 +3,9 @@ using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.G
 using CeramicaCanelas.Application.Services.EnumExtensions;
 using CeramicaCanelas.Application.Services.Reports;
 using MigraDocCore.DocumentObjectModel;
-using MigraDocCore.DocumentObjectModel.MigraDoc.DocumentObjectModel.Shapes;
 using MigraDocCore.DocumentObjectModel.Tables;
 using MigraDocCore.Rendering;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Infrastructure.Reports
 {
@@ -24,133 +18,172 @@ namespace CeramicaCanelas.Infrastructure.Reports
             decimal totalMilheiros,
             decimal totalRevenue,
             string? subtitle = null,
-            string? logoPath = null)
+            string? logoPath = null) // não usado (sem logo)
         {
             var culture = new CultureInfo("pt-BR");
-            var theme = Colors.Orange; // em MigraDocCore use Colors.Orange (não há Color.FromRgb em algumas versões)
+            var primaryColor = Colors.Orange;   // Laranja
+            var textColor = Colors.White;     // Texto branco no cabeçalho
 
             var doc = new Document();
             doc.Info.Title = "Relatório de Venda de Itens";
-            doc.DefaultPageSetup.TopMargin = Unit.FromCentimeter(2);
-            doc.DefaultPageSetup.LeftMargin = Unit.FromCentimeter(1.5);
-            doc.DefaultPageSetup.RightMargin = Unit.FromCentimeter(1.5);
+            doc.DefaultPageSetup.TopMargin = Unit.FromCentimeter(1.5);
+            doc.DefaultPageSetup.LeftMargin = Unit.FromCentimeter(1.0);
+            doc.DefaultPageSetup.RightMargin = Unit.FromCentimeter(1.2);
+            doc.DefaultPageSetup.BottomMargin = Unit.FromCentimeter(2);
 
             var section = doc.AddSection();
 
             // =========================
-            // Cabeçalho (logo + dados)
+            // Cabeçalho (sem logo) - texto CENTRALIZADO
             // =========================
-            var head = section.AddTable();
-            head.Borders.Width = 0;
-            head.AddColumn(Unit.FromCentimeter(3.5));   // logo
-            head.AddColumn(Unit.FromCentimeter(12.5));  // informações
+            var headerTable = section.AddTable();
+            headerTable.Borders.Width = 0;
+            headerTable.Rows.LeftIndent = 0;
+            headerTable.AddColumn(Unit.FromCentimeter(17)); // largura útil total
 
-            var headRow = head.AddRow();
-            headRow.Shading.Color = theme;
+            var headerRow = headerTable.AddRow();
+            headerRow.Height = Unit.FromCentimeter(3.0);
+            headerRow.Shading.Color = primaryColor;
+            headerRow.TopPadding = Unit.FromPoint(6);
+            headerRow.BottomPadding = Unit.FromPoint(6);
+            headerRow.VerticalAlignment = VerticalAlignment.Center;
 
-            // ---- Padding do cabeçalho ----
-            var padH = Unit.FromPoint(8);  // 8pt nas laterais
-            var padV = Unit.FromPoint(6);  // 6pt em cima/baixo
+            // paddings iguais para alinhar com os demais blocos
+            headerTable.Columns[0].LeftPadding = Unit.FromPoint(8);
+            headerTable.Columns[0].RightPadding = Unit.FromPoint(8);
 
-            // horizontal por coluna
-            head.Columns[0].LeftPadding = padH;
-            head.Columns[0].RightPadding = padH;
-            head.Columns[1].LeftPadding = padH;
-            head.Columns[1].RightPadding = padH;
+            var infoCell = headerRow.Cells[0];
+            infoCell.VerticalAlignment = VerticalAlignment.Center;
+            infoCell.Format.Font.Color = textColor;
+            infoCell.Format.Alignment = ParagraphAlignment.Center; // centraliza todo conteúdo
 
-            // vertical na linha toda
-            headRow.TopPadding = padV;
-            headRow.BottomPadding = padV;
+            // Nome da empresa
+            var companyName = infoCell.AddParagraph(company.Name);
+            companyName.Format.Font.Size = 18;
+            companyName.Format.Font.Bold = true;
+            companyName.Format.SpaceAfter = Unit.FromPoint(2);
+            companyName.Format.Alignment = ParagraphAlignment.Center;
 
-            // centraliza verticalmente o conteúdo
-            head.Rows.VerticalAlignment = VerticalAlignment.Center;
+            // Descrição comercial
+            var tradeDesc = infoCell.AddParagraph(company.TradeDescription);
+            tradeDesc.Format.Font.Size = 12;
+            tradeDesc.Format.Font.Bold = true;
+            tradeDesc.Format.SpaceAfter = Unit.FromPoint(6);
+            tradeDesc.Format.Alignment = ParagraphAlignment.Center;
 
-            var info = headRow.Cells[1];
-            info.Format.Font.Color = Colors.Black;
+            // Informações legais e contato
+            var legalInfo = infoCell.AddParagraph();
+            legalInfo.Format.Font.Size = 9;
+            legalInfo.Format.LineSpacing = Unit.FromPoint(11);
+            legalInfo.Format.Alignment = ParagraphAlignment.Center;
+            legalInfo.AddText(company.LegalName);
+            legalInfo.AddLineBreak();
+            legalInfo.AddText($"{company.StateRegistration} • {company.Cnpj}");
+            legalInfo.AddLineBreak();
+            legalInfo.AddText(company.Address);
+            legalInfo.AddLineBreak();
+            legalInfo.AddText(company.CityStateZip);
+            legalInfo.AddLineBreak();
+            legalInfo.AddText(company.Phones);
 
-            var p1 = info.AddParagraph(company.Name);
-            p1.Format.Font.Size = 16; p1.Format.Font.Bold = true;
+            // Espaço após o cabeçalho
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
 
-            var p2 = info.AddParagraph(company.TradeDescription);
-            p2.Format.Font.Size = 11;
+            // =========================
+            // Título do Relatório (ALINHADO com o cabeçalho e a tabela)
+            // =========================
+            var titleSection = section.AddTable();
+            titleSection.Borders.Width = 0;
+            titleSection.Rows.LeftIndent = 0;
+            titleSection.AddColumn(Unit.FromCentimeter(17));
 
-            info.AddParagraph(company.LegalName).Format.Font.Size = 9;
-            info.AddParagraph($"{company.StateRegistration} · {company.Cnpj}").Format.Font.Size = 9;
-            info.AddParagraph(company.Address).Format.Font.Size = 9;
-            info.AddParagraph(company.CityStateZip).Format.Font.Size = 9;
-            info.AddParagraph(company.Phones).Format.Font.Size = 9;
+            var titleRow = titleSection.AddRow();
+            titleRow.Shading.Color = Colors.LightGray;
+            titleRow.TopPadding = Unit.FromPoint(8);
+            titleRow.BottomPadding = Unit.FromPoint(8);
 
-            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(8);
+            // usar mesmos paddings do cabeçalho para alinhar a borda esquerda
+            titleSection.Columns[0].LeftPadding = Unit.FromPoint(8);
+            titleSection.Columns[0].RightPadding = Unit.FromPoint(8);
 
-            // ===== título do relatório =====
-            var title = section.AddParagraph("Relatório de Venda de Itens");
-            title.Format.Font.Size = 14;
-            title.Format.Font.Bold = true;
-            title.Format.SpaceAfter = Unit.FromPoint(4);
+            var titleCell = titleRow.Cells[0];
 
-            // Barra divisória fina
-            var divider = section.AddParagraph();
-            divider.AddFormattedText(new string('─', 80));
-            divider.Format.Font.Color = Colors.Orange;
-            divider.Format.SpaceAfter = Unit.FromPoint(10);
+            var mainTitle = titleCell.AddParagraph("📊 Relatório de Venda de Itens");
+            mainTitle.Format.Font.Size = 16;
+            mainTitle.Format.Font.Bold = true;
+            mainTitle.Format.Font.Color = Colors.Black;
 
             if (!string.IsNullOrWhiteSpace(subtitle))
             {
-                var sub = section.AddParagraph(subtitle);
-                sub.Format.Font.Size = 9;
-                sub.Format.Font.Color = Colors.Gray;
-                sub.Format.SpaceBefore = Unit.FromPoint(2);
+                var subTitle = titleCell.AddParagraph(subtitle);
+                subTitle.Format.Font.Size = 11;
+                subTitle.Format.Font.Color = Colors.Gray;
+                subTitle.Format.SpaceBefore = Unit.FromPoint(2);
             }
 
-            var periodP = section.AddParagraph($"Período: {period.start:dd/MM/yyyy} a {period.end:dd/MM/yyyy}");
-            periodP.Format.Font.Size = 9;
-            periodP.Format.SpaceAfter = Unit.FromPoint(8);
+            var periodInfo = titleCell.AddParagraph($"📅 Período: {period.start:dd/MM/yyyy} a {period.end:dd/MM/yyyy}");
+            periodInfo.Format.Font.Size = 10;
+            periodInfo.Format.Font.Color = primaryColor;
+            periodInfo.Format.Font.Bold = true;
+            periodInfo.Format.SpaceBefore = Unit.FromPoint(4);
 
-            // Barra divisória
-            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(6);
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
 
             // =========================
-            // Tabela
+            // Tabela de Dados
             // =========================
             var table = section.AddTable();
-            table.Borders.Width = 0.5;
+            table.Borders.Width = 0;
             table.Rows.LeftIndent = 0;
-
-            // fonte padrão menor para caber melhor
             table.Format.Font.Size = 9;
 
-            // Larguras totalizando 17,8 cm (<= 18 cm de área útil)
-            table.AddColumn(Unit.FromCentimeter(6.2)); // Produto
-            table.AddColumn(Unit.FromCentimeter(2.8)); // Milheiros
-            table.AddColumn(Unit.FromCentimeter(3.0)); // Quantidade (un)
-            table.AddColumn(Unit.FromCentimeter(3.0)); // Receita
-            table.AddColumn(Unit.FromCentimeter(2.8)); // Preço Médio (R$/milheiro)
+            table.AddColumn(Unit.FromCentimeter(6.5));  // Produto
+            table.AddColumn(Unit.FromCentimeter(2.8));  // Milheiros
+            table.AddColumn(Unit.FromCentimeter(3.0));  // Quantidade
+            table.AddColumn(Unit.FromCentimeter(3.2));  // Receita
+            table.AddColumn(Unit.FromCentimeter(3.0));  // Preço Médio
 
-            // Cabeçalho
-            var header = table.AddRow();
-            header.HeadingFormat = true;               // repete em páginas seguintes
-            header.Shading.Color = theme;
-            header.Format.Font.Bold = true;
-            header.Format.Font.Color = Colors.Black;
+            var th = table.AddRow();
+            th.HeadingFormat = true;
+            th.Height = Unit.FromCentimeter(1);
+            th.Shading.Color = Colors.Black;
+            th.Format.Font.Bold = true;
+            th.Format.Font.Color = Colors.White;
+            th.Format.Font.Size = 10;
+            th.VerticalAlignment = VerticalAlignment.Center;
 
-            header.Cells[0].AddParagraph("Produto");
-            header.Cells[1].AddParagraph("Milheiros");
-            header.Cells[2].AddParagraph("Quantidade (un)");
-            header.Cells[3].AddParagraph("Receita (R$)");
-            header.Cells[4].AddParagraph("Preço Médio (R$/milheiro)");
+            th.TopPadding = Unit.FromPoint(8);
+            th.BottomPadding = Unit.FromPoint(8);
 
-            // alinha números à direita para ganhar espaço visual
+            // mesmos paddings laterais para alinhar com o bloco do título
+            for (int i = 0; i < table.Columns.Count; i++)
+            {
+                table.Columns[i].LeftPadding = Unit.FromPoint(8);
+                table.Columns[i].RightPadding = Unit.FromPoint(8);
+            }
+
+            th.Cells[0].AddParagraph("PRODUTO");
+            th.Cells[1].AddParagraph("MILHEIROS");
+            th.Cells[2].AddParagraph("QTD. (UN)");
+            th.Cells[3].AddParagraph("RECEITA (R$)");
+            th.Cells[4].AddParagraph("PREÇO MÉD. (R$/MIL)");
             for (int c = 1; c <= 4; c++)
-                header.Cells[c].Format.Alignment = ParagraphAlignment.Right;
+                th.Cells[c].Format.Alignment = ParagraphAlignment.Right;
 
-            bool zebra = false;
+            bool alternate = false;
             foreach (var r in rows)
             {
                 var row = table.AddRow();
-                if (zebra) row.Shading.Color = Colors.WhiteSmoke;
-                zebra = !zebra;
+                row.Height = Unit.FromPoint(24);
+                row.Shading.Color = alternate ? Colors.LightGray : Colors.White;
+                alternate = !alternate;
 
-                row.Cells[0].AddParagraph(r.Product.GetDescription());
+                row.TopPadding = Unit.FromPoint(4);
+                row.BottomPadding = Unit.FromPoint(4);
+                row.VerticalAlignment = VerticalAlignment.Center;
+
+                var productPara = row.Cells[0].AddParagraph(r.Product.GetDescription());
+                productPara.Format.Font.Bold = true;
 
                 row.Cells[1].AddParagraph(r.Milheiros.ToString("N3", culture));
                 row.Cells[1].Format.Alignment = ParagraphAlignment.Right;
@@ -158,40 +191,76 @@ namespace CeramicaCanelas.Infrastructure.Reports
                 row.Cells[2].AddParagraph((r.Milheiros * 1000m).ToString("N0", culture));
                 row.Cells[2].Format.Alignment = ParagraphAlignment.Right;
 
-                row.Cells[3].AddParagraph(r.Revenue.ToString("N2", culture));
+                var revenuePara = row.Cells[3].AddParagraph(r.Revenue.ToString("N2", culture));
+                revenuePara.Format.Font.Bold = true;
+                revenuePara.Format.Font.Color = Colors.DarkGreen;
                 row.Cells[3].Format.Alignment = ParagraphAlignment.Right;
 
                 row.Cells[4].AddParagraph(r.AvgPrice.ToString("N2", culture));
                 row.Cells[4].Format.Alignment = ParagraphAlignment.Right;
             }
 
-            // Totais
             var totalRow = table.AddRow();
-            totalRow.Borders.Top.Width = 0.75;
+            totalRow.Height = Unit.FromPoint(32);
+            totalRow.Shading.Color = Colors.LightYellow;
+            totalRow.Borders.Top.Width = 2;
+            totalRow.Borders.Top.Color = primaryColor;
+            totalRow.TopPadding = Unit.FromPoint(6);
+            totalRow.BottomPadding = Unit.FromPoint(6);
+            totalRow.VerticalAlignment = VerticalAlignment.Center;
 
-            totalRow.Cells[0].AddParagraph("Totais").Format.Font.Bold = true;
-            totalRow.Cells[0].Format.Alignment = ParagraphAlignment.Left;
+            var totalLabel = totalRow.Cells[0].AddParagraph("💰 TOTAIS");
+            totalLabel.Format.Font.Bold = true;
+            totalLabel.Format.Font.Size = 11;
 
-            totalRow.Cells[1].AddParagraph(totalMilheiros.ToString("N3", culture));
+            var totalMilheirosP = totalRow.Cells[1].AddParagraph(totalMilheiros.ToString("N3", culture));
+            totalMilheirosP.Format.Font.Bold = true;
             totalRow.Cells[1].Format.Alignment = ParagraphAlignment.Right;
 
-            totalRow.Cells[2].AddParagraph((totalMilheiros * 1000m).ToString("N0", culture));
+            var totalQtyP = totalRow.Cells[2].AddParagraph((totalMilheiros * 1000m).ToString("N0", culture));
+            totalQtyP.Format.Font.Bold = true;
             totalRow.Cells[2].Format.Alignment = ParagraphAlignment.Right;
 
-            totalRow.Cells[3].AddParagraph(totalRevenue.ToString("N2", culture));
+            var totalRevenueP = totalRow.Cells[3].AddParagraph(totalRevenue.ToString("N2", culture));
+            totalRevenueP.Format.Font.Bold = true;
+            totalRevenueP.Format.Font.Size = 11;
+            totalRevenueP.Format.Font.Color = Colors.DarkGreen;
             totalRow.Cells[3].Format.Alignment = ParagraphAlignment.Right;
-            totalRow.Cells[3].Format.Font.Bold = true;
 
-            totalRow.Cells[4].AddParagraph("");
+            totalRow.Cells[4].AddParagraph("—");
+            totalRow.Cells[4].Format.Alignment = ParagraphAlignment.Center;
 
-            // Rodapé com paginação
-            var footer = section.Footers.Primary.AddParagraph();
-            footer.Format.SpaceBefore = Unit.FromPoint(10);
-            footer.Format.Alignment = ParagraphAlignment.Right;
-            footer.AddText("Página ");
-            footer.AddPageField();
-            footer.AddText(" de ");
-            footer.AddNumPagesField();
+            // =========================
+            // Rodapé
+            // =========================
+            var footer = section.Footers.Primary;
+
+            var footerLine = footer.AddParagraph();
+            footerLine.AddFormattedText(new string('─', 90));
+            footerLine.Format.Font.Color = primaryColor;
+            footerLine.Format.SpaceBefore = Unit.FromPoint(10);
+            footerLine.Format.SpaceAfter = Unit.FromPoint(6);
+            footerLine.Format.Alignment = ParagraphAlignment.Center;
+
+            var pageInfo = footer.AddTable();
+            pageInfo.Borders.Width = 0;
+            pageInfo.AddColumn(Unit.FromCentimeter(8.5));
+            pageInfo.AddColumn(Unit.FromCentimeter(8.5));
+
+            var pageRow = pageInfo.AddRow();
+
+            var leftFooter = pageRow.Cells[0].AddParagraph($"Relatório gerado em {DateTime.Now:dd/MM/yyyy HH:mm}");
+            leftFooter.Format.Font.Size = 8;
+            leftFooter.Format.Font.Color = Colors.Gray;
+
+            var rightFooter = pageRow.Cells[1].AddParagraph();
+            rightFooter.Format.Alignment = ParagraphAlignment.Right;
+            rightFooter.Format.Font.Size = 8;
+            rightFooter.Format.Font.Color = Colors.Gray;
+            rightFooter.AddText("Página ");
+            rightFooter.AddPageField();
+            rightFooter.AddText(" de ");
+            rightFooter.AddNumPagesField();
 
             var renderer = new PdfDocumentRenderer(unicode: true) { Document = doc };
             renderer.RenderDocument();
