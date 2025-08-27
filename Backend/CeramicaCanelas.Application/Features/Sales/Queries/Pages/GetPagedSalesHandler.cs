@@ -39,14 +39,16 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
             // Período
             if (request.StartDate.HasValue)
             {
-                var start = request.StartDate.Value.ToDateTime(TimeOnly.MinValue);
-                q = q.Where(s => s.Date >= start);
+                var startDate = request.StartDate.Value.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+                q = q.Where(s => s.Date >= startDate.Date); // Comparar apenas a data
             }
             if (request.EndDate.HasValue)
             {
-                var end = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue);
-                q = q.Where(s => s.Date <= end);
+                var endDate = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue).ToUniversalTime();
+                q = q.Where(s => s.Date <= endDate.Date); // Comparar apenas a data
             }
+
+
 
             // Filtros extras
             if (request.PaymentMethod.HasValue)
