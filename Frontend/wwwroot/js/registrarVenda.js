@@ -7,7 +7,7 @@ console.log('Script js/venda.js DEFINIDO.');
 function initDynamicForm() {
     console.log('▶️ initDynamicForm() de venda.js foi chamada.');
     initializeSaleForm();
-    populatePaymentMethods();
+    populateSelects();
     populateProductSelect();
     initializeHistoryFilters();
     fetchAndRenderHistory(1);
@@ -35,11 +35,20 @@ function initializeSaleForm() {
     });
 }
 
-function populatePaymentMethods() {
+function populateSelects() {
     const paymentSelect = document.getElementById('paymentMethod');
-    if (!paymentSelect) return;
-    for (const [key, value] of Object.entries(paymentMethodMap)) {
-        paymentSelect.appendChild(new Option(value, key));
+    const statusSelect = document.getElementById('saleStatus');
+    if (paymentSelect) {
+        paymentSelect.innerHTML = '';
+        for (const [key, value] of Object.entries(paymentMethodMap)) {
+            paymentSelect.appendChild(new Option(value, key));
+        }
+    }
+    if (statusSelect) {
+        statusSelect.innerHTML = '';
+        for (const [key, value] of Object.entries(saleStatusMap)) {
+            statusSelect.appendChild(new Option(value, key));
+        }
     }
 }
 
@@ -70,7 +79,7 @@ async function handleSaleSubmit(event) {
     event.preventDefault();
     const itemsRows = document.querySelectorAll('#saleItemsTbody tr:not(#placeholder-row)');
     if (itemsRows.length === 0) {
-        showErrorModal({ title: "Validação", detail: "Adicione pelo menos um produto para registrar a venda." });
+        showErrorModal({ title: "Validação", detail: "Adicione pelo menos um produto." });
         return;
     }
     const saleItems = [];
@@ -90,11 +99,16 @@ async function handleSaleSubmit(event) {
         customerPhone: document.getElementById('customerPhone').value,
         paymentMethod: parseInt(document.getElementById('paymentMethod').value),
         discount: parseFloat(document.getElementById('discount').value) || 0,
+        saleStatus: parseInt(document.getElementById('saleStatus').value),
+        noteSaleDate: document.getElementById('noteSaleDate').value,
         items: saleItems
     };
+
+    console.log("📦 Dados que serão enviados para a API:", payload);
+
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/financial/sales`, {
+        const response = await fetch(`${API_BASE_URL}/sales`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
             body: JSON.stringify(payload)
@@ -114,9 +128,6 @@ async function handleSaleSubmit(event) {
     }
 }
 
-// =======================================================
-// LÓGICA DO CARRINHO DE ITENS
-// =======================================================
 function addProductToCart() {
     const productSelect = document.getElementById('product-select');
     const quantityInput = document.getElementById('sale-quantity');
@@ -178,7 +189,6 @@ function initializeHistoryFilters() {
             statusSelect.appendChild(new Option(value, key));
         }
     }
-
     if(filterBtn) filterBtn.onclick = () => fetchAndRenderHistory(1);
     if(clearBtn) clearBtn.onclick = () => {
         document.getElementById('historySearch').value = '';
@@ -194,25 +204,20 @@ async function fetchAndRenderHistory(page = 1) {
     const tableBody = document.getElementById('sales-history-body');
     if (!tableBody) return;
     tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Buscando vendas...</td></tr>';
-    
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const params = new URLSearchParams({ Page: page, PageSize: 10, OrderBy: 'Date', Ascending: false });
-
+        const params = new URLSearchParams({ Page: page, PageSize: 10, OrderBy: 'SaleDate', Ascending: false });
         const search = document.getElementById('historySearch')?.value;
         const status = document.getElementById('historyStatus')?.value;
         const startDate = document.getElementById('historyStartDate')?.value;
         const endDate = document.getElementById('historyEndDate')?.value;
-
         if(search) params.append('Search', search);
         if(status) params.append('Status', status);
         if(startDate) params.append('StartDate', startDate);
         if(endDate) params.append('EndDate', endDate);
-
         const url = `${API_BASE_URL}/sales/paged?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar vendas (Status: ${response.status})`);
-        
         const paginatedData = await response.json();
         renderHistoryTable(paginatedData.items);
         renderHistoryPagination(paginatedData);
@@ -230,10 +235,10 @@ function renderHistoryTable(items) {
         return;
     }
     items.forEach(item => {
-        const formattedDate = new Date(item.date).toLocaleDateString('pt-BR');
-        const formattedTotal = (item.totalAmount || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const date = new Date(item.saleDate);
+        const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
+        const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const statusText = saleStatusMap[item.status] || 'N/A';
-
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${item.noteNumber}</td>
@@ -241,8 +246,7 @@ function renderHistoryTable(items) {
             <td>${formattedDate}</td>
             <td>${formattedTotal}</td>
             <td>${statusText}</td>
-            <td class="actions-cell">
-                </td>
+            <td class="actions-cell"></td>
         `;
         tableBody.appendChild(row);
     });
@@ -253,24 +257,20 @@ function renderHistoryPagination(paginationData) {
     if (!controlsContainer) return;
     controlsContainer.innerHTML = '';
     if (!paginationData || paginationData.totalPages <= 1) return;
-    
     const { page, totalPages } = paginationData;
     const prevButton = document.createElement('button');
     prevButton.textContent = 'Anterior';
     prevButton.className = 'pagination-btn';
     prevButton.disabled = page <= 1;
     prevButton.onclick = () => fetchAndRenderHistory(page - 1);
-    
     const pageInfo = document.createElement('span');
     pageInfo.textContent = `Página ${page} de ${totalPages}`;
     pageInfo.className = 'pagination-info';
-    
     const nextButton = document.createElement('button');
     nextButton.textContent = 'Próxima';
     nextButton.className = 'pagination-btn';
     nextButton.disabled = page >= totalPages;
     nextButton.onclick = () => fetchAndRenderHistory(page + 1);
-    
     controlsContainer.appendChild(prevButton);
     controlsContainer.appendChild(pageInfo);
     controlsContainer.appendChild(nextButton);

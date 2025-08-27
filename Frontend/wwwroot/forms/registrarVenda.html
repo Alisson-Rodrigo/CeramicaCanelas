@@ -22,6 +22,10 @@
                     <div class="form-group"><label for="state">Estado</label><input type="text" id="state" name="state" class="form-input"></div>
                     <div class="form-group"><label for="customerPhone">Telefone</label><input type="text" id="customerPhone" name="customerPhone" class="form-input"></div>
                 </div>
+                <div class="form-group">
+                    <label for="noteSaleDate">Data da Venda</label>
+                    <input type="date" id="noteSaleDate" name="noteSaleDate" class="form-input" required>
+                </div>
             </div>
 
             <hr class="section-divider">
@@ -71,9 +75,15 @@
                     <div class="summary-row"><label for="discount">Desconto (R$):</label><input type="number" id="discount" name="discount" class="form-input discount-input" value="0" step="0.01"></div>
                     <div class="summary-row total"><span>Total a Pagar:</span><span id="total">R$ 0,00</span></div>
                 </div>
-                <div class="form-group">
-                    <label for="paymentMethod">Método de Pagamento</label>
-                    <select id="paymentMethod" name="paymentMethod" class="form-input" required></select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="paymentMethod">Método de Pagamento</label>
+                        <select id="paymentMethod" name="paymentMethod" class="form-input" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleStatus">Status da Venda</label>
+                        <select id="saleStatus" name="saleStatus" class="form-input" required></select>
+                    </div>
                 </div>
             </div>
 
