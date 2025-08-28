@@ -367,3 +367,34 @@
     flex-wrap: wrap;
     margin-top: 20px;
 }
+#generatePdfButton.pdf-button {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(45deg, #3498db, #2980b9);  /* Gradiente de azul */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    text-decoration: none;  /* Garante que o botão não tenha sublinhado */
+}
+
+#generatePdfButton.pdf-button span {
+    margin-right: 8px;  /* Espaçamento entre o ícone e o texto */
+    font-size: 20px;  /* Tamanho do ícone */
+}
+
+#generatePdfButton.pdf-button:hover {
+    background: linear-gradient(45deg, #2980b9, #1f6a8c);  /* Alterando o gradiente no hover */
+    transform: translateY(-2px);  /* Efeito de elevação no hover */
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);  /* Sombra mais intensa no hover */
+}
+
+#generatePdfButton.pdf-button:active {
+    transform: translateY(1px);  /* Efeito de "pressionar" o botão ao clicar */
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);  /* Sombra normal ao clicar */
+}

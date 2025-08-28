@@ -931,3 +931,34 @@ textarea:focus {
 }
 
 /* --- FIM: Bloco de Animação dos Botões --- */
+/* Edição na Tabela */
+.edit-input {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #e67e22;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+    .edit-input:focus {
+        outline: none;
+        box-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+    }
+
+.btn-delete-item, .btn-remove {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+    border: none;
+    padding: 8px 16px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-delete-item:hover, .btn-remove:hover {
+    background: linear-gradient(45deg, #c0392b, #a93226);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5);
+}

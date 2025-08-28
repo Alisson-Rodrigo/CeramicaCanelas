@@ -15,7 +15,7 @@ function initializeFilters() {
     document.getElementById('clearButton')?.addEventListener('click', clearFilters);
     document.getElementById('generatePdfButton')?.addEventListener('click', generatePdfReport);
     
-    // Popula os selects de filtro (assumindo que os mapas estão em main.js)
+  
     populateSelect(document.getElementById('product-filter'), productTypeMap, 'Todos os Produtos');
     populateSelect(document.getElementById('status-filter'), saleStatusMap, 'Todos os Status');
     populateSelect(document.getElementById('payment-method-filter'), paymentMethodMap, 'Todos os Métodos');
