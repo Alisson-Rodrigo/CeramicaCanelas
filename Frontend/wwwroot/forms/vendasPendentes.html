@@ -1,0 +1,62 @@
+<div class="container">
+    <div class="header">
+        <h1>Relatório de Vendas Pendentes</h1>
+        <p>Acompanhe todas as vendas com status "Pendente"</p>
+    </div>
+
+    <div class="search-section">
+        <div class="search-title">
+            <div class="search-icon">🔍</div>
+            Filtros de Pesquisa
+        </div>
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label" for="search-input">Buscar por Cliente/Nota</label>
+                <input type="text" id="search-input" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="payment-method-filter">Método de Pagamento</label>
+                <select id="payment-method-filter" class="filter-input"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="start-date">Data Inicial</label>
+                <input type="date" id="start-date" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="end-date">Data Final</label>
+                <input type="date" id="end-date" class="filter-input">
+            </div>
+        </div>
+        <div class="search-actions">
+            <button id="searchButton" class="search-button"><span>📊</span> Filtrar</button>
+            <button id="clearButton" class="clear-button"><span>🗑️</span> Limpar Filtros</button>
+        </div>
+    </div>
+
+    <div class="loading" id="loading" style="display: none;">
+        <div class="spinner"></div>
+        Carregando relatório...
+    </div>
+
+    <div class="results-section" id="resultsSection" style="display: none;">
+        <div class="table-responsive">
+            <table class="results-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Nº Nota</th>
+                        <th>Cliente</th>
+                        <th>Data da Venda</th>
+                        <th>Telefone</th>
+                        <th>Itens</th>
+                        <th>Total</th>
+                        <th>Ações</th> </tr>
+                </thead>
+                <tbody id="report-table-body"></tbody>
+            </table>
+        </div>
+        <div class="no-results" id="noResults" style="display: none;">
+            <p>🎉 Nenhuma venda pendente encontrada.</p>
+        </div>
+        <div id="pagination-controls" class="pagination-controls"></div>
+    </div>
+</div>

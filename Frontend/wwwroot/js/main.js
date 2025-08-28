@@ -55,6 +55,8 @@ const productTypeMap = {
     6: "Blocos de 9 Furos Duplo", 7: "Bandas", 8: "Telhas de 1ª", 9: "Telhas de 2ª",
     10: "Lajotas", 11: "Tijolos para churrasqueira"
 };
+const originalRowHTML_Sale = {};
+
 // Função utilitária global
 const getPositionName = (positionId) => positionMap[positionId] || 'Desconhecido';
 const saleStatusMap = { 0: 'Pendente', 1: 'Confirmada', 2: 'Cancelada' };

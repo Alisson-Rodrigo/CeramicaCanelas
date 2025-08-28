@@ -1,6 +1,7 @@
 console.log('Script js/venda.js DEFINIDO.');
 
 
+
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -100,12 +101,8 @@ async function handleSaleSubmit(event) {
         paymentMethod: parseInt(document.getElementById('paymentMethod').value),
         discount: parseFloat(document.getElementById('discount').value) || 0,
         saleStatus: parseInt(document.getElementById('saleStatus').value),
-        noteSaleDate: document.getElementById('noteSaleDate').value,
         items: saleItems
     };
-
-    console.log("📦 Dados que serão enviados para a API:", payload);
-
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
@@ -116,6 +113,7 @@ async function handleSaleSubmit(event) {
         if (response.ok) {
             alert('Venda registrada com sucesso!');
             document.getElementById('saleForm').reset();
+            populateSelects();
             document.getElementById('saleItemsTbody').innerHTML = '<tr id="placeholder-row"><td colspan="5">Nenhum produto adicionado.</td></tr>';
             updateTotals();
             fetchAndRenderHistory(1);
@@ -199,6 +197,21 @@ function initializeHistoryFilters() {
     };
 }
 
+/**
+ * Função auxiliar para adicionar os parâmetros de data no formato que a API espera.
+ */
+function appendDateParams(params, prefix, dateString) {
+    if (!dateString) return;
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    params.append(`${prefix}.Year`, year);
+    params.append(`${prefix}.Month`, month);
+    params.append(`${prefix}.Day`, day);
+}
+
 async function fetchAndRenderHistory(page = 1) {
     currentHistoryPage = page;
     const tableBody = document.getElementById('sales-history-body');
@@ -211,14 +224,20 @@ async function fetchAndRenderHistory(page = 1) {
         const status = document.getElementById('historyStatus')?.value;
         const startDate = document.getElementById('historyStartDate')?.value;
         const endDate = document.getElementById('historyEndDate')?.value;
+        
         if(search) params.append('Search', search);
         if(status) params.append('Status', status);
-        if(startDate) params.append('StartDate', startDate);
-        if(endDate) params.append('EndDate', endDate);
+        
+        // --- CORREÇÃO APLICADA AQUI ---
+        appendDateParams(params, 'StartDate', startDate);
+        appendDateParams(params, 'EndDate', endDate);
+        // ------------------------------------
+
         const url = `${API_BASE_URL}/sales/paged?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar vendas (Status: ${response.status})`);
         const paginatedData = await response.json();
+        historyItemsCache = paginatedData.items;
         renderHistoryTable(paginatedData.items);
         renderHistoryPagination(paginatedData);
     } catch (error) {
@@ -235,18 +254,23 @@ function renderHistoryTable(items) {
         return;
     }
     items.forEach(item => {
+        const itemJsonString = JSON.stringify(item).replace(/'/g, "&apos;");
         const date = new Date(item.saleDate);
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
         const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const statusText = saleStatusMap[item.status] || 'N/A';
         const row = document.createElement('tr');
+        row.id = `row-sale-${item.id}`;
         row.innerHTML = `
-            <td>${item.noteNumber}</td>
-            <td>${item.customerName}</td>
-            <td>${formattedDate}</td>
-            <td>${formattedTotal}</td>
-            <td>${statusText}</td>
-            <td class="actions-cell"></td>
+            <td data-field="noteNumber">${item.noteNumber}</td>
+            <td data-field="customerName">${item.customerName}</td>
+            <td data-field="saleDate">${formattedDate}</td>
+            <td data-field="totalNet">${formattedTotal}</td>
+            <td data-field="status">${statusText}</td>
+            <td class="actions-cell" data-field="actions">
+                <button class="btn-action btn-edit" onclick='editSale(${itemJsonString})'>Editar</button>
+                <button class="btn-action btn-delete" onclick="deleteSale('${item.id}')">Excluir</button>
+            </td>
         `;
         tableBody.appendChild(row);
     });
@@ -275,3 +299,104 @@ function renderHistoryPagination(paginationData) {
     controlsContainer.appendChild(pageInfo);
     controlsContainer.appendChild(nextButton);
 }
+
+window.deleteSale = async (saleId) => {
+    if (!confirm('Tem certeza que deseja excluir esta venda?')) return;
+    try {
+        const accessToken = localStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE_URL}/sales/${saleId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        if (response.ok) {
+            alert('Venda excluída com sucesso!');
+            fetchAndRenderHistory(currentHistoryPage);
+        } else {
+            const errorData = await response.json().catch(() => ({ title: "Erro ao Excluir" }));
+            showErrorModal(errorData);
+        }
+    } catch (error) {
+        showErrorModal({ title: "Erro de Conexão", detail: error.message });
+    }
+};
+
+window.editSale = (item) => {
+    const row = document.getElementById(`row-sale-${item.id}`);
+    if (!row || originalRowHTML_Sale[item.id]) return;
+
+    originalRowHTML_Sale[item.id] = row.innerHTML;
+    
+    row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="noteNumber" class="edit-input" value="${item.noteNumber}">`;
+    row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="customerName" class="edit-input" value="${item.customerName}">`;
+    
+    const isoDate = new Date(item.saleDate).toISOString().split('T')[0];
+    row.querySelector('[data-field="saleDate"]').innerHTML = `<input type="date" name="saleDate" class="edit-input" value="${isoDate}">`;
+    
+    row.querySelector('[data-field="totalNet"]').innerHTML = `<input type="number" name="discount" class="edit-input" placeholder="Desconto" value="${item.discount}">`;
+    
+    let statusOptions = '';
+    for (const [key, value] of Object.entries(saleStatusMap)) {
+        const selected = key == item.status ? 'selected' : '';
+        statusOptions += `<option value="${key}" ${selected}>${value}</option>`;
+    }
+    row.querySelector('[data-field="status"]').innerHTML = `<select name="status" class="edit-input">${statusOptions}</select>`;
+
+    row.querySelector('[data-field="actions"]').innerHTML = `
+        <button class="btn-action btn-save" onclick="saveSaleChanges('${item.id}')">Salvar</button>
+        <button class="btn-action btn-cancel" onclick="cancelEditSale('${item.id}')">Cancelar</button>
+    `;
+};
+
+window.saveSaleChanges = async (saleId) => {
+    const row = document.getElementById(`row-sale-${saleId}`);
+    if (!row) return;
+
+    const originalItem = historyItemsCache.find(i => i.id === saleId);
+    if (!originalItem) {
+        showErrorModal({title: "Erro", detail: "Não foi possível encontrar os dados originais da venda."});
+        cancelEditSale(saleId);
+        return;
+    }
+
+    const payload = {
+        id: saleId,
+        noteNumber: parseInt(row.querySelector('[name="noteNumber"]').value) || 0,
+        customerName: row.querySelector('[name="customerName"]').value,
+        saleDate: row.querySelector('[name="saleDate"]').value,
+        discount: parseFloat(row.querySelector('[name="discount"]').value) || 0,
+        status: parseInt(row.querySelector('[name="status"]').value),
+        city: originalItem.city,
+        state: originalItem.state,
+        customerAddress: originalItem.customerAddress,
+        customerPhone: originalItem.customerPhone,
+        paymentMethod: originalItem.paymentMethod,
+        items: originalItem.items || []
+    };
+
+    try {
+        const accessToken = localStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE_URL}/sales`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+            body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+            alert('Venda atualizada com sucesso!');
+            fetchAndRenderHistory(currentHistoryPage);
+        } else {
+            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
+            showErrorModal(errorData);
+        }
+    } catch (error) {
+        showErrorModal({ title: "Erro de Conexão", detail: error.message });
+        cancelEditSale(saleId);
+    }
+};
+
+window.cancelEditSale = (saleId) => {
+    const row = document.getElementById(`row-sale-${saleId}`);
+    if (row && originalRowHTML_Sale[saleId]) {
+        row.innerHTML = originalRowHTML_Sale[saleId];
+        delete originalRowHTML_Sale[saleId];
+    }
+};
