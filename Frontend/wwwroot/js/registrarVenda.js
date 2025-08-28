@@ -1,7 +1,6 @@
 console.log('Script js/venda.js DEFINIDO.');
 
 
-
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -197,21 +196,6 @@ function initializeHistoryFilters() {
     };
 }
 
-/**
- * Função auxiliar para adicionar os parâmetros de data no formato que a API espera.
- */
-function appendDateParams(params, prefix, dateString) {
-    if (!dateString) return;
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    
-    params.append(`${prefix}.Year`, year);
-    params.append(`${prefix}.Month`, month);
-    params.append(`${prefix}.Day`, day);
-}
-
 async function fetchAndRenderHistory(page = 1) {
     currentHistoryPage = page;
     const tableBody = document.getElementById('sales-history-body');
@@ -224,15 +208,10 @@ async function fetchAndRenderHistory(page = 1) {
         const status = document.getElementById('historyStatus')?.value;
         const startDate = document.getElementById('historyStartDate')?.value;
         const endDate = document.getElementById('historyEndDate')?.value;
-        
         if(search) params.append('Search', search);
         if(status) params.append('Status', status);
-        
-        // --- CORREÇÃO APLICADA AQUI ---
-        appendDateParams(params, 'StartDate', startDate);
-        appendDateParams(params, 'EndDate', endDate);
-        // ------------------------------------
-
+        if(startDate) params.append('StartDate', startDate);
+        if(endDate) params.append('EndDate', endDate);
         const url = `${API_BASE_URL}/sales/paged?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar vendas (Status: ${response.status})`);
@@ -328,10 +307,7 @@ window.editSale = (item) => {
     
     row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="noteNumber" class="edit-input" value="${item.noteNumber}">`;
     row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="customerName" class="edit-input" value="${item.customerName}">`;
-    
-    const isoDate = new Date(item.saleDate).toISOString().split('T')[0];
-    row.querySelector('[data-field="saleDate"]').innerHTML = `<input type="date" name="saleDate" class="edit-input" value="${isoDate}">`;
-    
+    row.querySelector('[data-field="saleDate"]').textContent = ''; // Limpa a data, pois não é editável
     row.querySelector('[data-field="totalNet"]').innerHTML = `<input type="number" name="discount" class="edit-input" placeholder="Desconto" value="${item.discount}">`;
     
     let statusOptions = '';
@@ -362,7 +338,6 @@ window.saveSaleChanges = async (saleId) => {
         id: saleId,
         noteNumber: parseInt(row.querySelector('[name="noteNumber"]').value) || 0,
         customerName: row.querySelector('[name="customerName"]').value,
-        saleDate: row.querySelector('[name="saleDate"]').value,
         discount: parseFloat(row.querySelector('[name="discount"]').value) || 0,
         status: parseInt(row.querySelector('[name="status"]').value),
         city: originalItem.city,
