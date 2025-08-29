@@ -1,6 +1,7 @@
 console.log('Script js/venda.js DEFINIDO.');
 
 
+
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -307,7 +308,10 @@ window.editSale = (item) => {
     
     row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="noteNumber" class="edit-input" value="${item.noteNumber}">`;
     row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="customerName" class="edit-input" value="${item.customerName}">`;
-    row.querySelector('[data-field="saleDate"]').textContent = ''; // Limpa a data, pois não é editável
+    
+    // A data não será editável, então apenas mantemos o valor
+    row.querySelector('[data-field="saleDate"]').innerHTML = item.saleDate;
+    
     row.querySelector('[data-field="totalNet"]').innerHTML = `<input type="number" name="discount" class="edit-input" placeholder="Desconto" value="${item.discount}">`;
     
     let statusOptions = '';
@@ -340,6 +344,7 @@ window.saveSaleChanges = async (saleId) => {
         customerName: row.querySelector('[name="customerName"]').value,
         discount: parseFloat(row.querySelector('[name="discount"]').value) || 0,
         status: parseInt(row.querySelector('[name="status"]').value),
+        // Mantém os dados originais que não são editáveis na linha
         city: originalItem.city,
         state: originalItem.state,
         customerAddress: originalItem.customerAddress,
