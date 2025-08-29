@@ -64,8 +64,10 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
 
     public class UpdateSalesItem
     {
+        public Guid? Id { get; set; }                 // <— agora é nullable
         public ProductType Product { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }
     }
+
 }
