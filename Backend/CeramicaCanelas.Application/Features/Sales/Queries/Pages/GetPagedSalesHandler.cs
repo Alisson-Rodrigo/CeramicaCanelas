@@ -13,11 +13,14 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
     public class GetPagedSalesHandler : IRequestHandler<PagedRequestSales, PagedResultSales>
     {
         private readonly ISalesRepository _salesRepository;
+
         public GetPagedSalesHandler(ISalesRepository salesRepository) => _salesRepository = salesRepository;
 
         public async Task<PagedResultSales> Handle(PagedRequestSales request, CancellationToken ct)
         {
-            var q = _salesRepository.QueryAllWithIncludes(); // IQueryable<Sale> — só ativas (HasQueryFilter)
+            // Use QueryAllWithIncludes() para obter as vendas com os itens incluídos
+            var q = _salesRepository.QueryAllWithIncludes() // Obtendo vendas com itens
+                .AsQueryable(); // Convertendo para IQueryable
 
             // Busca textual (case-insensitive, compatível com qualquer provider)
             if (!string.IsNullOrWhiteSpace(request.Search))
@@ -48,8 +51,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
                 q = q.Where(s => s.Date <= endDate.Date); // Comparar apenas a data
             }
 
-
-
             // Filtros extras
             if (request.PaymentMethod.HasValue)
                 q = q.Where(s => s.PaymentMethod == request.PaymentMethod.Value);
@@ -63,8 +64,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
                 .OrderByDescending(s => s.Date)
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
-                // Se sua SaleResult tem construtor (Sale s):
-                .Select(s => new SaleResult(s))
+                .Select(s => new SaleResult(s)) // Passando a venda com seus itens
                 .ToListAsync(ct);
 
             return new PagedResultSales
