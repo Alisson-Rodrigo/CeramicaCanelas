@@ -1,12 +1,11 @@
-console.log('Script js/relatorio-saidas-categoria.js DEFINIDO.');
-
+console.log('Script js/vendas-pendentes.js DEFINIDO.');
 
 
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
 function initDynamicForm() {
-    console.log('▶️ initDynamicForm() de relatorio-saidas-categoria.js foi chamada.');
+    console.log('▶️ initDynamicForm() de vendas-pendentes.js foi chamada.');
     initializeFilters();
     fetchReportData(1);
 }
@@ -14,10 +13,19 @@ function initDynamicForm() {
 function initializeFilters() {
     document.getElementById('searchButton')?.addEventListener('click', () => fetchReportData(1));
     document.getElementById('clearButton')?.addEventListener('click', clearFilters);
+    
+    const paymentSelect = document.getElementById('payment-method-filter');
+    if (paymentSelect && typeof paymentMethodMap !== 'undefined') {
+        paymentSelect.innerHTML = '<option value="">Todos</option>';
+        for (const [key, value] of Object.entries(paymentMethodMap)) {
+            paymentSelect.appendChild(new Option(value, key));
+        }
+    }
 }
 
 function clearFilters() {
     document.getElementById('search-input').value = '';
+    document.getElementById('payment-method-filter').value = '';
     document.getElementById('start-date').value = '';
     document.getElementById('end-date').value = '';
     fetchReportData(1);
@@ -38,26 +46,25 @@ async function fetchReportData(page = 1) {
         const accessToken = localStorage.getItem('accessToken');
         if (!accessToken) throw new Error("Não autenticado.");
 
-        const params = new URLSearchParams({ Page: currentPage, PageSize: 10, OrderBy: 'CategoryName' });
+        const params = new URLSearchParams({ Page: currentPage, PageSize: 10 });
+        
         const search = document.getElementById('search-input')?.value;
+        const paymentMethod = document.getElementById('payment-method-filter')?.value;
         const startDate = document.getElementById('start-date')?.value;
         const endDate = document.getElementById('end-date')?.value;
-
+        
         if (search) params.append('Search', search);
+        if (paymentMethod) params.append('PaymentMethod', paymentMethod);
         if (startDate) params.append('StartDate', startDate);
         if (endDate) params.append('EndDate', endDate);
 
-        const url = `${API_BASE_URL}/financial/dashboard-financial/balance-expense?${params.toString()}`;
+        const url = `${API_BASE_URL}/sales/pending/paged?${params.toString()}`;
+        
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar dados (Status: ${response.status})`);
 
         const data = await response.json();
         
-        if (!data.items || !data.hasOwnProperty('totalPages')) {
-             throw new Error("A resposta da API não tem o formato paginado esperado.");
-        }
-        
-        updateSummary(data);
         renderReportTable(data.items);
         renderPagination(data);
         
@@ -65,34 +72,13 @@ async function fetchReportData(page = 1) {
 
     } catch (error) {
         if(typeof showErrorModal === 'function') {
-          
+            showErrorModal({ title: "Erro na Pesquisa", detail: error.message });
         } else {
-           
+            alert(`Erro na Pesquisa: ${error.message}`);
         }
     } finally {
         if(loadingDiv) loadingDiv.style.display = 'none';
     }
-}
-
-/**
- * ATUALIZADO: Agora usa as datas dos filtros se a API retornar null.
- */
-function updateSummary(data) {
-    const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const formatDate = (dateString) => {
-        if (!dateString) return '--/--/----';
-        const date = new Date(dateString);
-        return new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
-    };
-
-    // Pega as datas dos campos de filtro como fallback
-    const startDateFromFilter = document.getElementById('start-date')?.value;
-    const endDateFromFilter = document.getElementById('end-date')?.value;
-
-    document.getElementById('total-expense-overall').textContent = formatCurrency(data.totalExpenseOverall);
-    // Usa a data da API, mas se for nula, usa a data do filtro
-    document.getElementById('period-start-date').textContent = formatDate(data.startDate || startDateFromFilter);
-    document.getElementById('period-end-date').textContent = formatDate(data.endDate || endDateFromFilter);
 }
 
 function renderReportTable(items) {
@@ -110,12 +96,21 @@ function renderReportTable(items) {
     noResultsDiv.style.display = 'none';
 
     items.forEach(item => {
-        const formattedAmount = (item.totalExpense || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const date = new Date(item.saleDate);
+        const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
+        const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         
         const row = tableBody.insertRow();
         row.innerHTML = `
-            <td>${item.categoryName || 'N/A'}</td>
-            <td class="expense">${formattedAmount}</td>
+            <td>${item.noteNumber || 'N/A'}</td>
+            <td>${item.customerName || 'N/A'}</td>
+            <td>${formattedDate}</td>
+            <td>${item.customerPhone || 'N/A'}</td>
+            <td>${item.itemsCount || 0}</td>
+            <td>${formattedTotal}</td>
+            <td class="actions-cell">
+                <button class="btn-action btn-success" onclick="markSaleAsPaid('${item.id}')">Marcar como Pago</button>
+            </td>
         `;
     });
 }
@@ -149,3 +144,30 @@ function renderPagination(paginationData) {
     controlsContainer.appendChild(pageInfo);
     controlsContainer.appendChild(nextButton);
 }
+
+// =======================================================
+// NOVA FUNÇÃO PARA MARCAR COMO PAGO
+// =======================================================
+window.markSaleAsPaid = async (saleId) => {
+    if (!confirm('Tem certeza que deseja marcar esta venda como paga?')) return;
+
+    try {
+        const accessToken = localStorage.getItem('accessToken');
+        const url = `${API_BASE_URL}/sales/${saleId}/pay`;
+        
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+
+        if (response.ok) {
+            alert('Venda atualizada para "Confirmada" com sucesso!');
+            fetchReportData(currentPage);
+        } else {
+            const errorData = await response.json().catch(() => ({ title: "Erro" }));
+            showErrorModal({ title: "Falha ao Atualizar", detail: errorData.message || "Não foi possível marcar como pago."});
+        }
+    } catch (error) {
+        showErrorModal({ title: "Erro de Conexão", detail: error.message });
+    }
+};
