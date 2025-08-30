@@ -24,8 +24,8 @@ function initializeSaleForm() {
     const addItemBtn = document.getElementById('add-sale-item-btn');
 
     saleForm.addEventListener('submit', handleSaleSubmit);
-    if(discountInput) discountInput.addEventListener('input', updateTotals);
-    if(addItemBtn) addItemBtn.addEventListener('click', addProductToCart);
+    if (discountInput) discountInput.addEventListener('input', updateTotals);
+    if (addItemBtn) addItemBtn.addEventListener('click', addProductToCart);
     
     itemsTbody.addEventListener('click', (event) => {
         if (event.target.classList.contains('btn-delete-item')) {
@@ -181,14 +181,14 @@ function initializeHistoryFilters() {
     const clearBtn = document.getElementById('historyClearBtn');
     const statusSelect = document.getElementById('historyStatus');
 
-    if(statusSelect) {
+    if (statusSelect) {
         statusSelect.innerHTML = '<option value="">Todos os Status</option>';
         for (const [key, value] of Object.entries(saleStatusMap)) {
             statusSelect.appendChild(new Option(value, key));
         }
     }
-    if(filterBtn) filterBtn.onclick = () => fetchAndRenderHistory(1);
-    if(clearBtn) clearBtn.onclick = () => {
+    if (filterBtn) filterBtn.onclick = () => fetchAndRenderHistory(1);
+    if (clearBtn) clearBtn.onclick = () => {
         document.getElementById('historySearch').value = '';
         document.getElementById('historyStatus').value = '';
         document.getElementById('historyStartDate').value = '';
@@ -199,9 +199,13 @@ function initializeHistoryFilters() {
 
 async function fetchAndRenderHistory(page = 1) {
     currentHistoryPage = page;
+
+    // 🔄 Limpa qualquer cache de edição pendente ao recarregar a lista
+    for (const k in originalRowHTML_Sale) delete originalRowHTML_Sale[k];
+
     const tableBody = document.getElementById('sales-history-body');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Buscando vendas...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Buscando vendas...</td></tr>';
     try {
         const accessToken = localStorage.getItem('accessToken');
         const params = new URLSearchParams({ Page: page, PageSize: 10, OrderBy: 'SaleDate', Ascending: false });
@@ -209,10 +213,10 @@ async function fetchAndRenderHistory(page = 1) {
         const status = document.getElementById('historyStatus')?.value;
         const startDate = document.getElementById('historyStartDate')?.value;
         const endDate = document.getElementById('historyEndDate')?.value;
-        if(search) params.append('Search', search);
-        if(status) params.append('Status', status);
-        if(startDate) params.append('StartDate', startDate);
-        if(endDate) params.append('EndDate', endDate);
+        if (search) params.append('Search', search);
+        if (status) params.append('Status', status);
+        if (startDate) params.append('StartDate', startDate);
+        if (endDate) params.append('EndDate', endDate);
         const url = `${API_BASE_URL}/sales/paged?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar vendas (Status: ${response.status})`);
@@ -222,7 +226,7 @@ async function fetchAndRenderHistory(page = 1) {
         renderHistoryPagination(paginatedData);
     } catch (error) {
         showErrorModal({ title: "Erro ao Listar Vendas", detail: error.message });
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">${error.message}</td></tr>`;
     }
 }
 
@@ -230,7 +234,7 @@ function renderHistoryTable(items) {
     const tableBody = document.getElementById('sales-history-body');
     tableBody.innerHTML = '';
     if (!items || items.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhuma venda encontrada.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhuma venda encontrada.</td></tr>';
         return;
     }
     items.forEach(item => {
@@ -239,9 +243,12 @@ function renderHistoryTable(items) {
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
         const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const statusText = saleStatusMap[item.status] || 'N/A';
-        const row = document.createElement('tr');
-        row.id = `row-sale-${item.id}`;
-        row.innerHTML = `
+        
+        const saleRow = document.createElement('tr');
+        saleRow.className = 'sale-row';
+        saleRow.id = `row-sale-${item.id}`;
+        saleRow.innerHTML = `
+            <td><button class="expand-btn" onclick="toggleItems(this, '${item.id}')">+</button></td>
             <td data-field="noteNumber">${item.noteNumber}</td>
             <td data-field="customerName">${item.customerName}</td>
             <td data-field="saleDate">${formattedDate}</td>
@@ -252,7 +259,31 @@ function renderHistoryTable(items) {
                 <button class="btn-action btn-delete" onclick="deleteSale('${item.id}')">Excluir</button>
             </td>
         `;
-        tableBody.appendChild(row);
+        tableBody.appendChild(saleRow);
+
+        const itemsRow = document.createElement('tr');
+        itemsRow.className = 'items-row';
+        itemsRow.id = `items-${item.id}`;
+        itemsRow.style.display = 'none';
+        
+        let itemsHtml = `<td colspan="7" class="items-container"><table class="nested-table">
+            <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
+            <tbody>`;
+        item.items.forEach(saleItem => {
+            const productName = productTypeMap[saleItem.product] || 'Produto desconhecido';
+            const subtotal = (saleItem.quantity * saleItem.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            itemsHtml += `
+                <tr data-item-id="${saleItem.id}">
+                    <td data-item-field="product">${productName}</td>
+                    <td data-item-field="quantity">${saleItem.quantity}</td>
+                    <td data-item-field="unitPrice">${(saleItem.unitPrice || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td>${subtotal}</td>
+                </tr>
+            `;
+        });
+        itemsHtml += '</tbody></table></td>';
+        itemsRow.innerHTML = itemsHtml;
+        tableBody.appendChild(itemsRow);
     });
 }
 
@@ -280,6 +311,17 @@ function renderHistoryPagination(paginationData) {
     controlsContainer.appendChild(nextButton);
 }
 
+window.toggleItems = (button, saleId) => {
+    const itemsRow = document.getElementById(`items-${saleId}`);
+    if (itemsRow.style.display === 'none') {
+        itemsRow.style.display = 'table-row';
+        button.textContent = '-';
+    } else {
+        itemsRow.style.display = 'none';
+        button.textContent = '+';
+    }
+};
+
 window.deleteSale = async (saleId) => {
     if (!confirm('Tem certeza que deseja excluir esta venda?')) return;
     try {
@@ -300,35 +342,55 @@ window.deleteSale = async (saleId) => {
     }
 };
 
+// =======================
+// EDIÇÃO INLINE DA VENDA
+// =======================
 window.editSale = (item) => {
     const row = document.getElementById(`row-sale-${item.id}`);
-    if (!row || originalRowHTML_Sale[item.id]) return;
+    const itemsRow = document.getElementById(`items-${item.id}`);
+    if (!row) return;
 
-    originalRowHTML_Sale[item.id] = row.innerHTML;
-    
-    row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="noteNumber" class="edit-input" value="${item.noteNumber}">`;
-    row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="customerName" class="edit-input" value="${item.customerName}">`;
-    
-    // A data não será editável, então apenas mantemos o valor
-    row.querySelector('[data-field="saleDate"]').innerHTML = item.saleDate;
-    
-    row.querySelector('[data-field="totalNet"]').innerHTML = `<input type="number" name="discount" class="edit-input" placeholder="Desconto" value="${item.discount}">`;
+    // ✅ Novo guard: evita bloquear edições subsequentes
+    if (row.querySelector('.edit-input')) return;
+
+    // Salva HTML original apenas uma vez
+    if (!originalRowHTML_Sale[item.id]) {
+        originalRowHTML_Sale[item.id] = { main: row.innerHTML, items: itemsRow.innerHTML };
+    }
+
+    row.querySelector('[data-field="noteNumber"]').innerHTML =
+        `<input type="number" name="noteNumber" class="edit-input" value="${item.noteNumber}">`;
+    row.querySelector('[data-field="customerName"]').innerHTML =
+        `<input type="text" name="customerName" class="edit-input" value="${item.customerName}">`;
     
     let statusOptions = '';
     for (const [key, value] of Object.entries(saleStatusMap)) {
         const selected = key == item.status ? 'selected' : '';
         statusOptions += `<option value="${key}" ${selected}>${value}</option>`;
     }
-    row.querySelector('[data-field="status"]').innerHTML = `<select name="status" class="edit-input">${statusOptions}</select>`;
+    row.querySelector('[data-field="status"]').innerHTML =
+        `<select name="status" class="edit-input">${statusOptions}</select>`;
 
     row.querySelector('[data-field="actions"]').innerHTML = `
         <button class="btn-action btn-save" onclick="saveSaleChanges('${item.id}')">Salvar</button>
         <button class="btn-action btn-cancel" onclick="cancelEditSale('${item.id}')">Cancelar</button>
     `;
+    
+    const itemsTableBody = itemsRow.querySelector('tbody');
+    itemsTableBody.querySelectorAll('tr').forEach(itemRow => {
+        const saleItem = item.items.find(i => i.id === itemRow.dataset.itemId);
+        if (!saleItem) return;
+        
+        itemRow.querySelector('[data-item-field="quantity"]').innerHTML =
+            `<input type="number" class="edit-input" name="quantity" value="${saleItem.quantity}">`;
+        itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML =
+            `<input type="number" step="0.01" class="edit-input" name="unitPrice" value="${saleItem.unitPrice}">`;
+    });
 };
 
 window.saveSaleChanges = async (saleId) => {
     const row = document.getElementById(`row-sale-${saleId}`);
+    const itemsRow = document.getElementById(`items-${saleId}`);
     if (!row) return;
 
     const originalItem = historyItemsCache.find(i => i.id === saleId);
@@ -337,20 +399,32 @@ window.saveSaleChanges = async (saleId) => {
         cancelEditSale(saleId);
         return;
     }
+    
+    const editedItems = [];
+    itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
+        const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
+        if (originalSaleItem) {
+            editedItems.push({
+                id: originalSaleItem.id,
+                product: originalSaleItem.product,
+                quantity: parseFloat(itemTr.querySelector('[name="quantity"]').value),
+                unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value)
+            });
+        }
+    });
 
     const payload = {
         id: saleId,
         noteNumber: parseInt(row.querySelector('[name="noteNumber"]').value) || 0,
         customerName: row.querySelector('[name="customerName"]').value,
-        discount: parseFloat(row.querySelector('[name="discount"]').value) || 0,
         status: parseInt(row.querySelector('[name="status"]').value),
-        // Mantém os dados originais que não são editáveis na linha
         city: originalItem.city,
         state: originalItem.state,
         customerAddress: originalItem.customerAddress,
         customerPhone: originalItem.customerPhone,
         paymentMethod: originalItem.paymentMethod,
-        items: originalItem.items || []
+        discount: originalItem.discount,
+        items: editedItems
     };
 
     try {
@@ -362,6 +436,8 @@ window.saveSaleChanges = async (saleId) => {
         });
         if (response.ok) {
             alert('Venda atualizada com sucesso!');
+            // ✅ limpa o cache desta venda para permitir nova edição
+            delete originalRowHTML_Sale[saleId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
             const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
@@ -375,8 +451,10 @@ window.saveSaleChanges = async (saleId) => {
 
 window.cancelEditSale = (saleId) => {
     const row = document.getElementById(`row-sale-${saleId}`);
+    const itemsRow = document.getElementById(`items-${saleId}`);
     if (row && originalRowHTML_Sale[saleId]) {
-        row.innerHTML = originalRowHTML_Sale[saleId];
+        row.innerHTML = originalRowHTML_Sale[saleId].main;
+        itemsRow.innerHTML = originalRowHTML_Sale[saleId].items;
         delete originalRowHTML_Sale[saleId];
     }
 };
