@@ -971,7 +971,7 @@ textarea:focus {
   --expand-fg:       #222;
   --expand-open-bg:  #e7f5ff;
   --expand-open-bd:  #74c0fc;
-     --green:       var(--green, green);
+    
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -980,7 +980,7 @@ textarea:focus {
   height: 28px;
   border-radius: 50%;
   border: 1px solid var(--expand-border);
-  background: var(green(--expand-bg, #f6f8fa));
+  background: green;
   color: var(--expand-fg);
 
   font: 700 14px/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
