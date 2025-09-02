@@ -57,18 +57,20 @@ public class GetProductItemsReportPdfHandler
         var itemsQ = q.SelectMany(s => s.Items.Select(i => new
         {
             i.Product,
-            Milheiros = i.Quantity,                       // milheiros
-            Subtotal = i.UnitPrice * i.Quantity,         // receita BRUTA do item
-            SaleGross = s.TotalGross,                     // bruto da venda
-            SaleDiscount = s.Discount                        // desconto da venda
+            Milheiros = (decimal)i.Quantity,                   // garante decimal
+            Subtotal = i.UnitPrice * (decimal)i.Quantity,     // decimal * decimal
+            SaleGross = s.TotalGross,
+            SaleDiscount = s.Discount
         }))
         .Select(x => new
         {
             x.Product,
             x.Milheiros,
-            NetRevenue = (x.SaleGross > 0)
-                ? x.Subtotal * (1 - (x.SaleDiscount / x.SaleGross)) // receita LÍQUIDA do item
-                : x.Subtotal
+            NetRevenueRounded = Math.Round(                      // limita escala antes do SUM
+                (x.SaleGross > 0m)
+                    ? x.Subtotal * (1m - (x.SaleDiscount / x.SaleGross))
+                    : x.Subtotal,
+                2)
         });
 
         if (req.Product.HasValue)
@@ -81,14 +83,15 @@ public class GetProductItemsReportPdfHandler
             {
                 Product = g.Key,
                 Milheiros = g.Sum(z => z.Milheiros),
-                Revenue = g.Sum(z => z.NetRevenue)        // << agora já vem com desconto aplicado
+                Revenue = g.Sum(z => z.NetRevenueRounded)  // soma do valor já arredondado
             })
             .OrderByDescending(r => r.Revenue)
             .ToListAsync(ct);
 
-        // Totais (também líquidos)
+        // Totais (opcional arredondar também)
         var totalMilheiros = grouped.Sum(x => x.Milheiros);
-        var totalRevenue = grouped.Sum(x => x.Revenue);
+        var totalRevenue = Math.Round(grouped.Sum(x => x.Revenue), 2);
+
 
         var subtitle = req.Product.HasValue ? $"Produto: {req.Product.Value}" : null;
 

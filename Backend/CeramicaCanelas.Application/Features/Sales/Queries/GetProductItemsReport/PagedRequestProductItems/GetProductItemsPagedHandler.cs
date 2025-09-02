@@ -58,8 +58,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             var itemsQ = q.SelectMany(s => s.Items.Select(i => new
             {
                 i.Product,
-                Milheiros = i.Quantity,
-                Subtotal = i.UnitPrice * i.Quantity,
+                Milheiros = (decimal)i.Quantity,                   // garante decimal
+                Subtotal = i.UnitPrice * (decimal)i.Quantity,     // decimal * decimal
                 SaleGross = s.TotalGross,
                 SaleDiscount = s.Discount
             }))
@@ -67,9 +67,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             {
                 x.Product,
                 x.Milheiros,
-                NetRevenue = (x.SaleGross > 0)
-                    ? x.Subtotal * (1 - (x.SaleDiscount / x.SaleGross))
-                    : x.Subtotal
+                NetRevenueRounded = Math.Round(                     // limita a escala antes do SUM
+                    (x.SaleGross > 0m)
+                        ? x.Subtotal * (1m - (x.SaleDiscount / x.SaleGross))
+                        : x.Subtotal,
+                    2)
             });
 
             if (req.Product.HasValue)
@@ -81,10 +83,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 {
                     Product = g.Key,
                     Milheiros = g.Sum(z => z.Milheiros),
-                    Revenue = g.Sum(z => z.NetRevenue)
+                    Revenue = g.Sum(z => z.NetRevenueRounded)     // soma do valor já arredondado
                 })
                 .OrderByDescending(r => r.Revenue)
                 .ToListAsync(ct);
+
 
             var total = grouped.Count;
             var paged = grouped
