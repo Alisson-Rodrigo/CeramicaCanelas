@@ -38,26 +38,42 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             if (!string.IsNullOrWhiteSpace(req.State)) q = q.Where(s => s.State == req.State);
             q = q.Where(s => s.Date >= startUtc && s.Date <= endUtc);
 
+            // Explode itens com rateio proporcional do desconto da venda
             var itemsQ = q.SelectMany(s => s.Items.Select(i => new
             {
                 i.Product,
-                i.Quantity,
-                Subtotal = i.UnitPrice * i.Quantity
-            }));
+                Milheiros = i.Quantity,                    // sua unidade de quantidade
+                Subtotal = i.UnitPrice * i.Quantity,      // receita bruta do item
+                SaleGross = s.TotalGross,                  // soma bruta da venda
+                SaleDiscount = s.Discount                     // desconto da venda
+            }))
+            // calcula receita líquida do item após rateio do desconto
+            .Select(x => new
+            {
+                x.Product,
+                x.Milheiros,
+                NetRevenue = (x.SaleGross > 0)
+                    ? x.Subtotal * (1 - (x.SaleDiscount / x.SaleGross))
+                    : x.Subtotal
 
+            });
+
+            // filtro por produto (se houver)
             if (req.Product.HasValue)
                 itemsQ = itemsQ.Where(x => x.Product == req.Product.Value);
 
+            // agrega por produto já com receita líquida
             var grouped = await itemsQ
                 .GroupBy(x => x.Product)
                 .Select(g => new ProductItemsRowDto
                 {
                     Product = g.Key,
-                    Milheiros = g.Sum(z => z.Quantity),
-                    Revenue = g.Sum(z => z.Subtotal)
+                    Milheiros = g.Sum(z => z.Milheiros),
+                    Revenue = g.Sum(z => z.NetRevenue)
                 })
                 .OrderByDescending(r => r.Revenue)
                 .ToListAsync(ct);
+
 
             // paginação
             var total = grouped.Count;
