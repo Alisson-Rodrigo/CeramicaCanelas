@@ -48,29 +48,43 @@ public class GetProductItemsReportPdfHandler
         }
         q = q.Where(s => s.Date >= startUtc && s.Date <= endUtc);
 
-        // Explode itens e agrega (Quantity = MILHEIROS, UnitPrice = R$/milheiro)
+        // Explode itens e calcula RECEITA LÍQUIDA do item (rateio proporcional do desconto da venda)
         var itemsQ = q.SelectMany(s => s.Items.Select(i => new
         {
             i.Product,
-            i.Quantity,                                // milheiros
-            Subtotal = i.UnitPrice * i.Quantity        // receita
-        }));
+            Milheiros = i.Quantity,                       // milheiros
+            Subtotal = i.UnitPrice * i.Quantity,         // receita BRUTA do item
+            SaleGross = s.TotalGross,                     // bruto da venda
+            SaleDiscount = s.Discount                        // desconto da venda
+        }))
+        .Select(x => new
+        {
+            x.Product,
+            x.Milheiros,
+            NetRevenue = (x.SaleGross > 0)
+                ? x.Subtotal * (1 - (x.SaleDiscount / x.SaleGross)) // receita LÍQUIDA do item
+                : x.Subtotal
+        });
+
         if (req.Product.HasValue)
             itemsQ = itemsQ.Where(x => x.Product == req.Product.Value);
 
+        // Agrega por produto usando a RECEITA LÍQUIDA
         var grouped = await itemsQ
             .GroupBy(x => x.Product)
             .Select(g => new ProductItemsRow
             {
                 Product = g.Key,
-                Milheiros = g.Sum(z => z.Quantity),
-                Revenue = g.Sum(z => z.Subtotal)
+                Milheiros = g.Sum(z => z.Milheiros),
+                Revenue = g.Sum(z => z.NetRevenue)        // << agora já vem com desconto aplicado
             })
             .OrderByDescending(r => r.Revenue)
             .ToListAsync(ct);
 
+        // Totais (também líquidos)
         var totalMilheiros = grouped.Sum(x => x.Milheiros);
         var totalRevenue = grouped.Sum(x => x.Revenue);
+
         var subtitle = req.Product.HasValue ? $"Produto: {req.Product.Value}" : null;
 
         // ===== HARD-CODE da empresa =====
