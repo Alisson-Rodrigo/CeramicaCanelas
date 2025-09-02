@@ -49,7 +49,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 q = q.Where(s => s.City!.ToLower() == req.City.ToLower());
 
             if (!string.IsNullOrWhiteSpace(req.State))
-                q = q.Where(s => s.State == req.State);
+                q = q.Where(s => s.State.ToLower() == req.State.ToLower());
 
             // Período
             q = q.Where(s => s.Date >= startUtc && s.Date <= endUtc);

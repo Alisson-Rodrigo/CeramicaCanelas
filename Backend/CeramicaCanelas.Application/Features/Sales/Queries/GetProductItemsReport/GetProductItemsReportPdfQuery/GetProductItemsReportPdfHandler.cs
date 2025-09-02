@@ -48,9 +48,10 @@ public class GetProductItemsReportPdfHandler
         }
         if (!string.IsNullOrWhiteSpace(req.State))
         {
-            var uf = req.State.Trim().ToUpper();
-            q = q.Where(s => s.State == uf);
+            var uf = req.State.Trim().ToLowerInvariant();
+            q = q.Where(s => s.State.ToLower() == uf);
         }
+
         q = q.Where(s => s.Date >= startUtc && s.Date <= endUtc);
 
         // Explode itens e calcula RECEITA LÍQUIDA do item (rateio proporcional do desconto da venda)
