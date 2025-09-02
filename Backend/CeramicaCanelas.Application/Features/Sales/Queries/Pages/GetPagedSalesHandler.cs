@@ -40,16 +40,25 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
             }
 
             // Período
+            // Período (interprete as datas como SP e converta explicitamente para UTC)
+            TimeZoneInfo tz;
+            try { tz = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo"); }
+            catch { tz = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"); }
+
             if (request.StartDate.HasValue)
             {
-                var startDate = request.StartDate.Value.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
-                q = q.Where(s => s.Date >= startDate.Date); // Comparar apenas a data
+                var localStart = request.StartDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+                var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, tz);
+                q = q.Where(s => s.Date >= startUtc);
             }
+
             if (request.EndDate.HasValue)
             {
-                var endDate = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue).ToUniversalTime();
-                q = q.Where(s => s.Date <= endDate.Date); // Comparar apenas a data
+                var localEnd = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Unspecified);
+                var endUtc = TimeZoneInfo.ConvertTimeToUtc(localEnd, tz);
+                q = q.Where(s => s.Date <= endUtc);
             }
+
 
             // Filtros extras
             if (request.PaymentMethod.HasValue)
