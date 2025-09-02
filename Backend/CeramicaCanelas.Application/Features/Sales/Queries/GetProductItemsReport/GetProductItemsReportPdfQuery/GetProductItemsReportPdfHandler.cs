@@ -28,9 +28,14 @@ public class GetProductItemsReportPdfHandler
         var endDate = req.EndDate == default ? today : req.EndDate;
         if (endDate < startDate) (startDate, endDate) = (endDate, startDate);
 
-        // DateOnly -> DateTime (UTC)
-        var startUtc = System.DateTime.SpecifyKind(startDate.ToDateTime(TimeOnly.MinValue), System.DateTimeKind.Utc);
-        var endUtc = System.DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MaxValue), System.DateTimeKind.Utc);
+        // Converter datas de São Paulo para UTC
+        var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+
+        var localStart = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, tz);
+
+        var localEnd = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Unspecified);
+        var endUtc = TimeZoneInfo.ConvertTimeToUtc(localEnd, tz);
 
         // Query base (só ativas pelo HasQueryFilter)
         var q = _salesRepository.QueryAllWithIncludes();

@@ -27,27 +27,42 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             var endDate = req.EndDate == default ? today : req.EndDate;
             if (endDate < startDate) (startDate, endDate) = (endDate, startDate);
 
-            var startUtc = DateTime.SpecifyKind(startDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-            var endUtc = DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MaxValue), DateTimeKind.Utc);
+            // Converter datas de São Paulo para UTC
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
 
+            var localStart = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+            var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, tz);
+
+            var localEnd = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Unspecified);
+            var endUtc = TimeZoneInfo.ConvertTimeToUtc(localEnd, tz);
+
+            // Query base
             var q = _salesRepository.QueryAllWithIncludes();
 
-            if (req.Status.HasValue) q = q.Where(s => s.Status == req.Status.Value);
-            if (req.PaymentMethod.HasValue) q = q.Where(s => s.PaymentMethod == req.PaymentMethod.Value);
-            if (!string.IsNullOrWhiteSpace(req.City)) q = q.Where(s => s.City!.ToLower() == req.City.ToLower());
-            if (!string.IsNullOrWhiteSpace(req.State)) q = q.Where(s => s.State == req.State);
+            if (req.Status.HasValue)
+                q = q.Where(s => s.Status == req.Status.Value);
+
+            if (req.PaymentMethod.HasValue)
+                q = q.Where(s => s.PaymentMethod == req.PaymentMethod.Value);
+
+            if (!string.IsNullOrWhiteSpace(req.City))
+                q = q.Where(s => s.City!.ToLower() == req.City.ToLower());
+
+            if (!string.IsNullOrWhiteSpace(req.State))
+                q = q.Where(s => s.State == req.State);
+
+            // Período
             q = q.Where(s => s.Date >= startUtc && s.Date <= endUtc);
 
             // Explode itens com rateio proporcional do desconto da venda
             var itemsQ = q.SelectMany(s => s.Items.Select(i => new
             {
                 i.Product,
-                Milheiros = i.Quantity,                    // sua unidade de quantidade
-                Subtotal = i.UnitPrice * i.Quantity,      // receita bruta do item
-                SaleGross = s.TotalGross,                  // soma bruta da venda
-                SaleDiscount = s.Discount                     // desconto da venda
+                Milheiros = i.Quantity,
+                Subtotal = i.UnitPrice * i.Quantity,
+                SaleGross = s.TotalGross,
+                SaleDiscount = s.Discount
             }))
-            // calcula receita líquida do item após rateio do desconto
             .Select(x => new
             {
                 x.Product,
@@ -55,14 +70,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 NetRevenue = (x.SaleGross > 0)
                     ? x.Subtotal * (1 - (x.SaleDiscount / x.SaleGross))
                     : x.Subtotal
-
             });
 
-            // filtro por produto (se houver)
             if (req.Product.HasValue)
                 itemsQ = itemsQ.Where(x => x.Product == req.Product.Value);
 
-            // agrega por produto já com receita líquida
             var grouped = await itemsQ
                 .GroupBy(x => x.Product)
                 .Select(g => new ProductItemsRowDto
@@ -74,8 +86,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 .OrderByDescending(r => r.Revenue)
                 .ToListAsync(ct);
 
-
-            // paginação
             var total = grouped.Count;
             var paged = grouped
                 .Skip((req.Page - 1) * req.PageSize)
@@ -90,5 +100,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 PageSize = req.PageSize
             };
         }
+
     }
 }
