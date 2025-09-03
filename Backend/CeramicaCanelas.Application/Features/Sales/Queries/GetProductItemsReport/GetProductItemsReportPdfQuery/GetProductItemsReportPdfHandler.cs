@@ -1,10 +1,11 @@
 ﻿using CeramicaCanelas.Application.Contracts.Application.Services;
 using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.GetProductItemsReportPdfQuery;
+using CeramicaCanelas.Application.Services.EnumExtensions;
 using CeramicaCanelas.Application.Services.Reports;
+using CeramicaCanelas.Domain.Enums.Sales;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-
 
 public class GetProductItemsReportPdfHandler
     : IRequestHandler<GetProductItemsReportPdfQuery, byte[]>
@@ -39,7 +40,13 @@ public class GetProductItemsReportPdfHandler
 
         // Query base (só ativas pelo HasQueryFilter)
         var q = _salesRepository.QueryAllWithIncludes();
-        if (req.Status != 0) q = q.Where(s => s.Status == req.Status);
+
+        // CORREÇÃO: Aplicar filtro de status apenas se não for "All"
+        if (req.Status != SaleStatus.All)
+        {
+            q = q.Where(s => s.Status == req.Status);
+        }
+
         if (req.PaymentMethod.HasValue) q = q.Where(s => s.PaymentMethod == req.PaymentMethod.Value);
         if (!string.IsNullOrWhiteSpace(req.City))
         {
@@ -58,8 +65,8 @@ public class GetProductItemsReportPdfHandler
         var itemsQ = q.SelectMany(s => s.Items.Select(i => new
         {
             i.Product,
-            Milheiros = (decimal)i.Quantity,                   // garante decimal
-            Subtotal = i.UnitPrice * (decimal)i.Quantity,     // decimal * decimal
+            Milheiros = (decimal)i.Quantity,
+            Subtotal = i.UnitPrice * (decimal)i.Quantity,
             SaleGross = s.TotalGross,
             SaleDiscount = s.Discount
         }))
@@ -67,7 +74,7 @@ public class GetProductItemsReportPdfHandler
         {
             x.Product,
             x.Milheiros,
-            NetRevenueRounded = Math.Round(                      // limita escala antes do SUM
+            NetRevenueRounded = Math.Round(
                 (x.SaleGross > 0m)
                     ? x.Subtotal * (1m - (x.SaleDiscount / x.SaleGross))
                     : x.Subtotal,
@@ -84,19 +91,18 @@ public class GetProductItemsReportPdfHandler
             {
                 Product = g.Key,
                 Milheiros = g.Sum(z => z.Milheiros),
-                Revenue = g.Sum(z => z.NetRevenueRounded)  // soma do valor já arredondado
+                Revenue = g.Sum(z => z.NetRevenueRounded)
             })
             .OrderByDescending(r => r.Revenue)
             .ToListAsync(ct);
 
-        // Totais (opcional arredondar também)
+        // Totais
         var totalMilheiros = grouped.Sum(x => x.Milheiros);
         var totalRevenue = Math.Round(grouped.Sum(x => x.Revenue), 2);
 
-
         var subtitle = req.Product.HasValue ? $"Produto: {req.Product.Value}" : null;
 
-        // ===== HARD-CODE da empresa =====
+        // Hard-code da empresa
         var company = new CompanyProfile
         {
             Name = "CERÂMICA CANELAS",
@@ -109,11 +115,34 @@ public class GetProductItemsReportPdfHandler
             Phones = "Fone: (89) 98818-8560 • 98812-2809"
         };
 
-        // Logo hardcode: caminho RELATIVO na pasta de execução (ajuste se preferir absoluto)
         const string LogoRelative = "wwwroot/base/Logo.png";
-
         string? logoPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, LogoRelative));
-        if (!File.Exists(logoPath)) logoPath = null; // não quebra se não achar
+        if (!File.Exists(logoPath)) logoPath = null;
+
+        // CORREÇÃO: Função helper para obter descrição do status
+        string GetStatusDescription(SaleStatus status)
+        {
+            return status switch
+            {
+                SaleStatus.All => "Todos",
+                SaleStatus.Pending => "Pendente",
+                SaleStatus.Confirmed => "Confirmado",
+                SaleStatus.Cancelled => "Cancelado",
+                _ => status.ToString()
+            };
+        }
+
+        var filtrosAplicados = new List<AppliedFilter>
+        {
+            new("Período", $"{startDate:dd/MM/yyyy} a {endDate:dd/MM/yyyy}"),
+            new("Status", GetStatusDescription(req.Status)),
+            new("Forma de Pagamento", req.PaymentMethod.HasValue ? req.PaymentMethod.Value.ToString() : "Todos"),
+            new("Cidade", string.IsNullOrWhiteSpace(req.City) ? "Todas" : req.City!.Trim()),
+            new("UF", string.IsNullOrWhiteSpace(req.State) ? "Todas" : req.State!.Trim().ToUpperInvariant()),
+            new("Produto", req.Product.HasValue ? req.Product.Value.GetDescription() : "Todos"),
+            new("Janela UTC aplicada", $"{startUtc:yyyy-MM-dd HH:mm:ss} → {endUtc:yyyy-MM-dd HH:mm:ss}"),
+            new("Gerado em", DateTime.Now.ToString("dd/MM/yyyy HH:mm"))
+        };
 
         // Gera PDF
         return _pdf.BuildProductItemsReportPdf(
@@ -123,7 +152,8 @@ public class GetProductItemsReportPdfHandler
             totalMilheiros: totalMilheiros,
             totalRevenue: totalRevenue,
             subtitle: subtitle,
-            logoPath: logoPath
+            logoPath: logoPath,
+            filters: filtrosAplicados
         );
     }
 }

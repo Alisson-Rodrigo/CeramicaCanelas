@@ -18,7 +18,8 @@ namespace CeramicaCanelas.Infrastructure.Reports
             decimal totalMilheiros,
             decimal totalRevenue,
             string? subtitle = null,
-            string? logoPath = null) // não usado (sem logo)
+            string? logoPath = null,
+            IEnumerable<AppliedFilter>? filters = null) // não usado (sem logo)
         {
             var culture = new CultureInfo("pt-BR");
             var primaryColor = Colors.Orange;   // Laranja
@@ -89,6 +90,7 @@ namespace CeramicaCanelas.Infrastructure.Reports
             // Espaço após o cabeçalho
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
 
+
             // =========================
             // Título do Relatório (ALINHADO com o cabeçalho e a tabela)
             // =========================
@@ -128,6 +130,66 @@ namespace CeramicaCanelas.Infrastructure.Reports
             periodInfo.Format.SpaceBefore = Unit.FromPoint(4);
 
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
+
+
+            // =========================
+            // Filtros aplicados (opcional) - VERSÃO ESTILIZADA
+            // =========================
+            if (filters != null && filters.Any())
+            {
+                var filtersTable = section.AddTable();
+                filtersTable.Borders.Width = 0; // Remove bordas para seguir o padrão
+                filtersTable.Rows.LeftIndent = 0;
+
+                // Uma coluna única para manter alinhamento com outros blocos
+                filtersTable.AddColumn(Unit.FromCentimeter(17));
+
+                // Cabeçalho dos filtros - seguindo o padrão do título
+                var filterHeaderRow = filtersTable.AddRow();
+                filterHeaderRow.Shading.Color = Colors.LightGray;
+                filterHeaderRow.TopPadding = Unit.FromPoint(8);
+                filterHeaderRow.BottomPadding = Unit.FromPoint(8);
+
+                // Mesmos paddings para alinhar com outros blocos
+                filtersTable.Columns[0].LeftPadding = Unit.FromPoint(8);
+                filtersTable.Columns[0].RightPadding = Unit.FromPoint(8);
+
+                var filterHeaderCell = filterHeaderRow.Cells[0];
+                var filterTitle = filterHeaderCell.AddParagraph("🔍 Filtros Aplicados");
+                filterTitle.Format.Font.Size = 14;
+                filterTitle.Format.Font.Bold = true;
+                filterTitle.Format.Font.Color = Colors.Black;
+
+                // Container para os filtros individuais
+                var filterContentRow = filtersTable.AddRow();
+                filterContentRow.TopPadding = Unit.FromPoint(8);
+                filterContentRow.BottomPadding = Unit.FromPoint(8);
+                filterContentRow.Shading.Color = Colors.White;
+
+                var filterContentCell = filterContentRow.Cells[0];
+
+                // Adicionar os filtros como parágrafos formatados dentro da célula
+                foreach (var f in filters)
+                {
+                    // Criar um parágrafo para cada filtro
+                    var filterPara = filterContentCell.AddParagraph();
+                    filterPara.Format.SpaceBefore = Unit.FromPoint(2);
+                    filterPara.Format.SpaceAfter = Unit.FromPoint(2);
+
+                    // Adicionar o rótulo com estilo destacado
+                    var labelText = filterPara.AddFormattedText($"• {f.Label}: ");
+                    labelText.Font.Size = 10;
+                    labelText.Font.Bold = true;
+                    labelText.Color = primaryColor;
+
+                    // Adicionar o valor
+                    var valueText = filterPara.AddFormattedText(f.Value);
+                    valueText.Font.Size = 10;
+                    valueText.Color = Colors.Black;
+                }
+
+                section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
+            }
 
             // =========================
             // Tabela de Dados

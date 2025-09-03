@@ -17,7 +17,9 @@ namespace CeramicaCanelas.Application.Contracts.Application.Services
             decimal totalMilheiros,
             decimal totalRevenue,
             string? subtitle = null,
-            string? logoPath = null
+            string? logoPath = null,
+            IEnumerable<AppliedFilter>? filters = null // <<< NOVO
         );
+
     }
 }

@@ -34,5 +34,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
         public decimal AvgPrice => Milheiros > 0 ? Math.Round(Revenue / Milheiros, 2) : 0m; // R$/milheiro
     }
 
+    public record AppliedFilter(string Label, string Value);
+
 
 }
