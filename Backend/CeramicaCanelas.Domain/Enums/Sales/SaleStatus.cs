@@ -8,6 +8,7 @@ namespace CeramicaCanelas.Domain.Enums.Sales
 {
     public enum SaleStatus
     {
+        All = -1,    // Para representar "todos"
         Pending = 0,
         Confirmed = 1,
         Cancelled = 2
