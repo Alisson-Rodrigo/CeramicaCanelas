@@ -4,6 +4,7 @@ using CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.GetProductItemsReportPdfQuery;
 using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.PagedRequestProductItems;
+using CeramicaCanelas.Application.Features.Sales.Queries.GetSalesDashboardIndicatorsQueryHandler;
 using CeramicaCanelas.Application.Features.Sales.Queries.Pages;
 using CeramicaCanelas.Application.Services.Reports;
 using CeramicaCanelas.Domain.Enums.Sales;
@@ -103,6 +104,17 @@ namespace CeramicaCanelas.WebApi.Controllers
         public async Task<IActionResult> GetProductItemsPaged([FromQuery] PagedRequestProductItems query, CancellationToken ct)
         {
             var result = await _mediator.Send(query, ct);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Sales,Financial,Admin")]
+        [HttpGet("dashboard")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetDashboardIndicators(CancellationToken cancellationToken)
+        {
+            var query = new GetSalesDashboardIndicatorsQuery();
+            var result = await _mediator.Send(query, cancellationToken);
             return Ok(result);
         }
 
