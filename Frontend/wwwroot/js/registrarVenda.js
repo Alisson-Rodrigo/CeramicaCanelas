@@ -1,7 +1,5 @@
 console.log('Script js/venda.js DEFINIDO.');
 
-
-
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -26,7 +24,7 @@ function initializeSaleForm() {
     saleForm.addEventListener('submit', handleSaleSubmit);
     if (discountInput) discountInput.addEventListener('input', updateTotals);
     if (addItemBtn) addItemBtn.addEventListener('click', addProductToCart);
-    
+
     itemsTbody.addEventListener('click', (event) => {
         if (event.target.classList.contains('btn-delete-item')) {
             event.target.closest('tr').remove();
@@ -39,17 +37,28 @@ function initializeSaleForm() {
 function populateSelects() {
     const paymentSelect = document.getElementById('paymentMethod');
     const statusSelect = document.getElementById('saleStatus');
+    
     if (paymentSelect) {
         paymentSelect.innerHTML = '';
         for (const [key, value] of Object.entries(paymentMethodMap)) {
             paymentSelect.appendChild(new Option(value, key));
         }
     }
+
     if (statusSelect) {
         statusSelect.innerHTML = '';
+        // Adicionar opção "Todos os Status" primeiro
+        statusSelect.appendChild(new Option('Todos os Status', '-1'));
+        
+        // Adicionar os outros status, pulando o -1 se existir no mapa
         for (const [key, value] of Object.entries(saleStatusMap)) {
-            statusSelect.appendChild(new Option(value, key));
+            if (key !== '-1') { // Evita duplicar a opção "Todos"
+                statusSelect.appendChild(new Option(value, key));
+            }
         }
+
+        // Garantir que o valor padrão seja '-1' (Todos os Status)
+        statusSelect.value = '-1';
     }
 }
 
@@ -105,7 +114,7 @@ async function handleSaleSubmit(event) {
     };
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/sales`, {
+        const response = await fetch(`${API_BASE_URL}/financial/sales`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
             body: JSON.stringify(payload)
@@ -181,16 +190,26 @@ function initializeHistoryFilters() {
     const clearBtn = document.getElementById('historyClearBtn');
     const statusSelect = document.getElementById('historyStatus');
 
-    if (statusSelect) {
-        statusSelect.innerHTML = '<option value="">Todos os Status</option>';
+    if(statusSelect) {
+        statusSelect.innerHTML = '';
+        // Adicionar opção "Todos os Status" primeiro
+        statusSelect.appendChild(new Option('Todos os Status', '-1'));
+        
+        // Adicionar os outros status, pulando o -1 se existir no mapa
         for (const [key, value] of Object.entries(saleStatusMap)) {
-            statusSelect.appendChild(new Option(value, key));
+            if (key !== '-1') { // Evita duplicar a opção "Todos"
+                statusSelect.appendChild(new Option(value, key));
+            }
         }
+
+        // Garantir que o valor padrão seja '-1' (Todos os Status)
+        statusSelect.value = '-1';
     }
-    if (filterBtn) filterBtn.onclick = () => fetchAndRenderHistory(1);
-    if (clearBtn) clearBtn.onclick = () => {
+
+    if(filterBtn) filterBtn.onclick = () => fetchAndRenderHistory(1);
+    if(clearBtn) clearBtn.onclick = () => {
         document.getElementById('historySearch').value = '';
-        document.getElementById('historyStatus').value = '';
+        document.getElementById('historyStatus').value = '-1'; // Garantir que seja -1 para "Todos os Status"
         document.getElementById('historyStartDate').value = '';
         document.getElementById('historyEndDate').value = '';
         fetchAndRenderHistory(1);
@@ -199,24 +218,24 @@ function initializeHistoryFilters() {
 
 async function fetchAndRenderHistory(page = 1) {
     currentHistoryPage = page;
-
-    // 🔄 Limpa qualquer cache de edição pendente ao recarregar a lista
-    for (const k in originalRowHTML_Sale) delete originalRowHTML_Sale[k];
-
     const tableBody = document.getElementById('sales-history-body');
     if (!tableBody) return;
     tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Buscando vendas...</td></tr>';
     try {
         const accessToken = localStorage.getItem('accessToken');
         const params = new URLSearchParams({ Page: page, PageSize: 10, OrderBy: 'SaleDate', Ascending: false });
+        
         const search = document.getElementById('historySearch')?.value;
         const status = document.getElementById('historyStatus')?.value;
         const startDate = document.getElementById('historyStartDate')?.value;
         const endDate = document.getElementById('historyEndDate')?.value;
-        if (search) params.append('Search', search);
-        if (status) params.append('Status', status);
-        if (startDate) params.append('StartDate', startDate);
-        if (endDate) params.append('EndDate', endDate);
+        
+        if(search) params.append('Search', search);
+        // Só adiciona o status se não for '-1' (Todos os Status)
+        if(status && status !== '-1') params.append('Status', status);
+        if(startDate) params.append('StartDate', startDate);
+        if(endDate) params.append('EndDate', endDate);
+
         const url = `${API_BASE_URL}/sales/paged?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar vendas (Status: ${response.status})`);
@@ -237,12 +256,18 @@ function renderHistoryTable(items) {
         tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhuma venda encontrada.</td></tr>';
         return;
     }
-    items.forEach(item => {
+    items.forEach((item, index) => {
         const itemJsonString = JSON.stringify(item).replace(/'/g, "&apos;");
         const date = new Date(item.saleDate);
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
         const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const statusText = saleStatusMap[item.status] || 'N/A';
+        
+        // Usar o mapeamento correto, evitando mostrar "Todos" para registros reais
+        let statusText = saleStatusMap[item.status] || 'N/A';
+        if (item.status === -1) {
+            // Se por algum motivo um registro vier com status -1, mostrar como N/A
+            statusText = 'N/A';
+        }
         
         const saleRow = document.createElement('tr');
         saleRow.className = 'sale-row';
@@ -255,7 +280,7 @@ function renderHistoryTable(items) {
             <td data-field="totalNet">${formattedTotal}</td>
             <td data-field="status">${statusText}</td>
             <td class="actions-cell" data-field="actions">
-                <button class="btn-action btn-edit" onclick='editSale(${itemJsonString})'>Editar</button>
+                <button class="btn-action btn-edit" onclick='editSale(${index})'>Editar</button>
                 <button class="btn-action btn-delete" onclick="deleteSale('${item.id}')">Excluir</button>
             </td>
         `;
@@ -339,122 +364,5 @@ window.deleteSale = async (saleId) => {
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
-    }
-};
-
-// =======================
-// EDIÇÃO INLINE DA VENDA
-// =======================
-window.editSale = (item) => {
-    const row = document.getElementById(`row-sale-${item.id}`);
-    const itemsRow = document.getElementById(`items-${item.id}`);
-    if (!row) return;
-
-    // ✅ Novo guard: evita bloquear edições subsequentes
-    if (row.querySelector('.edit-input')) return;
-
-    // Salva HTML original apenas uma vez
-    if (!originalRowHTML_Sale[item.id]) {
-        originalRowHTML_Sale[item.id] = { main: row.innerHTML, items: itemsRow.innerHTML };
-    }
-
-    row.querySelector('[data-field="noteNumber"]').innerHTML =
-        `<input type="number" name="noteNumber" class="edit-input" value="${item.noteNumber}">`;
-    row.querySelector('[data-field="customerName"]').innerHTML =
-        `<input type="text" name="customerName" class="edit-input" value="${item.customerName}">`;
-    
-    let statusOptions = '';
-    for (const [key, value] of Object.entries(saleStatusMap)) {
-        const selected = key == item.status ? 'selected' : '';
-        statusOptions += `<option value="${key}" ${selected}>${value}</option>`;
-    }
-    row.querySelector('[data-field="status"]').innerHTML =
-        `<select name="status" class="edit-input">${statusOptions}</select>`;
-
-    row.querySelector('[data-field="actions"]').innerHTML = `
-        <button class="btn-action btn-save" onclick="saveSaleChanges('${item.id}')">Salvar</button>
-        <button class="btn-action btn-cancel" onclick="cancelEditSale('${item.id}')">Cancelar</button>
-    `;
-    
-    const itemsTableBody = itemsRow.querySelector('tbody');
-    itemsTableBody.querySelectorAll('tr').forEach(itemRow => {
-        const saleItem = item.items.find(i => i.id === itemRow.dataset.itemId);
-        if (!saleItem) return;
-        
-        itemRow.querySelector('[data-item-field="quantity"]').innerHTML =
-            `<input type="number" class="edit-input" name="quantity" value="${saleItem.quantity}">`;
-        itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML =
-            `<input type="number" step="0.01" class="edit-input" name="unitPrice" value="${saleItem.unitPrice}">`;
-    });
-};
-
-window.saveSaleChanges = async (saleId) => {
-    const row = document.getElementById(`row-sale-${saleId}`);
-    const itemsRow = document.getElementById(`items-${saleId}`);
-    if (!row) return;
-
-    const originalItem = historyItemsCache.find(i => i.id === saleId);
-    if (!originalItem) {
-        showErrorModal({title: "Erro", detail: "Não foi possível encontrar os dados originais da venda."});
-        cancelEditSale(saleId);
-        return;
-    }
-    
-    const editedItems = [];
-    itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
-        const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
-        if (originalSaleItem) {
-            editedItems.push({
-                id: originalSaleItem.id,
-                product: originalSaleItem.product,
-                quantity: parseFloat(itemTr.querySelector('[name="quantity"]').value),
-                unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value)
-            });
-        }
-    });
-
-    const payload = {
-        id: saleId,
-        noteNumber: parseInt(row.querySelector('[name="noteNumber"]').value) || 0,
-        customerName: row.querySelector('[name="customerName"]').value,
-        status: parseInt(row.querySelector('[name="status"]').value),
-        city: originalItem.city,
-        state: originalItem.state,
-        customerAddress: originalItem.customerAddress,
-        customerPhone: originalItem.customerPhone,
-        paymentMethod: originalItem.paymentMethod,
-        discount: originalItem.discount,
-        items: editedItems
-    };
-
-    try {
-        const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/sales`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify(payload)
-        });
-        if (response.ok) {
-            alert('Venda atualizada com sucesso!');
-            // ✅ limpa o cache desta venda para permitir nova edição
-            delete originalRowHTML_Sale[saleId];
-            fetchAndRenderHistory(currentHistoryPage);
-        } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
-            showErrorModal(errorData);
-        }
-    } catch (error) {
-        showErrorModal({ title: "Erro de Conexão", detail: error.message });
-        cancelEditSale(saleId);
-    }
-};
-
-window.cancelEditSale = (saleId) => {
-    const row = document.getElementById(`row-sale-${saleId}`);
-    const itemsRow = document.getElementById(`items-${saleId}`);
-    if (row && originalRowHTML_Sale[saleId]) {
-        row.innerHTML = originalRowHTML_Sale[saleId].main;
-        itemsRow.innerHTML = originalRowHTML_Sale[saleId].items;
-        delete originalRowHTML_Sale[saleId];
     }
 };
