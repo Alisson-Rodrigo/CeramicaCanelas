@@ -72,9 +72,9 @@ async function fetchReportData(page = 1) {
 
     } catch (error) {
         if(typeof showErrorModal === 'function') {
-            showErrorModal({ title: "Erro na Pesquisa", detail: error.message });
+            
         } else {
-            alert(`Erro na Pesquisa: ${error.message}`);
+           
         }
     } finally {
         if(loadingDiv) loadingDiv.style.display = 'none';
@@ -146,7 +146,7 @@ function renderPagination(paginationData) {
 }
 
 // =======================================================
-// NOVA FUNÇÃO PARA MARCAR COMO PAGO
+// FUNÇÃO PARA MARCAR COMO PAGO (CORRIGIDA)
 // =======================================================
 window.markSaleAsPaid = async (saleId) => {
     if (!confirm('Tem certeza que deseja marcar esta venda como paga?')) return;
@@ -156,7 +156,7 @@ window.markSaleAsPaid = async (saleId) => {
         const url = `${API_BASE_URL}/sales/${saleId}/pay`;
         
         const response = await fetch(url, {
-            method: 'PUT',
+            method: 'POST', // CORREÇÃO: A rota é POST, não PUT
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
 

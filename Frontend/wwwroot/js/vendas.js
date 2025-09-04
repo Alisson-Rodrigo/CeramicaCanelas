@@ -15,7 +15,7 @@ function initializeFilters() {
     document.getElementById('clearButton')?.addEventListener('click', clearFilters);
     document.getElementById('generatePdfButton')?.addEventListener('click', generatePdfReport);
     
-  
+    // Popula os selects de filtro (assumindo que os mapas estão em main.js)
     populateSelect(document.getElementById('product-filter'), productTypeMap, 'Todos os Produtos');
     populateSelect(document.getElementById('status-filter'), saleStatusMap, 'Todos os Status');
     populateSelect(document.getElementById('payment-method-filter'), paymentMethodMap, 'Todos os Métodos');
@@ -157,8 +157,6 @@ async function generatePdfReport() {
 
         const params = new URLSearchParams();
         
-        // --- CORREÇÃO APLICADA AQUI ---
-        // Coleta todos os filtros da página para enviar ao endpoint do PDF
         const product = document.getElementById('product-filter')?.value;
         const status = document.getElementById('status-filter')?.value;
         const paymentMethod = document.getElementById('payment-method-filter')?.value;
@@ -174,7 +172,6 @@ async function generatePdfReport() {
         if (state) params.append('State', state);
         if (startDate) params.append('StartDate', startDate);
         if (endDate) params.append('EndDate', endDate);
-        // ------------------------------------
 
         const url = `${API_BASE_URL}/sales/items/pdf?${params.toString()}`;
         console.log("📡 Gerando PDF a partir de:", url);
