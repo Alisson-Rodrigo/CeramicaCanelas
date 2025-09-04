@@ -21,7 +21,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
         public string? State { get; set; }
 
         // Por padrão, só vendas confirmadas
-        public SaleStatus Status { get; set; } = SaleStatus.Confirmed;
+        public SaleStatus? Status { get; set; } = null;
     }
 
     // Linha agregada por produto

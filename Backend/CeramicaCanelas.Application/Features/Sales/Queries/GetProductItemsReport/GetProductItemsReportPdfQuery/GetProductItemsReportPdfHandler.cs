@@ -42,10 +42,11 @@ public class GetProductItemsReportPdfHandler
         var q = _salesRepository.QueryAllWithIncludes();
 
         // CORREÇÃO: Aplicar filtro de status apenas se não for "All"
-        if (req.Status != SaleStatus.All)
+        if (req.Status is not null)
         {
             q = q.Where(s => s.Status == req.Status);
         }
+
 
         if (req.PaymentMethod.HasValue) q = q.Where(s => s.PaymentMethod == req.PaymentMethod.Value);
         if (!string.IsNullOrWhiteSpace(req.City))
@@ -120,17 +121,18 @@ public class GetProductItemsReportPdfHandler
         if (!File.Exists(logoPath)) logoPath = null;
 
         // CORREÇÃO: Função helper para obter descrição do status
-        string GetStatusDescription(SaleStatus status)
+        string GetStatusDescription(SaleStatus? status)
         {
             return status switch
             {
-                SaleStatus.All => "Todos",
+                null => "Todos",
                 SaleStatus.Pending => "Pendente",
                 SaleStatus.Confirmed => "Confirmado",
                 SaleStatus.Cancelled => "Cancelado",
                 _ => status.ToString()
             };
         }
+
 
         var filtrosAplicados = new List<AppliedFilter>
         {
