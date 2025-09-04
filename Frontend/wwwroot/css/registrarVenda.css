@@ -1577,4 +1577,50 @@ body {
         max-width: 300px !important;
         margin: 1rem auto 0 auto !important;
     }
+}/* ====== CENTRALIZAÇÃO DOS PREÇOS NA TABELA EXPANDIDA ====== */
+
+/* Centralizar as colunas numéricas (Quantidade, Preço Unit., Subtotal) */
+.nested-table td:nth-child(2),
+.nested-table td:nth-child(3),
+.nested-table td:nth-child(4) {
+    text-align: center !important; /* Centralizado ao invés de alinhado à direita */
+    font-variant-numeric: tabular-nums; /* números alinhados */
+    font-weight: 500; /* Um pouco mais de peso para destacar os valores */
+}
+
+/* Centralizar também os cabeçalhos das colunas numéricas */
+.nested-table thead th:nth-child(2),
+.nested-table thead th:nth-child(3),
+.nested-table thead th:nth-child(4) {
+    text-align: center !important;
+}
+
+/* Manter o produto alinhado à esquerda para melhor legibilidade */
+.nested-table td:first-child,
+.nested-table thead th:first-child {
+    text-align: left !important;
+}
+
+/* Adicionar padding extra para melhor espaçamento visual dos valores centralizados */
+.nested-table td:nth-child(2),
+.nested-table td:nth-child(3),
+.nested-table td:nth-child(4) {
+    padding: 10px 16px; /* Um pouco mais de padding horizontal */
+}
+
+/* Para dispositivos móveis, manter a centralização mas ajustar padding */
+@media (max-width: 768px) {
+    .nested-table td:nth-child(2),
+    .nested-table td:nth-child(3),
+    .nested-table td:nth-child(4) {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .nested-table thead th:nth-child(2),
+    .nested-table thead th:nth-child(3),
+    .nested-table thead th:nth-child(4) {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
 }
