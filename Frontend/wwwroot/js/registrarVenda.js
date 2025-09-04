@@ -72,9 +72,12 @@ function updateTotals() {
     });
     const discount = parseFloat(document.getElementById('discount').value) || 0;
     const total = subtotal - discount;
-    document.getElementById('subtotal').textContent = subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    document.getElementById('total').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    // Formatação dos valores com 2 casas decimais
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('total').textContent = total.toFixed(2).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
 
 async function handleSaleSubmit(event) {
     event.preventDefault();
@@ -133,11 +136,11 @@ function addProductToCart() {
     
     const productId = productSelect.value;
     const productName = productSelect.options[productSelect.selectedIndex].text;
-    const quantity = parseFloat(quantityInput.value);
-    const unitPrice = parseFloat(priceInput.value);
+    const quantity = parseFloat(quantityInput.value).toFixed(2); // Quantidade com 2 casas decimais
+    const unitPrice = parseFloat(priceInput.value).toFixed(2); // Preço unitário com 2 casas decimais
 
     if (!productId) { alert('Selecione um produto.'); return; }
-    if (isNaN(quantity) || quantity <= 0) { alert('Insira uma quantidade válida.'); return; }
+    if (isNaN(quantity) || quantity <= 0) { alert('Insira uma quantidade válida (ex: 1.5).'); return; }
     if (isNaN(unitPrice) || unitPrice < 0) { alert('Insira um preço válido.'); return; }
 
     const tbody = document.getElementById('saleItemsTbody');
@@ -147,7 +150,10 @@ function addProductToCart() {
     }
 
     checkPlaceholder();
-    const subtotal = (quantity * unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    // Calculando subtotal
+    const subtotal = (quantity * unitPrice).toFixed(2);
+
     const newRow = document.createElement('tr');
     newRow.dataset.productId = productId;
     newRow.dataset.quantity = quantity;
@@ -155,9 +161,9 @@ function addProductToCart() {
 
     newRow.innerHTML = `
         <td>${productName}</td>
-        <td>${quantity}</td>
-        <td>${unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-        <td>${subtotal}</td>
+        <td>${parseFloat(quantity).toFixed(2)}</td> <!-- Exibindo quantidade com 2 casas decimais -->
+        <td>${parseFloat(unitPrice).toFixed(2)}</td> <!-- Exibindo preço unitário com 2 casas decimais -->
+        <td>R$ ${subtotal}</td> <!-- Exibindo subtotal formatado -->
         <td><button type="button" class="btn-action btn-delete-item">Remover</button></td>
     `;
     tbody.appendChild(newRow);

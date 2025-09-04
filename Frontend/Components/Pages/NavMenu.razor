@@ -17,12 +17,9 @@
     <div class="menu">
         <div class="menu-section" id="almoxarifado-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
-                <svg class="expand-icon" viewBox="0 0 24 24">
-                    <path d="M7,10L12,15L17,10H7Z" />
-                </svg>
+                <svg class="expand-icon" viewBox="0 0 24 24"><path d="M7,10L12,15L17,10H7Z" /></svg>
                 <span>Almoxarifado</span>
             </div>
-
             <div class="submenu-container expanded" id="almoxarifado-submenu">
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Dashboards</div>
@@ -51,7 +48,6 @@
                         <span class="menu-text">Retiradas por funcionarios</span>
                     </a>
                 </div>
-
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Cadastro</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('product'); setActive(this); closeMobileMenu();">
@@ -71,7 +67,6 @@
                         <span class="menu-text">Fornecedores</span>
                     </a>
                 </div>
-
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Movimentação de Produtos</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('entrada'); setActive(this); closeMobileMenu();">
@@ -92,69 +87,49 @@
 
         <div class="menu-section" id="financeiro-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
-                <svg class="expand-icon" viewBox="0 0 24 24">
-                    <path d="M7,10L12,15L17,10H7Z" />
-                </svg>
+                <svg class="expand-icon" viewBox="0 0 24 24"><path d="M7,10L12,15L17,10H7Z" /></svg>
                 <span>Financeiro</span>
             </div>
-
             <div class="submenu-container expanded" id="financeiro-submenu">
-                 <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicioFinancial'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" /></svg>
-                        <span class="menu-text">Início</span>
-                    </a>
+                <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicioFinancial'); setActive(this); closeMobileMenu();">
+                    <svg class="menu-icon" viewBox="0 0 24 24"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" /></svg>
+                    <span class="menu-text">Início</span>
+                </a>
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Cadastros e Lançamentos</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('lancamentocategory'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24">
-                            <path d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21A7,7 0 0,1 14,26H10A7,7 0 0,1 3,19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2Z" />
-                        </svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21A7,7 0 0,1 14,26H10A7,7 0 0,1 3,19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2Z" /></svg>
                         <span class="menu-text">Categorias Financeiras</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('cadastroclientes'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24">
-                            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
-                        </svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" /></svg>
                         <span class="menu-text">Cadastro de Clientes</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('lancamentos'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                        </svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" /></svg>
                         <span class="menu-text">Lançamentos</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('pendentesfinancial'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24">
-                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" />
-                        </svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" /></svg>
                         <span class="menu-text">Pendentes</span>
                     </a>
                 </div>
-
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Relatórios e Balancetes</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('movimentocaixa'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24">
-                            <path d="M5,6H23V18H5V6M14,9A3,3 0 0,1 17,12A3,3 0 0,1 14,15A3,3 0 0,1 11,12A3,3 0 0,1 14,9M9,8A2,2 0 0,1 7,10V14A2,2 0 0,1 9,16H19A2,2 0 0,1 21,14V10A2,2 0 0,1 19,8H9M1,10H3V20H19V22H1V10Z" />
-                        </svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M5,6H23V18H5V6M14,9A3,3 0 0,1 17,12A3,3 0 0,1 14,15A3,3 0 0,1 11,12A3,3 0 0,1 14,9M9,8A2,2 0 0,1 7,10V14A2,2 0 0,1 9,16H19A2,2 0 0,1 21,14V10A2,2 0 0,1 19,8H9M1,10H3V20H19V22H1V10Z" /></svg>
                         <span class="menu-text">Movimento Caixa</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('saidafinancial'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24">
-                            <path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V16A2,2 0 0,1 20,18H16V20A2,2 0 0,1 14,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2H14M4,4V20H14V18H8A2,2 0 0,1 6,16V8A2,2 0 0,1 8,6H14V4H4Z" />
-                        </svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V16A2,2 0 0,1 20,18H16V20A2,2 0 0,1 14,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2H14M4,4V20H14V18H8A2,2 0 0,1 6,16V8A2,2 0 0,1 8,6H14V4H4Z" /></svg>
                         <span class="menu-text">Balancete de Saídas</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('entradafinancial'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24">
-                            <path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V16A2,2 0 0,1 20,18H16V20A2,2 0 0,1 14,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2H14M4,4V20H14V18H8A2,2 0 0,1 6,16V8A2,2 0 0,1 8,6H14V4H4Z" />
-                        </svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V16A2,2 0 0,1 20,18H16V20A2,2 0 0,1 14,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2H14M4,4V20H14V18H8A2,2 0 0,1 6,16V8A2,2 0 0,1 8,6H14V4H4Z" /></svg>
                         <span class="menu-text">Balancete de Entradas</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('relatorioclientes'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24">
-                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" />
-                        </svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" /></svg>
                         <span class="menu-text">Relatorio dos Clientes </span>
                     </a>
                 </div>
@@ -163,9 +138,7 @@
         
         <div class="menu-section" id="vendas-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
-                <svg class="expand-icon" viewBox="0 0 24 24">
-                    <path d="M7,10L12,15L17,10H7Z" />
-                </svg>
+                <svg class="expand-icon" viewBox="0 0 24 24"><path d="M7,10L12,15L17,10H7Z" /></svg>
                 <span>Vendas</span>
             </div>
             <div class="submenu-container expanded" id="vendas-submenu">
@@ -193,15 +166,14 @@
                 </div>
             </div>
         </div>
+        
         <div class="menu-section logout-section">
             <a href="#" class="menu-item admin-only" id="userSystemMenu" onclick="event.preventDefault(); loadForm('usersys'); setActive(this); closeMobileMenu();" style="display: none;">
                 <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1M12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7M12 13C13.37 13 15.14 13.5 16 14.38V11C16 9.67 12.33 9 12 9S8 9.67 8 11V14.38C8.86 13.5 10.63 13 12 13Z" /></svg>
                 <span class="menu-text">Usuários do Sistema</span>
             </a>
             <a href="#" class="menu-item logout" onclick="logout(); closeMobileMenu();">
-                <svg class="menu-icon" viewBox="0 0 24 24">
-                    <path d="M16 13V11H8V8L3 12L8 16V13H16M20 3H12V5H20V19H12V21H20A2 2 0 0 0 22 19V5A2 2 0 0 0 20 3Z" />
-                </svg>
+                <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16 13V11H8V8L3 12L8 16V13H16M20 3H12V5H20V19H12V21H20A2 2 0 0 0 22 19V5A2 2 0 0 0 20 3Z" /></svg>
                 <span class="menu-text">Sair</span>
             </a>
         </div>
@@ -209,7 +181,6 @@
 </div>
 
 <script>
-    // FUNÇÃO PARA DECODIFICAR JWT TOKEN
     function parseJwt(token) {
         try {
             const base64Url = token.split('.')[1];
@@ -219,120 +190,62 @@
             }).join(''));
             return JSON.parse(jsonPayload);
         } catch (error) {
-            console.error('Erro ao decodificar token:', error);
             return null;
         }
     }
 
-    // FUNÇÃO PARA VERIFICAR AS PERMISSÕES DO USUÁRIO
     function checkUserRole() {
         try {
             const token = localStorage.getItem('accessToken');
-            console.log("Token encontrado:", token ? "SIM" : "NÃO");
-            
             if (!token) {
-                console.log("Nenhum token encontrado, usando modo demonstração");
-                showMenusByRole(true, true, true, true); // Para demonstração, mostra tudo
+                showMenusByRole(false, false, false, false);
                 return;
             }
-
             const decodedToken = parseJwt(token);
-            console.log("Token decodificado:", decodedToken);
-            
             if (decodedToken && decodedToken.role) {
                 const isAdmin = decodedToken.role === 'Admin';
                 const isAlmoxarifado = decodedToken.role === 'Almoxarifado';
                 const isFinancial = decodedToken.role === 'Financial';
-                const isVendas = decodedToken.role === 'Vendas'; // Adicionado
-
+                const isSales = decodedToken.role === 'Sales';
+                
                 const hasAlmoxarifadoAccess = isAdmin || isAlmoxarifado;
                 const hasFinancialAccess = isAdmin || isFinancial;
-                const hasVendasAccess = isAdmin || isVendas; // Adicionado
+                const hasSalesAccess = isAdmin || isSales;
                 
-                console.log(`=== INFORMAÇÕES DO USUÁRIO ===`);
-                console.log(`Usuário: ${decodedToken.unique_name || 'Não definido'}`);
-                console.log(`Email: ${decodedToken.email || 'Não definido'}`);
-                console.log(`Role: ${decodedToken.role}`);
-                console.log(`É Admin: ${isAdmin}`);
-                console.log(`É Almoxarifado: ${isAlmoxarifado}`);
-                console.log(`É Financeiro: ${isFinancial}`);
-                console.log(`É Vendas: ${isVendas}`); // Adicionado
-                console.log(`Tem acesso ao Almoxarifado: ${hasAlmoxarifadoAccess}`);
-                console.log(`Tem acesso ao Financeiro: ${hasFinancialAccess}`);
-                console.log(`Tem acesso a Vendas: ${hasVendasAccess}`); // Adicionado
-                console.log(`=== FIM DAS INFORMAÇÕES ===`);
-                
-                // Controla a exibição dos menus baseado nas permissões
-                showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess, hasVendasAccess); // Atualizado
+                showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess, hasSalesAccess);
             } else {
-                console.log("Token inválido ou sem role definida");
-                console.log("Dados do token:", decodedToken);
-                showMenusByRole(false, false, false, false); // Atualizado
+                showMenusByRole(false, false, false, false);
             }
         } catch (error) {
-            console.error("Erro ao verificar role do usuário:", error);
-            showMenusByRole(false, false, false, false); // Atualizado
+            showMenusByRole(false, false, false, false);
         }
     }
 
-    // FUNÇÃO PARA MOSTRAR/OCULTAR MENUS BASEADO NA PERMISSÃO
-    function showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess, hasVendasAccess) { // Assinatura atualizada
+    function showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess, hasSalesAccess) {
         const userSystemMenu = document.getElementById('userSystemMenu');
         const almoxarifadoSection = document.getElementById('almoxarifado-section');
         const financeiroSection = document.getElementById('financeiro-section');
-        const vendasSection = document.getElementById('vendas-section'); // Adicionado
+        const vendasSection = document.getElementById('vendas-section');
 
-        console.log("=== CONTROLE DE MENUS ===");
-        console.log(`Deve mostrar menu Admin: ${isAdmin}`);
-        console.log(`Deve mostrar Almoxarifado: ${hasAlmoxarifadoAccess}`);
-        console.log(`Deve mostrar Financeiro: ${hasFinancialAccess}`);
-        console.log(`Deve mostrar Vendas: ${hasVendasAccess}`); // Adicionado
-        
-        // Menu "Usuários do Sistema" - só para Admin
-        if (userSystemMenu) {
-            userSystemMenu.style.display = isAdmin ? 'flex' : 'none';
-            console.log(`Menu Admin definido como: ${isAdmin ? 'VISÍVEL' : 'OCULTO'}`);
-        }
-        
-        // Seção "Almoxarifado" - para Admin e Almoxarifado
-        if (almoxarifadoSection) {
-            almoxarifadoSection.style.display = hasAlmoxarifadoAccess ? 'block' : 'none';
-            console.log(`Seção Almoxarifado definida como: ${hasAlmoxarifadoAccess ? 'VISÍVEL' : 'OCULTA'}`);
-        }
-        
-        // Seção "Financeiro" - para Admin e Financial
-        if (financeiroSection) {
-            financeiroSection.style.display = hasFinancialAccess ? 'block' : 'none';
-            console.log(`Seção Financeiro definida como: ${hasFinancialAccess ? 'VISÍVEL' : 'OCULTA'}`);
-        }
-
-        // Seção "Vendas" - para Admin e Vendas (NOVA LÓGICA)
-        if (vendasSection) {
-            vendasSection.style.display = hasVendasAccess ? 'block' : 'none';
-            console.log(`Seção Vendas definida como: ${hasVendasAccess ? 'VISÍVEL' : 'OCULTA'}`);
-        }
-        
-        console.log("=== FIM CONTROLE DE MENUS ===");
+        if (userSystemMenu) userSystemMenu.style.display = isAdmin ? 'flex' : 'none';
+        if (almoxarifadoSection) almoxarifadoSection.style.display = hasAlmoxarifadoAccess ? 'block' : 'none';
+        if (financeiroSection) financeiroSection.style.display = hasFinancialAccess ? 'block' : 'none';
+        if (vendasSection) vendasSection.style.display = hasSalesAccess ? 'block' : 'none';
     }
 
-    // VERIFICAÇÃO DE TOKEN DE ACESSO
     function checkToken() {
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
-                console.log("Token não encontrado. Iniciando verificação de permissões (modo demo).");
                 checkUserRole();
             } else {
-                console.log("Token válido encontrado. Iniciando verificação de permissões.");
                 checkUserRole();
             }
         } catch (error) {
-            console.error("Erro na verificação do token:", error);
-            showMenusByRole(false, false, false, false); // Atualizado
+            showMenusByRole(false, false, false, false);
         }
     }
 
-    // FUNÇÕES DO MENU
     function setActive(element) {
         document.querySelectorAll(".menu-item").forEach((item) => {
             item.classList.remove("active");
@@ -347,7 +260,6 @@
         icon.classList.toggle("rotated");
     }
 
-    // FUNÇÕES DE RESPONSIVIDADE
     function toggleMobileMenu() {
         const sidebar = document.getElementById('sidebar');
         const hamburger = document.getElementById('hamburgerBtn');
@@ -369,18 +281,13 @@
     }
 
     function logout() {
-        console.log("Fazendo logout...");
         localStorage.removeItem("accessToken");
         window.location.href = "/";
-        alert("Logout realizado com sucesso! Redirecionando para a página inicial.");
+        alert("Logout realizado com sucesso!");
     }
 
-    // EVENT LISTENERS
     document.addEventListener("DOMContentLoaded", function () {
-        // Inicializa a verificação de token e permissões
         checkToken();
-
-        // Configura os submenus como expandidos por padrão
         document.querySelectorAll('.submenu-container').forEach(submenu => {
             submenu.classList.add('expanded');
         });
@@ -388,28 +295,24 @@
             icon.classList.add('rotated');
         });
 
-        // Event listeners para o menu hambúrguer
         const hamburger = document.getElementById('hamburgerBtn');
         const overlay = document.getElementById('overlay');
 
         if (hamburger) hamburger.addEventListener('click', toggleMobileMenu);
         if (overlay) overlay.addEventListener('click', closeMobileMenu);
 
-        // Fecha o menu ao pressionar ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeMobileMenu();
             }
         });
 
-        // Fecha o menu ao redimensionar para desktop
         window.addEventListener('resize', function() {
             if (window.innerWidth > 768) {
                 closeMobileMenu();
             }
         });
 
-        // Define o primeiro item visível como ativo por padrão (após carregar os menus)
         setTimeout(() => {
             const firstVisibleMenuItem = document.querySelector('.menu-item:not([style*="display: none"])');
             if (firstVisibleMenuItem) {
