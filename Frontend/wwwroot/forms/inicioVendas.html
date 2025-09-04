@@ -1,0 +1,66 @@
+<div class="container dashboard-container">
+    <div class="header">
+        <h1>Dashboard de Vendas</h1>
+        <p>Visão geral do desempenho de vendas da empresa</p>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon revenue-icon"><i class="fas fa-dollar-sign"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="revenue-this-month">R$ 0,00</div>
+                <div class="kpi-label">Receita (Mês Atual)</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon sales-icon"><i class="fas fa-shopping-cart"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="sales-this-month">0</div>
+                <div class="kpi-label">Vendas (Mês Atual)</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon ticket-icon"><i class="fas fa-receipt"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="average-ticket">R$ 0,00</div>
+                <div class="kpi-label">Ticket Médio</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon pending-icon"><i class="fas fa-hourglass-half"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="pending-sales">0</div>
+                <div class="kpi-label">Vendas Pendentes</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon growth-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="monthly-growth">0%</div>
+                <div class="kpi-label">Crescimento Mensal</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon customer-icon"><i class="fas fa-users"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="unique-customers">0</div>
+                <div class="kpi-label">Clientes Únicos</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-container main-chart">
+            <h3>Vendas vs. Receita por Mês</h3>
+            <canvas id="salesRevenueChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Top 5 Produtos Vendidos</h3>
+            <canvas id="topProductsChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Vendas por Método de Pagamento</h3>
+            <canvas id="paymentMethodsChart"></canvas>
+        </div>
+    </div>
+</div>
