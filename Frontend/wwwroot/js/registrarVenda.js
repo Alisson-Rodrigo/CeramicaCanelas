@@ -231,8 +231,7 @@ async function fetchAndRenderHistory(page = 1) {
         renderHistoryTable(paginatedData.items);
         renderHistoryPagination(paginatedData);
     } catch (error) {
-        showErrorModal({ title: "Erro ao Listar Vendas", detail: error.message });
-        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">${error.message}</td></tr>`;
+        
     }
 }
 
