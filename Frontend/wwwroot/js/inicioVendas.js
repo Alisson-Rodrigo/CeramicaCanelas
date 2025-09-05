@@ -37,10 +37,7 @@ async function fetchDashboardData() {
         renderTopCitiesChart(data.topCities);
 
     } catch (error) {
-        console.error("❌ Erro ao carregar dados do dashboard:", error);
-        if (typeof showErrorModal === 'function') {
-            showErrorModal({ title: "Erro no Dashboard", detail: error.message });
-        }
+       
     } finally {
         if(loadingDiv) loadingDiv.style.display = 'none';
     }
