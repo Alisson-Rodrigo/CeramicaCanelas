@@ -4,6 +4,7 @@
         <p>Visão geral do desempenho de vendas da empresa</p>
     </div>
 
+    <h3 class="kpi-section-title">Desempenho Recente</h3>
     <div class="kpi-grid">
         <div class="kpi-card">
             <div class="kpi-icon revenue-icon"><i class="fas fa-dollar-sign"></i></div>
@@ -20,10 +21,28 @@
             </div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-icon ticket-icon"><i class="fas fa-receipt"></i></div>
+            <div class="kpi-icon revenue-icon"><i class="fas fa-calendar-alt"></i></div>
             <div class="kpi-content">
-                <div class="kpi-value" id="average-ticket">R$ 0,00</div>
-                <div class="kpi-label">Ticket Médio</div>
+                <div class="kpi-value" id="revenue-last-30d">R$ 0,00</div>
+                <div class="kpi-label">Receita (Últimos 30d)</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon sales-icon"><i class="fas fa-history"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="sales-last-30d">0</div>
+                <div class="kpi-label">Vendas (Últimos 30d)</div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="kpi-section-title">Status e Performance</h3>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon confirmed-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="confirmed-sales">0</div>
+                <div class="kpi-label">Vendas Confirmadas</div>
             </div>
         </div>
         <div class="kpi-card">
@@ -33,11 +52,36 @@
                 <div class="kpi-label">Vendas Pendentes</div>
             </div>
         </div>
-        <div class="kpi-card">
-            <div class="kpi-icon growth-icon"><i class="fas fa-chart-line"></i></div>
+         <div class="kpi-card">
+            <div class="kpi-icon cancelled-icon"><i class="fas fa-times-circle"></i></div>
             <div class="kpi-content">
-                <div class="kpi-value" id="monthly-growth">0%</div>
-                <div class="kpi-label">Crescimento Mensal</div>
+                <div class="kpi-value" id="cancelled-sales">0</div>
+                <div class="kpi-label">Vendas Canceladas</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon ticket-icon"><i class="fas fa-receipt"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="average-ticket">R$ 0,00</div>
+                <div class="kpi-label">Ticket Médio</div>
+            </div>
+        </div>
+    </div>
+    
+    <h3 class="kpi-section-title">Visão Anual e Geral</h3>
+     <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon revenue-icon"><i class="fas fa-chart-bar"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="revenue-this-year">R$ 0,00</div>
+                <div class="kpi-label">Receita (Ano)</div>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon sales-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="sales-this-year">0</div>
+                <div class="kpi-label">Vendas (Ano)</div>
             </div>
         </div>
         <div class="kpi-card">
@@ -47,7 +91,15 @@
                 <div class="kpi-label">Clientes Únicos</div>
             </div>
         </div>
+        <div class="kpi-card">
+            <div class="kpi-icon growth-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="kpi-content">
+                <div class="kpi-value" id="monthly-growth">0%</div>
+                <div class="kpi-label">Crescimento Mensal</div>
+            </div>
+        </div>
     </div>
+
 
     <div class="charts-grid">
         <div class="chart-container main-chart">
@@ -57,10 +109,17 @@
         <div class="chart-container">
             <h3>Top 5 Produtos Vendidos</h3>
             <canvas id="topProductsChart"></canvas>
+            <p id="topProductsEmpty" style="display: none;">Não há dados de produtos para exibir.</p>
         </div>
         <div class="chart-container">
             <h3>Vendas por Método de Pagamento</h3>
             <canvas id="paymentMethodsChart"></canvas>
+            <p id="paymentMethodsEmpty" style="display: none;">Não há dados de pagamento para exibir.</p>
+        </div>
+        <div class="chart-container">
+            <h3>Top 5 Cidades</h3>
+            <canvas id="topCitiesChart"></canvas>
+            <p id="topCitiesEmpty" style="display: none;">Não há dados de cidades para exibir.</p>
         </div>
     </div>
 </div>
