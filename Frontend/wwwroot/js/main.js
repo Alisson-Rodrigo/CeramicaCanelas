@@ -56,7 +56,10 @@ const productTypeMap = {
     10: "Lajotas", 11: "Tijolos para churrasqueira"
 };
 const originalRowHTML_Sale = {};
-
+let salesRevenueChart = null;
+let topProductsChart = null;
+let paymentMethodsChart = null;
+let topCitiesChart = null;
 // Função utilitária global
 const getPositionName = (positionId) => positionMap[positionId] || 'Desconhecido';
 const saleStatusMap = { 0: 'Pendente', 1: 'Confirmada', 2: 'Cancelada' };
