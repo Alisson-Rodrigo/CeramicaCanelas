@@ -34,7 +34,6 @@ async function fetchDashboardData() {
         renderSalesRevenueChart(data.salesByMonth, data.revenueByMonth);
         renderTopProductsChart(data.topProducts);
         renderPaymentMethodsChart(data.paymentMethodStats);
-        renderTopCitiesChart(data.topCities);
 
     } catch (error) {
        
@@ -260,81 +259,6 @@ function renderPaymentMethodsChart(paymentStats) {
     });
 }
 
-function renderTopCitiesChart(topCities) {
-    const canvas = document.getElementById('topCitiesChart');
-    const emptyMessage = document.getElementById('topCitiesEmpty');
-    
-    console.log('🏙️ Renderizando gráfico de cidades:', topCities);
-    
-    if (!canvas) {
-        console.warn('⚠️ Canvas topCitiesChart não encontrado');
-        return;
-    }
-
-    // Destruir gráfico existente se existir
-    if (topCitiesChart && typeof topCitiesChart.destroy === 'function') {
-        topCitiesChart.destroy();
-        topCitiesChart = null;
-    }
-
-    // Verificar se há dados válidos
-    if (!topCities || !Array.isArray(topCities) || topCities.length === 0) {
-        console.log('📊 Nenhuma cidade encontrada, ocultando gráfico');
-        canvas.style.display = 'none';
-        if (emptyMessage) {
-            emptyMessage.style.display = 'block';
-            emptyMessage.textContent = 'Nenhuma cidade com vendas registradas';
-        } else {
-            // Se não existe elemento de mensagem vazia, ocultar apenas o canvas
-            const container = canvas.parentElement;
-            if (container) {
-                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #6c757d;">Nenhuma cidade com vendas registradas</div>';
-            }
-        }
-        return;
-    }
-
-    // Mostrar canvas e ocultar mensagem vazia
-    canvas.style.display = 'block';
-    if (emptyMessage) emptyMessage.style.display = 'none';
-
-    const labels = topCities.map(c => c.city || c.cityName || c.name || 'Cidade Não Informada');
-    const data = topCities.map(c => c.count || c.salesCount || c.total || 0);
-
-    console.log('📊 Criando gráfico de cidades com dados:', { labels, data });
-
-    topCitiesChart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Vendas por Cidade',
-                data: data,
-                backgroundColor: '#0ea5e9',
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Vendas: ${context.parsed.x}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
 
 // =======================================================
 // FUNÇÃO DE LIMPEZA (OPCIONAL)
@@ -352,8 +276,5 @@ function destroyAllCharts() {
         paymentMethodsChart.destroy();
         paymentMethodsChart = null;
     }
-    if (topCitiesChart && typeof topCitiesChart.destroy === 'function') {
-        topCitiesChart.destroy();
-        topCitiesChart = null;
-    }
+
 }
