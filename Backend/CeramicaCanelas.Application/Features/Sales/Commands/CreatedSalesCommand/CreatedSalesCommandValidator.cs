@@ -36,9 +36,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                 item.RuleFor(i => i.Product)
                     .IsInEnum().WithMessage("Produto inválido.");
 
-                item.RuleFor(i => i.UnitPrice)
-                    .GreaterThanOrEqualTo(0).WithMessage("Valor unitário inválido.");
-
                 item.RuleFor(i => i.Quantity)
                     .GreaterThan(0).WithMessage("Quantidade deve ser maior que zero.");
             });
