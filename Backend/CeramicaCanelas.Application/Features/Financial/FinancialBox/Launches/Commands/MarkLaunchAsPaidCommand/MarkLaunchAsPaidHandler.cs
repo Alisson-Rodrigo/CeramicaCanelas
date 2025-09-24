@@ -28,6 +28,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
             }
 
             launch.Status = PaymentStatus.Paid;
+            launch.LaunchDate = DateOnly.FromDateTime(DateTime.UtcNow);
             await _launchRepository.Update(launch);
             return Unit.Value;
         }
