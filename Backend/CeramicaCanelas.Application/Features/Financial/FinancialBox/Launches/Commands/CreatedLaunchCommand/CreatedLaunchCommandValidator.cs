@@ -15,9 +15,6 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
                 .NotEmpty().WithMessage("A descrição é obrigatória.")
                 .MaximumLength(200).WithMessage("A descrição não pode exceder 200 caracteres.");
 
-            RuleFor(l => l.Amount)
-                .GreaterThan(0).WithMessage("O valor do lançamento deve ser maior que zero.");
-
             RuleFor(l => l.Type)
                 .IsInEnum().WithMessage("O tipo de lançamento é inválido.");
 

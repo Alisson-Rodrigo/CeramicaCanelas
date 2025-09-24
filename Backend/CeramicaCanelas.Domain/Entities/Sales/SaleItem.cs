@@ -14,7 +14,7 @@ namespace CeramicaCanelas.Domain.Entities
         public ProductType Product { get; set; }
 
         // Valores
-        public decimal? UnitPrice { get; set; }
+        public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }
 
         // Calculado

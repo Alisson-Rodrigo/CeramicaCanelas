@@ -14,7 +14,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
     public class CreatedLaunchCommand : IRequest<Unit>
     {
         public string Description { get; set; } = string.Empty;
-        public decimal? Amount { get; set; }
+        public decimal Amount { get; set; }
         public DateOnly LaunchDate { get; set; }
         public LaunchType Type { get; set; }
         public Guid? CategoryId { get; set; }
@@ -38,7 +38,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
                 CategoryId = CategoryId,
                 CustomerId = CustomerId,
                 PaymentMethod = PaymentMethod,
-                Status = Status, 
+                Status = Status,
                 DueDate = DueDate,
                 CreatedOn = DateTime.UtcNow,
                 ModifiedOn = DateTime.UtcNow
