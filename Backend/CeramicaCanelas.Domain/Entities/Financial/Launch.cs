@@ -19,7 +19,7 @@ namespace CeramicaCanelas.Domain.Entities.Financial
         /// <summary>
         /// O valor monetário da transação.
         /// </summary>
-        public decimal Amount { get; set; }
+        public decimal? Amount { get; set; }
 
         /// <summary>
         /// A data em que a transação efetivamente ocorreu.

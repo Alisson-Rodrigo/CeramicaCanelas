@@ -68,7 +68,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
     public class CreatedSalesItem
     {
         public ProductType Product { get; set; }
-        public decimal UnitPrice { get; set; }
+        public decimal? UnitPrice { get; set; }
         public decimal Quantity { get; set; }
     }
 }
