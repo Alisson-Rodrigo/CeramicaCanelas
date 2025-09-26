@@ -50,26 +50,10 @@ const launchTypeMap = { 1: 'Entrada', 2: 'Saída' };
 const paymentMethodMap = { 0: 'Dinheiro', 1: 'CXPJ', 2: 'Banco do Brasil - J', 3: 'Banco do Brasil - JS', 4: 'Cheque' };
 const statusMap = { 0: 'Pendente', 1: 'Pago' };
 const productTypeMap = {
-    0: "Tijolos de 1ª 06 Furos",
-    1: "Tijolos de 2ª 06 Furos",
-    2: "Tijolos de 1ª 08 Furos",
-    3: "Tijolos de 2ª 08 Furos",
-    4: "Tijolos de 08 Furos G",
-    5: "Blocos de 9 Furos",
-    6: "Blocos de 9 Furos Duplo",
-    7: "Bandas 6 furos",
-    8: "Telhas de 1ª",
-    9: "Telhas de 2ª",
-    10: "Lajotas",
-    11: "Tijolos para churrasqueira",
-    12: "Bandas 8 furos",
-    13: "Bandas 9 furos",
-    14: "Caldeado 6 furos",
-    15: "Caldeado 8 furos",
-    16: "Caldeado 9 furos",
-    17: "Tijolo de 6 furos Duplo"
-};
-
+    0: "Tijolos de 1ª 06 Furos", 1: "Tijolos de 2ª 06 Furos", 2: "Tijolos de 1ª 08 Furos",
+    3: "Tijolos de 2ª 08 Furos", 4: "Tijolos de 08 Furos G", 5: "Blocos de 9 Furos",
+    6: "Blocos de 9 Furos Duplo", 7: "Bandas", 8: "Telhas de 1ª", 9: "Telhas de 2ª",
+    10: "Lajotas", 11: "Tijolos para churrasqueira"
 };
 const originalRowHTML_Sale = {};
 let salesRevenueChart = null;
