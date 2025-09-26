@@ -25,7 +25,7 @@ namespace CeramicaCanelas.WebApi.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateExtract([FromBody] CreateExtractCommand request)
+        public async Task<IActionResult> CreateExtract([FromForm] CreateExtractCommand request)
         {
             await _mediator.Send(request);
             return NoContent();
@@ -35,19 +35,18 @@ namespace CeramicaCanelas.WebApi.Controllers
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateExtract([FromBody] UpdateExtractCommand request)
+        public async Task<IActionResult> UpdateExtract([FromForm] UpdateExtractCommand request)
         {
             await _mediator.Send(request);
             return NoContent();
         }
 
         [Authorize(Roles = "Financial,Admin")]
-        [HttpDelete("{id}")]
+        [HttpDelete]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> DeleteExtract([FromRoute] Guid id)
+        public async Task<IActionResult> DeleteExtract([FromForm] DeleteExtractCommand request)
         {
-            var request = new DeleteExtractCommand { Id = id };
             await _mediator.Send(request);
             return NoContent();
         }

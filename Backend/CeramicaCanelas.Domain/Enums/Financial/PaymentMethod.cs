@@ -11,7 +11,11 @@ namespace CeramicaCanelas.Domain.Enums.Financial
         Dinheiro,
         CXPJ,
         BBJ,
-        BBJS,
+        BBJN,
         CHEQUE,
+        BradescoPJ,
+        CXJ,
+        DébitoAutomático
+
     }
 }
