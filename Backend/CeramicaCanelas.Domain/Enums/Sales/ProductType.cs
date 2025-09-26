@@ -23,8 +23,14 @@ public enum ProductType
     [Description("Blocos de 9 Furos Duplo")]
     Block9Double = 6,
 
-    [Description("Bandas")]
+    [Description("Bandas 6 furos")]
     Bands = 7,
+
+    [Description("Bandas 8 furos")]
+    Bands8 = 12,
+
+    [Description("Bandas 9 furos")]
+    Bands9 = 13,
 
     [Description("Telhas de 1ª")]
     RoofTile1 = 8,
@@ -36,5 +42,22 @@ public enum ProductType
     Slabs = 10,
 
     [Description("Tijolos para churrasqueira")]
-    GrillBricks = 11
+    GrillBricks = 11,
+
+    [Description("Caldeado 6 furos")]
+    Caldeado6 = 14,
+
+    [Description("Caldeado 8 furos")]
+    Caldeado8 = 15,
+
+    [Description("Caldeado 9 furos")]
+    Caldeado9 = 16,
+
+    [Description("Tijolo de 6 furos Duplo")]
+    Brick6Double = 17
+
+
+
+
+
 }
