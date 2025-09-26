@@ -22,6 +22,8 @@ namespace CeramicaCanelas.Domain.Entities.Financial
         public decimal Value { get; set; }
         [MaxLength(255)]
         public string? Observations { get; set; }
+        public string OperatorName { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
 
 
     }

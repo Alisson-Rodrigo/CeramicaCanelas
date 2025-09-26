@@ -137,6 +137,12 @@ public class DefaultContext : IdentityDbContext<User>
 
             entity.Property(e => e.Value).HasPrecision(18, 2);
             entity.Property(e => e.Observations).HasMaxLength(255);
+
+            // Soft-delete
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            // Filtro global: sempre retorna só ativos
+            entity.HasQueryFilter(e => e.IsActive);
         });
 
 
