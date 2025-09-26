@@ -47,7 +47,16 @@ const positionMap = {
 };
 const userRolesMap = { 0: 'Admin', 1: 'Viewer', 2: 'Financial', 3: 'Almoxarifado' };
 const launchTypeMap = { 1: 'Entrada', 2: 'Saída' };
-const paymentMethodMap = { 0: 'Dinheiro', 1: 'CXPJ', 2: 'Banco do Brasil - J', 3: 'Banco do Brasil - JS', 4: 'Cheque' };
+const paymentMethodMap = { 
+    0: 'Dinheiro', 
+    1: 'CXPJ', 
+    2: 'BBJ', 
+    3: 'BBJS', 
+    4: 'CHEQUE',
+    5: 'Bradesco - PJ',
+    6: 'Caixa Econômica',
+    7: 'Débito Automático'
+};
 const statusMap = { 0: 'Pendente', 1: 'Pago' };
 const productTypeMap = {
     0: "Tijolos de 1ª 06 Furos",
