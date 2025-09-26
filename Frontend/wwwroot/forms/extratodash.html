@@ -1,0 +1,74 @@
+<div class="container">
+    <div class="header">
+        <h1>Relatório de Extratos</h1>
+        <p>Resumo financeiro dos extratos bancários por período</p>
+    </div>
+
+    <div class="search-section">
+        <div class="search-title">
+            <div class="search-icon">🔍</div>
+            Filtros para Geração do Relatório
+        </div>
+        
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label" for="start-date">Data Inicial</label>
+                <input type="date" id="start-date" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="end-date">Data Final</label>
+                <input type="date" id="end-date" class="filter-input">
+            </div>
+        </div>
+        
+        <div class="search-actions">
+            <button id="generateReportBtn" class="search-button">
+                <span>📄</span>
+                Gerar Relatório
+            </button>
+        </div>
+    </div>
+
+    <div class="loading" id="loading" style="display: none;">
+        <div class="spinner"></div>
+        Gerando relatório, por favor aguarde...
+    </div>
+    
+    <div id="results-section" style="display: none;">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fas fa-calendar-alt"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="report-period">--</div>
+                    <div class="kpi-label">Período do Relatório</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon revenue-icon"><i class="fas fa-globe"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="total-general">R$ 0,00</div>
+                    <div class="kpi-label">Saldo Total Geral</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="details-grid">
+            <div class="chart-container">
+                <h3>Totais por Método de Pagamento</h3>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Método de Pagamento</th>
+                            <th>Total (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="totals-by-account-body"></tbody>
+                </table>
+            </div>
+            <div class="chart-container">
+                <h3>Distribuição</h3>
+                <canvas id="paymentMethodsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>

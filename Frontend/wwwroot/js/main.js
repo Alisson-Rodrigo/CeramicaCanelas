@@ -11,7 +11,7 @@ const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
 
 // Cache para a tabela de histórico em páginas complexas
 let historyItemsCache = []; 
-
+const originalRowHTML_Extract = {};
 // Objetos para guardar o estado original da linha durante a edição
 const originalRowHTML_Product = {};
 const originalRowHTML_Employee = {};
