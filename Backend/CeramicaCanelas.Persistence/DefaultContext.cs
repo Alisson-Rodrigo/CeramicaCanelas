@@ -19,6 +19,9 @@ public class DefaultContext : IdentityDbContext<User>
     public DbSet<ProductEntry> ProductEntries { get; set; } = null!;
     public DbSet<Supplier> Suppliers { get; set; } = null!;
 
+    public DbSet<LaunchCategoryGroup> LaunchCategoryGroups { get; set; } = null!;
+
+
     // ---PARA O LIVRO CAIXA ---
     public DbSet<Launch> Launches { get; set; } = null!;
     public DbSet<LaunchCategory> LaunchCategories { get; set; } = null!;
@@ -167,12 +170,15 @@ public class DefaultContext : IdentityDbContext<User>
                   .OnDelete(DeleteBehavior.SetNull);
         });
 
-        // LaunchCategory
+        // 
         builder.Entity<LaunchCategory>(entity =>
         {
             entity.HasKey(lc => lc.Id);
             entity.Property(lc => lc.Id).HasDefaultValueSql("uuid_generate_v4()");
+            entity.Property(lc => lc.Name).IsRequired().HasMaxLength(100);
+            entity.Property(lc => lc.IsDeleted).HasDefaultValue(false);
         });
+
 
         // Customer
         builder.Entity<Customer>(entity =>
@@ -234,6 +240,21 @@ public class DefaultContext : IdentityDbContext<User>
             entity.Property(i => i.Product).HasConversion<int>();
 
             entity.HasIndex(i => i.SaleId);
+        });
+
+        // LaunchCategoryGroup
+        builder.Entity<LaunchCategoryGroup>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.Property(g => g.Id).HasDefaultValueSql("uuid_generate_v4()");
+            entity.Property(g => g.Name).IsRequired().HasMaxLength(100);
+            entity.Property(g => g.IsDeleted).HasDefaultValue(false);
+
+            // Relação 1:N → Grupo -> Subcategorias
+            entity.HasMany(g => g.Categories)
+                  .WithOne(c => c.Group)
+                  .HasForeignKey(c => c.GroupId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
 
 
