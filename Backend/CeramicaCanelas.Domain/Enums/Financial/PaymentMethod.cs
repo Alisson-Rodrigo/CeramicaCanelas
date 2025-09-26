@@ -12,6 +12,6 @@ namespace CeramicaCanelas.Domain.Enums.Financial
         CXPJ,
         BBJ,
         BBJS,
-        CHEQUE
+        CHEQUE,
     }
 }

@@ -23,4 +23,9 @@
     <ProjectReference Include="..\CeramicaCanelas.Domain\CeramicaCanelas.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Financial\FinancialBox\Extracts\Commands\" />
+    <Folder Include="Features\Financial\FinancialBox\Extracts\Queries\" />
+  </ItemGroup>
+
 </Project>
