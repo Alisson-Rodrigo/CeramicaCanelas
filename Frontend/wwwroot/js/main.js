@@ -70,7 +70,6 @@ const productTypeMap = {
     17: "Tijolo de 6 furos Duplo"
 };
 
-};
 const originalRowHTML_Sale = {};
 let salesRevenueChart = null;
 let topProductsChart = null;
