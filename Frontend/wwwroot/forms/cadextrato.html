@@ -1,0 +1,64 @@
+<div class="container">
+    <h2 class="form-title">Registrar Novo Extrato</h2>
+    <div class="form-container">
+        <form id="extractForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="extractDate" class="form-label">Data</label>
+                    <input type="date" id="extractDate" name="date" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="extractValue" class="form-label">Valor (R$)</label>
+                    <input type="number" id="extractValue" name="value" class="form-input" placeholder="0,00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod" class="form-label">Método de Pagamento</label>
+                    <select id="paymentMethod" name="paymentMethod" class="form-input" required></select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="extractObservations" class="form-label">Observações</label>
+                <textarea id="extractObservations" name="observations" class="form-input" rows="3"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Salvar Extrato</button>
+        </form>
+    </div>
+
+    <hr class="section-divider">
+    <h2>Extratos Registrados</h2>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label for="historyStartDate">Data Inicial:</label>
+            <input type="date" id="historyStartDate" class="form-input">
+        </div>
+        <div class="filter-group">
+            <label for="historyEndDate">Data Final:</label>
+            <input type="date" id="historyEndDate" class="form-input">
+        </div>
+        <div class="filter-group">
+            <label for="historyPaymentMethod">Método de Pagamento:</label>
+            <select id="historyPaymentMethod" class="form-input"></select>
+        </div>
+        <div class="filter-group-buttons">
+            <button type="button" id="historyFilterBtn" class="search-btn">Filtrar</button>
+            <button type="button" id="historyClearBtn" class="btn-cancel">Limpar</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Método de Pagamento</th>
+                    <th>Observações</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="extract-history-body"></tbody>
+        </table>
+    </div>
+    <div id="pagination-controls" class="pagination-controls"></div>
+</div>

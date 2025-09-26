@@ -23,6 +23,7 @@ public class DefaultContext : IdentityDbContext<User>
     public DbSet<Launch> Launches { get; set; } = null!;
     public DbSet<LaunchCategory> LaunchCategories { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
+    public DbSet<Extract> Extracts { get; set; } = null!;
 
     // Vendas
     public DbSet<Sale> Sales { get; set; } = null!;
@@ -119,6 +120,31 @@ public class DefaultContext : IdentityDbContext<User>
         });
 
         // --- INÍCIO DAS NOVAS CONFIGURAÇÕES ---
+
+        // Extract
+        builder.Entity<Extract>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasDefaultValueSql("uuid_generate_v4()");
+
+            // Mapear o DateOnly para o PostgreSQL
+            entity.Property(e => e.Date)
+                  .HasColumnType("date")
+                  .HasConversion(
+                      v => v.ToDateTime(TimeOnly.MinValue),
+                      v => DateOnly.FromDateTime(v)
+                  );
+
+            entity.Property(e => e.Value).HasPrecision(18, 2);
+            entity.Property(e => e.Observations).HasMaxLength(255);
+
+            // Soft-delete
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            // Filtro global: sempre retorna só ativos
+            entity.HasQueryFilter(e => e.IsActive);
+        });
+
 
         // Launch
         builder.Entity<Launch>(entity =>
