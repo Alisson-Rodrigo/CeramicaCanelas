@@ -11,6 +11,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.LaunchCate
     public class CreateLaunchCategoryCommand : IRequest<Unit>
     {
         public string Name { get; set; } = string.Empty;
+        public Guid? GroupId { get; set; }
 
         public LaunchCategory AssignToEntity()
         {
@@ -19,6 +20,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.LaunchCate
                 Name = Name,
                 CreatedOn = DateTime.UtcNow,
                 ModifiedOn = DateTime.UtcNow,
+                GroupId = GroupId,
                 IsDeleted = false
             };
         }
