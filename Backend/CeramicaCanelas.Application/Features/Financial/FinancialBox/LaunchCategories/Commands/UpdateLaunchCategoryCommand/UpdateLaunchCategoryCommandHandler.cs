@@ -35,6 +35,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.LaunchCate
                 throw new BadRequestException("Categoria de lançamento não encontrada.");
 
             category.Name = request.Name;
+            category.GroupId = request.GroupId;
             category.ModifiedOn = DateTime.UtcNow;
 
             await _categoryRepository.Update(category);

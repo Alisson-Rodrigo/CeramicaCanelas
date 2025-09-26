@@ -11,5 +11,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.LaunchCate
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
+
+        public Guid? GroupId { get; set; }
     }
 }
