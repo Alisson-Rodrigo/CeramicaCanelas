@@ -1,6 +1,7 @@
 console.log('Script js/extrato.js DEFINIDO.');
 
 
+// =======================================================
 // INICIALIZAÇÃO
 // =======================================================
 function initDynamicForm() {
@@ -47,18 +48,10 @@ async function handleExtractSubmit(event) {
             fetchAndRenderHistory(1);
         } else {
             const errorData = await response.json();
-            if(typeof showErrorModal === 'function') {
-                showErrorModal(errorData);
-            } else {
-                alert(`Erro: ${errorData.message || 'Ocorreu um erro.'}`);
-            }
+            showErrorModal(errorData);
         }
     } catch (error) {
-        if(typeof showErrorModal === 'function') {
-            showErrorModal({ title: "Erro de Conexão", detail: error.message });
-        } else {
-            alert(`Erro de Conexão: ${error.message}`);
-        }
+        showErrorModal({ title: "Erro de Conexão", detail: error.message });
     }
 }
 
@@ -105,9 +98,7 @@ async function fetchAndRenderHistory(page = 1) {
         renderHistoryTable(paginatedData.items);
         renderPagination(paginatedData);
     } catch (error) {
-        if(typeof showErrorModal === 'function'){
-            showErrorModal({ title: "Erro ao Listar", detail: error.message });
-        }
+        showErrorModal({ title: "Erro ao Listar", detail: error.message });
         tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">${error.message}</td></tr>`;
     }
 }
@@ -197,17 +188,11 @@ window.editExtract = (item) => {
     `;
 };
 
-// =========================================================
-// FUNÇÃO CORRIGIDA
-// =========================================================
 window.saveExtractChanges = async (extractId) => {
     const row = document.getElementById(`row-extract-${extractId}`);
     if (!row) return;
 
-    // 1. Criar um FormData para enviar os dados como multipart/form-data
     const formData = new FormData();
-
-    // 2. Adicionar todos os campos necessários, incluindo o 'Id'
     formData.append('Id', extractId);
     formData.append('Date', row.querySelector('[name="date"]').value);
     formData.append('Value', row.querySelector('[name="value"]').value);
@@ -216,14 +201,10 @@ window.saveExtractChanges = async (extractId) => {
 
     try {
         const accessToken = localStorage.getItem('accessToken');
-        // 3. A URL para PUT é a URL base, sem o ID no final
         const response = await fetch(`${API_BASE_URL}/extracts`, {
             method: 'PUT',
-            headers: {
-                // 4. NÃO definir o 'Content-Type', deixar o navegador fazer isso
-                'Authorization': `Bearer ${accessToken}`
-            },
-            body: formData // 5. Enviar o FormData
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+            body: formData
         });
         
         if (response.ok) {
@@ -248,19 +229,32 @@ window.cancelEditExtract = (extractId) => {
     }
 };
 
+// =========================================================
+// FUNÇÃO CORRIGIDA
+// =========================================================
 window.deleteExtract = async (id) => {
     if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+
+    // 1. Criar um FormData para enviar o ID no corpo da requisição
+    const formData = new FormData();
+    formData.append('Id', id);
+
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/extracts/${id}`, {
+        // 2. Usar a URL base, sem o ID no final
+        const response = await fetch(`${API_BASE_URL}/extracts`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${accessToken}` }
+            headers: {
+                // 3. NÃO definir o 'Content-Type'
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: formData // 4. Enviar o FormData com o ID
         });
         if (response.ok) {
             alert('Extrato excluído com sucesso!');
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Excluir" }));
+            const errorData = await response.json().catch(() => ({ title: "Erro ao Excluir", message: "Ocorreu um erro." }));
             showErrorModal(errorData);
         }
     } catch (error) {
@@ -279,6 +273,7 @@ function populateSelect(selectElement, map, defaultOptionText) {
     }
 }
 
+// Chamar a inicialização após o carregamento do DOM
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initDynamicForm);
 } else {
