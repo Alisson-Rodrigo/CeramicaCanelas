@@ -6,16 +6,26 @@ console.log('Script js/relatorio-extrato.js DEFINIDO.');
 function initDynamicForm() {
     console.log('▶️ initDynamicForm() de relatorio-extrato.js foi chamada.');
     initializeReportPage();
-    fetchReportData(); // <<-- CARREGA O RELATÓRIO AUTOMATICAMENTE
+    fetchReportData();
 }
 
 function initializeReportPage() {
     document.getElementById('generateReportBtn')?.addEventListener('click', fetchReportData);
+    // ADICIONADO: Listener para o novo botão de limpar filtros
+    document.getElementById('clearFiltersBtn')?.addEventListener('click', clearReportFilters);
 }
 
 // =======================================================
 // LÓGICA DO RELATÓRIO
 // =======================================================
+
+// FUNÇÃO ADICIONADA: Limpa os inputs de data e busca os dados novamente
+function clearReportFilters() {
+    document.getElementById('start-date').value = '';
+    document.getElementById('end-date').value = '';
+    fetchReportData();
+}
+
 async function fetchReportData() {
     const loadingDiv = document.getElementById('loading');
     const resultsSection = document.getElementById('results-section');
@@ -37,6 +47,9 @@ async function fetchReportData() {
         const url = `${API_BASE_URL}/extracts/report?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         
+        if (!response.ok) {
+            throw new Error(`Falha ao buscar relatório (Status: ${response.status})`);
+        }
         
         const data = await response.json();
         
@@ -46,7 +59,7 @@ async function fetchReportData() {
 
     } catch (error) {
         if(typeof showErrorModal === 'function') {
-            
+            showErrorModal({ title: "Erro ao Gerar Relatório", detail: error.message });
         } else {
             alert(`Erro: ${error.message}`);
         }
@@ -57,16 +70,24 @@ async function fetchReportData() {
 
 function updateReportUI(data) {
     const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : '';
     
-    // CORREÇÃO: Usa timeZone: 'UTC' para evitar bugs de fuso horário
-    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : '--';
+    // ATUALIZAÇÃO: Lógica melhorada para exibir o período
+    let periodText = 'Todos os Lançamentos';
+    const formattedStart = formatDate(data.startDate);
+    const formattedEnd = formatDate(data.endDate);
+
+    if (formattedStart && formattedEnd) {
+        periodText = `de ${formattedStart} a ${formattedEnd}`;
+    } else if (formattedStart) {
+        periodText = `A partir de ${formattedStart}`;
+    } else if (formattedEnd) {
+        periodText = `Até ${formattedEnd}`;
+    }
     
-    // Atualiza os cards
-    const period = `${formatDate(data.startDate)} a ${formatDate(data.endDate)}`;
-    document.getElementById('report-period').textContent = (data.startDate && data.endDate) ? period : 'Período Completo';
+    document.getElementById('report-period').textContent = periodText;
     document.getElementById('total-general').textContent = formatCurrency(data.totalGeneral);
 
-    // Atualiza a tabela de totais
     const tableBody = document.getElementById('totals-by-account-body');
     tableBody.innerHTML = '';
     if (data.totalsByAccount && Object.keys(data.totalsByAccount).length > 0) {
@@ -78,43 +99,12 @@ function updateReportUI(data) {
             `;
         }
     } else {
-        tableBody.innerHTML = '<tr><td colspan="2">Nenhum dado encontrado.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="2" style="text-align: center;">Nenhum dado encontrado para o período selecionado.</td></tr>';
     }
-    
-    // Renderiza o gráfico
-    renderPaymentMethodsChart(data.totalsByAccount);
 }
 
-function renderPaymentMethodsChart(totalsByAccount) {
-    const ctx = document.getElementById('paymentMethodsChart');
-    if (!ctx) return;
-    
-    // Destruir gráfico anterior se existir, para evitar bugs
-    if (ctx.chart) {
-        ctx.chart.destroy();
-    }
-
-    if (!totalsByAccount || Object.keys(totalsByAccount).length === 0) {
-        return;
-    }
-
-    const labels = Object.keys(totalsByAccount);
-    const data = Object.values(totalsByAccount);
-    
-    ctx.chart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Total (R$)',
-                data: data,
-                backgroundColor: ['#0d6efd', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997'],
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDynamicForm);
+} else {
+    initDynamicForm();
 }
