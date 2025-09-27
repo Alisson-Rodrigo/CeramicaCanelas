@@ -36,7 +36,7 @@ async function fetchReportData() {
 
         const url = `${API_BASE_URL}/extracts/report?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
-        if (!response.ok) throw new Error(`Falha ao buscar dados (Status: ${response.status})`);
+        
         
         const data = await response.json();
         
@@ -46,7 +46,7 @@ async function fetchReportData() {
 
     } catch (error) {
         if(typeof showErrorModal === 'function') {
-            showErrorModal({ title: "Erro ao Gerar Relatório", detail: error.message });
+            
         } else {
             alert(`Erro: ${error.message}`);
         }

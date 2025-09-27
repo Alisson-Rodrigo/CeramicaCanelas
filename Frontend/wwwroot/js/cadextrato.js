@@ -1,5 +1,6 @@
 console.log('Script js/extrato.js DEFINIDO.');
-// =======================================================
+
+
 // INICIALIZAÇÃO
 // =======================================================
 function initDynamicForm() {
@@ -18,42 +19,46 @@ function initializeExtractForm() {
         extractForm.addEventListener('submit', handleExtractSubmit);
     }
     populateSelect(document.getElementById('paymentMethod'), paymentMethodMap, 'Selecione um método');
+
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('extractDate');
+    if(dateInput) {
+        dateInput.value = today;
+    }
 }
 
 async function handleExtractSubmit(event) {
     event.preventDefault();
     const form = event.target;
-    
-    const payload = {
-        date: form.date.value,
-        value: parseFloat(form.value.value),
-        paymentMethod: parseInt(form.paymentMethod.value, 10),
-        observations: form.observations.value
-    };
-
-    if (isNaN(payload.value)) {
-        showErrorModal({ title: "Validação", detail: "O valor inserido é inválido." });
-        return;
-    }
+    const formData = new FormData(form);
 
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/extracts`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify(payload)
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+            body: formData
         });
 
         if (response.ok) {
             alert('Extrato salvo com sucesso!');
             form.reset();
+            document.getElementById('extractDate').value = new Date().toISOString().split('T')[0];
             fetchAndRenderHistory(1);
         } else {
             const errorData = await response.json();
-            showErrorModal(errorData);
+            if(typeof showErrorModal === 'function') {
+                showErrorModal(errorData);
+            } else {
+                alert(`Erro: ${errorData.message || 'Ocorreu um erro.'}`);
+            }
         }
     } catch (error) {
-        showErrorModal({ title: "Erro de Conexão", detail: error.message });
+        if(typeof showErrorModal === 'function') {
+            showErrorModal({ title: "Erro de Conexão", detail: error.message });
+        } else {
+            alert(`Erro de Conexão: ${error.message}`);
+        }
     }
 }
 
@@ -97,11 +102,12 @@ async function fetchAndRenderHistory(page = 1) {
         if (!response.ok) throw new Error(`Falha ao buscar extratos (Status: ${response.status})`);
         
         const paginatedData = await response.json();
-        historyItemsCache = paginatedData.items;
         renderHistoryTable(paginatedData.items);
         renderPagination(paginatedData);
     } catch (error) {
-        showErrorModal({ title: "Erro ao Listar", detail: error.message });
+        if(typeof showErrorModal === 'function'){
+            showErrorModal({ title: "Erro ao Listar", detail: error.message });
+        }
         tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">${error.message}</td></tr>`;
     }
 }
@@ -191,31 +197,41 @@ window.editExtract = (item) => {
     `;
 };
 
+// =========================================================
+// FUNÇÃO CORRIGIDA
+// =========================================================
 window.saveExtractChanges = async (extractId) => {
     const row = document.getElementById(`row-extract-${extractId}`);
     if (!row) return;
 
-    const payload = {
-        id: extractId,
-        date: row.querySelector('[name="date"]').value,
-        value: parseFloat(row.querySelector('[name="value"]').value),
-        paymentMethod: parseInt(row.querySelector('[name="paymentMethod"]').value),
-        observations: row.querySelector('[name="observations"]').value
-    };
+    // 1. Criar um FormData para enviar os dados como multipart/form-data
+    const formData = new FormData();
+
+    // 2. Adicionar todos os campos necessários, incluindo o 'Id'
+    formData.append('Id', extractId);
+    formData.append('Date', row.querySelector('[name="date"]').value);
+    formData.append('Value', row.querySelector('[name="value"]').value);
+    formData.append('PaymentMethod', row.querySelector('[name="paymentMethod"]').value);
+    formData.append('Observations', row.querySelector('[name="observations"]').value);
 
     try {
         const accessToken = localStorage.getItem('accessToken');
+        // 3. A URL para PUT é a URL base, sem o ID no final
         const response = await fetch(`${API_BASE_URL}/extracts`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify(payload)
+            headers: {
+                // 4. NÃO definir o 'Content-Type', deixar o navegador fazer isso
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: formData // 5. Enviar o FormData
         });
+        
         if (response.ok) {
             alert('Extrato atualizado com sucesso!');
             delete originalRowHTML_Extract[extractId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
+            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar", message: "Não foi possível ler a resposta do servidor." }));
             showErrorModal(errorData);
         }
     } catch (error) {
@@ -261,4 +277,10 @@ function populateSelect(selectElement, map, defaultOptionText) {
     for (const [key, value] of Object.entries(map)) {
         selectElement.appendChild(new Option(value, key));
     }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDynamicForm);
+} else {
+    initDynamicForm();
 }
