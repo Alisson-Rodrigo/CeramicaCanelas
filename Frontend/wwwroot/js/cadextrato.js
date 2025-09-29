@@ -1,4 +1,6 @@
 console.log('Script js/extrato.js DEFINIDO.');
+
+
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -18,35 +20,31 @@ function initializeExtractForm() {
         extractForm.addEventListener('submit', handleExtractSubmit);
     }
     populateSelect(document.getElementById('paymentMethod'), paymentMethodMap, 'Selecione um método');
+
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('extractDate');
+    if(dateInput) {
+        dateInput.value = today;
+    }
 }
 
 async function handleExtractSubmit(event) {
     event.preventDefault();
     const form = event.target;
-    
-    const payload = {
-        date: form.date.value,
-        value: parseFloat(form.value.value),
-        paymentMethod: parseInt(form.paymentMethod.value, 10),
-        observations: form.observations.value
-    };
-
-    if (isNaN(payload.value)) {
-        showErrorModal({ title: "Validação", detail: "O valor inserido é inválido." });
-        return;
-    }
+    const formData = new FormData(form);
 
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/extracts`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify(payload)
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+            body: formData
         });
 
         if (response.ok) {
             alert('Extrato salvo com sucesso!');
             form.reset();
+            document.getElementById('extractDate').value = new Date().toISOString().split('T')[0];
             fetchAndRenderHistory(1);
         } else {
             const errorData = await response.json();
@@ -97,7 +95,6 @@ async function fetchAndRenderHistory(page = 1) {
         if (!response.ok) throw new Error(`Falha ao buscar extratos (Status: ${response.status})`);
         
         const paginatedData = await response.json();
-        historyItemsCache = paginatedData.items;
         renderHistoryTable(paginatedData.items);
         renderPagination(paginatedData);
     } catch (error) {
@@ -195,27 +192,27 @@ window.saveExtractChanges = async (extractId) => {
     const row = document.getElementById(`row-extract-${extractId}`);
     if (!row) return;
 
-    const payload = {
-        id: extractId,
-        date: row.querySelector('[name="date"]').value,
-        value: parseFloat(row.querySelector('[name="value"]').value),
-        paymentMethod: parseInt(row.querySelector('[name="paymentMethod"]').value),
-        observations: row.querySelector('[name="observations"]').value
-    };
+    const formData = new FormData();
+    formData.append('Id', extractId);
+    formData.append('Date', row.querySelector('[name="date"]').value);
+    formData.append('Value', row.querySelector('[name="value"]').value);
+    formData.append('PaymentMethod', row.querySelector('[name="paymentMethod"]').value);
+    formData.append('Observations', row.querySelector('[name="observations"]').value);
 
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/extracts`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify(payload)
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+            body: formData
         });
+        
         if (response.ok) {
             alert('Extrato atualizado com sucesso!');
             delete originalRowHTML_Extract[extractId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
+            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar", message: "Não foi possível ler a resposta do servidor." }));
             showErrorModal(errorData);
         }
     } catch (error) {
@@ -232,19 +229,32 @@ window.cancelEditExtract = (extractId) => {
     }
 };
 
+// =========================================================
+// FUNÇÃO CORRIGIDA
+// =========================================================
 window.deleteExtract = async (id) => {
     if (!confirm('Tem certeza que deseja excluir este registro?')) return;
+
+    // 1. Criar um FormData para enviar o ID no corpo da requisição
+    const formData = new FormData();
+    formData.append('Id', id);
+
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/extracts/${id}`, {
+        // 2. Usar a URL base, sem o ID no final
+        const response = await fetch(`${API_BASE_URL}/extracts`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${accessToken}` }
+            headers: {
+                // 3. NÃO definir o 'Content-Type'
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: formData // 4. Enviar o FormData com o ID
         });
         if (response.ok) {
             alert('Extrato excluído com sucesso!');
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Excluir" }));
+            const errorData = await response.json().catch(() => ({ title: "Erro ao Excluir", message: "Ocorreu um erro." }));
             showErrorModal(errorData);
         }
     } catch (error) {
@@ -261,4 +271,11 @@ function populateSelect(selectElement, map, defaultOptionText) {
     for (const [key, value] of Object.entries(map)) {
         selectElement.appendChild(new Option(value, key));
     }
+}
+
+// Chamar a inicialização após o carregamento do DOM
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDynamicForm);
+} else {
+    initDynamicForm();
 }
