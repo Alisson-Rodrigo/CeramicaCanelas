@@ -8,6 +8,7 @@ const APP_VERSION = '1.0.0';
 
 // const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
 const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
+const originalRowHTML = {};
 
 // Cache para a tabela de histórico em páginas complexas
 let historyItemsCache = []; 
@@ -23,7 +24,7 @@ const originalRowHTML_Launch = {};
 const originalEntryRowHTML = {};
 const originalHistoryRowHTML = {};
 const originalRowHTML_CategoryGroup = {};
-
+let editingCategoryId = null;
 // Variáveis de estado para paginação
 let currentPage = 1;
 let currentTablePage = 1;
