@@ -2,9 +2,21 @@ console.log('Script js/grupos-categorias.js DEFINIDO.');
 
 
 
+// Função de mock para evitar erros caso não exista
+function showErrorModal(error) {
+    console.error(error);
+    alert(`${error.title}: ${error.detail || 'Ocorreu um erro.'}`);
+}
+
+
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // A função initDynamicForm será chamada quando o DOM estiver pronto
+    initDynamicForm();
+});
+
 function initDynamicForm() {
     console.log('▶️ initDynamicForm() de grupos-categorias.js foi chamada.');
     initializeCategoryGroupForm();
@@ -97,12 +109,20 @@ function renderHistoryTable(items) {
         return;
     }
     items.forEach(item => {
-        const itemJsonString = JSON.stringify(item).replace(/'/g, "&apos;");
+        // Garantir que o JSON passado para as funções de edição/exclusão não quebre o HTML
+        const itemJsonString = JSON.stringify(item).replace(/'/g, "&apos;").replace(/"/g, '&quot;');
         
         const row = document.createElement('tr');
         row.id = `row-group-${item.id}`;
         row.innerHTML = `
-            <td data-field="name">${item.name}</td>
+            <td data-field="name">
+                <button
+                    id="toggle-btn-${item.id}"
+                    class="toggle-btn"
+                    onclick='toggleSubcategories("${item.id}", ${JSON.stringify(item.categories || []).replace(/'/g, "&apos;")})'
+                >+</button>
+                <span>${item.name}</span>
+            </td>
             <td class="actions-cell" data-field="actions">
                 <button class="btn-action btn-edit" onclick='editCategoryGroup(${itemJsonString})'>Editar</button>
                 <button class="btn-action btn-delete" onclick="deleteCategoryGroup('${item.id}')">Excluir</button>
@@ -112,6 +132,55 @@ function renderHistoryTable(items) {
     });
 }
 
+/**
+ * ## NOVA FUNÇÃO ##
+ * Exibe ou oculta as subcategorias de um grupo.
+ */
+window.toggleSubcategories = (groupId, categories) => {
+    const parentRow = document.getElementById(`row-group-${groupId}`);
+    const subRowId = `sub-row-group-${groupId}`;
+    const existingSubRow = document.getElementById(subRowId);
+    const toggleBtn = document.getElementById(`toggle-btn-${groupId}`);
+
+    // Se a linha de subcategorias já existe, remove-a (efeito de recolher)
+    if (existingSubRow) {
+        existingSubRow.remove();
+        toggleBtn.textContent = '+';
+        return;
+    }
+
+    // Cria a nova linha para as subcategorias
+    const subRow = document.createElement('tr');
+    subRow.id = subRowId;
+
+    const subCell = document.createElement('td');
+    subCell.colSpan = 2; // Ocupa as duas colunas da tabela principal
+    subCell.classList.add('sub-category-cell');
+
+    let subTableHTML = '<p style="padding: 10px;">Nenhuma categoria encontrada.</p>';
+
+    if (categories && categories.length > 0) {
+        subTableHTML = `
+            <table class="sub-category-table">
+                <thead>
+                    <tr><th>Nome da Categoria</th></tr>
+                </thead>
+                <tbody>
+                    ${categories.map(cat => `<tr><td>${cat.name}</td></tr>`).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    subCell.innerHTML = subTableHTML;
+    subRow.appendChild(subCell);
+    
+    // Insere a nova linha logo abaixo da linha do grupo
+    parentRow.parentNode.insertBefore(subRow, parentRow.nextSibling);
+    toggleBtn.textContent = '-';
+};
+
+
 function renderPagination(paginationData) {
     const controlsContainer = document.getElementById('pagination-controls');
     if (!controlsContainer) return;
@@ -119,6 +188,7 @@ function renderPagination(paginationData) {
     if (!paginationData || paginationData.totalPages <= 1) return;
     
     const { page, totalPages } = paginationData;
+    
     const prevButton = document.createElement('button');
     prevButton.textContent = 'Anterior';
     prevButton.className = 'pagination-btn';
@@ -149,6 +219,7 @@ window.editCategoryGroup = (item) => {
 
     originalRowHTML_CategoryGroup[item.id] = row.innerHTML;
     
+    // Oculta o botão de expandir durante a edição
     row.querySelector('[data-field="name"]').innerHTML = `<input type="text" name="name" class="edit-input" value="${item.name}">`;
     
     row.querySelector('[data-field="actions"]').innerHTML = `
@@ -160,18 +231,17 @@ window.editCategoryGroup = (item) => {
 window.saveCategoryGroupChanges = async (groupId) => {
     const row = document.getElementById(`row-group-${groupId}`);
     if (!row) return;
-
-    const payload = {
-        id: groupId,
-        name: row.querySelector('[name="name"]').value
-    };
+    
+    const formData = new FormData();
+    formData.append('Id', groupId);
+    formData.append('Name', row.querySelector('[name="name"]').value);
 
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/financial/launch-category-groups`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify(payload)
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+            body: formData
         });
         if (response.ok) {
             alert('Grupo de categoria atualizado com sucesso!');
@@ -214,14 +284,3 @@ window.deleteCategoryGroup = async (id) => {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
     }
 };
-
-// =======================================================
-// FUNÇÕES AUXILIARES
-// =======================================================
-function populateSelect(selectElement, map, defaultOptionText) {
-    if (!selectElement) return;
-    selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
-    for (const [key, value] of Object.entries(map)) {
-        selectElement.appendChild(new Option(value, key));
-    }
-}
