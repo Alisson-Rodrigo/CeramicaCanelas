@@ -1,8 +1,4 @@
-/* ======================================= */
-/* === CSS ESPECÍFICO PARA PÁGINA DE CATEGORIAS === */
-/* ======================================= */
-
-/* Estilos de Layout e Base (reutilizáveis) */
+/* Estilos base do sistema */
 .container {
     width: 95%;
     max-width: 1400px;
@@ -10,30 +6,33 @@
     padding: 20px;
 }
 
-h2 {
+/* Títulos e Cabeçalhos */
+h1, h2, .form-title {
     color: #2c3e50;
     margin-bottom: 2rem;
     font-weight: 600;
     position: relative;
+}
+
+h2, .form-title {
     font-size: 1.8rem;
     padding-bottom: 0.8rem;
     border-bottom: 3px solid #e67e22;
     display: inline-block;
 }
 
-    h2::after {
-        content: '';
-        position: absolute;
-        bottom: -3px;
-        left: 0;
-        width: 30%;
-        height: 3px;
-        background: linear-gradient(45deg, #e67e22, #f39c12);
-        border-radius: 2px;
-    }
+h2::after, .form-title::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 30%;
+    height: 3px;
+    background: linear-gradient(45deg, #e67e22, #f39c12);
+    border-radius: 2px;
+}
 
-/* --- Formulário de Categoria --- */
-
+/* Formulário de Cadastro */
 .form-container {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -44,53 +43,72 @@ h2 {
     margin-bottom: 3rem;
 }
 
-/* ANTES: .data-form | AGORA: .category-form */
-.category-form {
-    width: 100%;
-}
-
 .form-group {
     display: flex;
     flex-direction: column;
     margin-bottom: 1.5rem;
 }
 
-    .form-group label {
-        font-weight: 500;
-        color: #555;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.5rem;
-    }
+.form-group label {
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
-    .form-group input,
-    .form-group textarea {
-        width: 100%;
-        padding: 1rem;
-        border: 2px solid #e1e8ed;
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.9);
-        box-sizing: border-box;
-        font-family: inherit;
-    }
+.form-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
 
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #e67e22;
-            box-shadow: 0 0 20px rgba(230, 126, 34, 0.3);
-            transform: translateY(-2px);
-        }
+.form-input:focus {
+    outline: none;
+    border-color: #e67e22;
+    box-shadow: 0 0 20px rgba(230, 126, 34, 0.3);
+    transform: translateY(-2px);
+}
 
-    .form-group textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
+/* Seleção de Grupo */
+.selection-box {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
 
-button[type="submit"] {
+.selection-box:hover {
+    border-color: #e67e22;
+    box-shadow: 0 0 15px rgba(230, 126, 34, 0.2);
+}
+
+#selectedGroupName {
+    flex: 1;
+    font-size: 1rem;
+    color: #555;
+    font-style: italic;
+}
+
+/* Divisor de Seção */
+.section-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #bdc3c7, transparent);
+    margin: 4rem 0;
+}
+
+/* Botão de Submit */
+.submit-btn {
     width: 100%;
     padding: 1rem;
     font-size: 1.1rem;
@@ -104,83 +122,21 @@ button[type="submit"] {
     text-transform: uppercase;
     letter-spacing: 1px;
     box-shadow: 0 4px 15px rgba(230, 126, 34, 0.4);
-    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
-    button[type="submit"]:hover {
-        background: linear-gradient(45deg, #d68910, #e67e22);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(230, 126, 34, 0.6);
-    }
-
-
-/* Tabela - CORREÇÃO APLICADA */
-.table-container {
-    overflow-x: auto;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    position: relative; /* Adicionado para controlar o contexto de empilhamento */
+.submit-btn:hover {
+    background: linear-gradient(45deg, #d68910, #e67e22);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 126, 34, 0.6);
 }
 
-.results-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-    .results-table th {
-        background: linear-gradient(135deg, #e67e22, #f39c12);
-        color: white;
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-
-    .results-table td {
-        padding: 1rem;
-        border-bottom: 1px solid rgba(224, 224, 224, 0.3);
-        vertical-align: middle;
-    }
-
-    /* CORREÇÃO: Removido o transform do hover que causava o bug */
-    .results-table tbody tr {
-        transition: background-color 0.3s ease;
-    }
-
-        .results-table tbody tr:hover {
-            background: rgba(230, 126, 34, 0.1);
-            /* Removido: transform: scale(1.01); - Isso causava o bug na scrollbar */
-        }
-
-/* Edição na Tabela */
-.edit-input {
-    width: 100%;
-    padding: 8px;
-    border: 2px solid #e67e22;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.9);
-}
-
-    .edit-input:focus {
-        outline: none;
-        box-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
-    }
-
-/* Divisor de Seção */
-.section-divider {
-    border: none;
-    height: 1px;
-    background: linear-gradient(to right, transparent, #bdc3c7, transparent);
-    margin: 4rem 0;
+.submit-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
 }
 
 /* Botão de Busca */
@@ -199,13 +155,11 @@ button[type="submit"] {
     white-space: nowrap;
 }
 
-    .search-btn:hover {
-        background: linear-gradient(45deg, #d68910, #e67e22);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(230, 126, 34, 0.6);
-    }
-
-
+.search-btn:hover {
+    background: linear-gradient(45deg, #d68910, #e67e22);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 126, 34, 0.6);
+}
 
 /* Barra de Filtros */
 .filter-bar {
@@ -216,56 +170,96 @@ button[type="submit"] {
     margin-bottom: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    /* --- ALTERAÇÕES PARA FLEXBOX --- */
     display: flex;
-    flex-wrap: wrap; /* Permite a quebra de linha */
+    flex-wrap: wrap;
     gap: 2rem;
-    align-items: flex-end; /* Alinha itens na base */
+    align-items: flex-end;
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
-    flex: 1; /* Faz o grupo crescer para ocupar o espaço livre na linha */
-    min-width: 250px; /* Largura mínima antes de quebrar para a linha de baixo */
+    flex: 1;
+    min-width: 250px;
 }
 
-    .filter-group label {
-        font-weight: 600;
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
-        color: #555;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+.filter-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
-    .filter-group.large {
-        flex: 2;
-    }
+.filter-group.large {
+    flex: 2;
+}
 
-    .filter-group input,
-    .filter-group select {
-        padding: 0.8rem;
-        border: 2px solid #e1e8ed;
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.9);
-    }
+.filter-group input,
+.filter-group select {
+    padding: 0.8rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
 
-        .filter-group input:focus,
-        .filter-group select:focus {
-            outline: none;
-            border-color: #e67e22;
-            box-shadow: 0 0 15px rgba(230, 126, 34, 0.3);
-        }
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: #e67e22;
+    box-shadow: 0 0 15px rgba(230, 126, 34, 0.3);
+}
 
 .filter-group-buttons {
     display: flex;
     gap: 12px;
 }
 
+/* Tabela */
+.table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    position: relative;
+}
 
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.results-table th {
+    background: linear-gradient(135deg, #e67e22, #f39c12);
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.results-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(224, 224, 224, 0.3);
+    vertical-align: middle;
+}
+
+.results-table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.results-table tbody tr:hover {
+    background: rgba(230, 126, 34, 0.1);
+}
 
 /* Botões de Ação */
 .actions-cell {
@@ -274,7 +268,7 @@ button[type="submit"] {
     justify-content: center;
 }
 
-.btn-action, .btn-save, .btn-cancel {
+.btn-action, .btn-edit, .btn-delete, .btn-save, .btn-cancel {
     padding: 8px 16px;
     border: none;
     border-radius: 6px;
@@ -292,67 +286,53 @@ button[type="submit"] {
     box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
 }
 
-    .btn-edit:hover {
-        background: linear-gradient(45deg, #2980b9, #1f618d);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);
-    }
+.btn-edit:hover {
+    background: linear-gradient(45deg, #2980b9, #1f618d);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);
+}
 
 .btn-delete {
     background: linear-gradient(45deg, #e74c3c, #c0392b);
     box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
 }
 
-    .btn-delete:hover {
-        background: linear-gradient(45deg, #c0392b, #a93226);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5);
-    }
+.btn-delete:hover {
+    background: linear-gradient(45deg, #c0392b, #a93226);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5);
+}
 
 .btn-save {
     background: linear-gradient(45deg, #2ecc71, #27ae60);
     box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 90px;
 }
 
-    .btn-save:hover {
-        background: linear-gradient(45deg, #27ae60, #229954);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.5);
-    }
+.btn-save:hover {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.5);
+}
+
+.btn-save:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
 
 .btn-cancel {
     background: linear-gradient(45deg, #95a5a6, #7f8c8d);
     box-shadow: 0 2px 8px rgba(149, 165, 166, 0.3);
 }
 
-    .btn-cancel:hover {
-        background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(149, 165, 166, 0.5);
-    }
-
-/* --- Validação, Acessibilidade e Responsividade --- */
-
-/* Estilo para campos inválidos (continua igual) */
-input:invalid,
-textarea:invalid {
-    border-color: #e74c3c;
-     box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
-}
-
-/* --- CORREÇÃO APLICADA AQUI --- */
-/* Deixa a borda verde apenas se o campo for válido e NÃO estiver em foco */
-input:valid:not(:focus),
-textarea:valid:not(:focus) {
-    border-color: #2ecc71;
-}
-
-button:focus,
-input:focus,
-textarea:focus,
-a:focus {
-    outline: 3px solid rgba(230, 126, 34, 0.3);
-    outline-offset: 2px;
+.btn-cancel:hover {
+    background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(149, 165, 166, 0.5);
 }
 
 /* Controles de Paginação */
@@ -395,73 +375,162 @@ a:focus {
     gap: 0.5rem;
 }
 
-    .pagination-btn:not(:disabled):hover {
-        background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(149, 165, 166, 0.5);
-    }
-
-    .pagination-btn:disabled {
-        background: linear-gradient(45deg, #bdc3c7, #95a5a6);
-        cursor: not-allowed;
-        opacity: 0.6;
-        transform: none;
-    }
-
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-
-    .form-container, .table-container {
-        padding: 1.5rem;
-    }
-
-    h2 {
-        font-size: 1.5rem;
-    }
-
-    .category-table {
-        font-size: 0.8rem;
-    }
-
-        .category-table th,
-        .category-table td {
-            padding: 0.8rem 0.5rem;
-        }
-
-    .actions-cell {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-
-    .btn-edit, .btn-delete, .btn-view {
-        width: 100%;
-        justify-content: center;
-    }
+.pagination-btn:not(:disabled):hover {
+    background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(149, 165, 166, 0.5);
 }
 
-@media (max-width: 480px) {
-    .form-container, .table-container {
-        padding: 1rem;
-    }
+.pagination-btn:disabled {
+    background: linear-gradient(45deg, #bdc3c7, #95a5a6);
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
 }
 
-/* --- INÍCIO: Bloco de Animação dos Botões --- */
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
 
-/* Animação que faz o spinner girar */
+.modal-content {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(230, 126, 34, 0.3);
+}
+
+.modal-header h2 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    border: none;
+}
+
+.modal-header h2::after {
+    display: none;
+}
+
+.modal-close-btn {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-close-btn:hover {
+    color: #e67e22;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.modal-content .filter-bar {
+    flex-shrink: 0;
+}
+
+.modal-content .table-container {
+    flex-grow: 1;
+    min-height: 200px;
+    overflow-y: auto;
+}
+
+.modal-content .pagination-controls {
+    flex-shrink: 0;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* Botões da Modal */
+.btn-select, .btn-modal-select {
+    padding: 8px 16px;
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+}
+
+.btn-select:hover, .btn-modal-select:hover {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.5);
+}
+
+/* Edição na Tabela */
+.edit-input {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #e67e22;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.edit-input:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+}
+
+/* Animação do Spinner */
 @keyframes spin {
     from {
         transform: rotate(0deg);
     }
-
     to {
         transform: rotate(360deg);
     }
 }
 
-/* Classe do ícone de spinner */
 .loading-spinner {
     width: 20px;
     height: 20px;
@@ -471,33 +540,120 @@ a:focus {
     animation: spin 1s ease-in-out infinite;
 }
 
-/* Estilo para o botão principal do formulário */
-.submit-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+/* Estados de Loading */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
 }
 
-    /* Estilo para o botão principal quando desabilitado */
-    .submit-btn:disabled {
-        opacity: 0.7;
-        cursor: wait;
-    }
-
-/* Estilo para o botão de salvar na tabela */
-.btn-save {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-width: 90px; /* Garante espaço para o spinner */
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #e67e22;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
 }
 
-    /* Estilo para o botão da tabela quando desabilitado */
-    .btn-save:disabled {
-        opacity: 0.7;
-        cursor: wait;
+/* Scrollbar personalizada */
+.table-container::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.table-container::-webkit-scrollbar-track,
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    margin: 2px;
+}
+
+.table-container::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #e67e22, #f39c12);
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.table-container::-webkit-scrollbar-thumb:hover,
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #d68910, #e67e22);
+}
+
+/* Melhorias de Acessibilidade */
+button:focus,
+input:focus,
+select:focus {
+    outline: 3px solid rgba(230, 126, 34, 0.3);
+    outline-offset: 2px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container {
+        width: 100%;
+        padding: 10px;
     }
 
-/* --- FIM: Bloco de Animação dos Botões --- */
+    .form-container {
+        padding: 1.5rem;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+
+    .filter-group {
+        min-width: 0;
+    }
+
+    .filter-group-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group-buttons .btn-cancel,
+    .search-btn {
+        width: 100%;
+    }
+
+    .selection-box {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .results-table {
+        font-size: 0.8rem;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 0.5rem;
+    }
+
+    .pagination-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .actions-cell {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 1.5rem;
+    }
+}

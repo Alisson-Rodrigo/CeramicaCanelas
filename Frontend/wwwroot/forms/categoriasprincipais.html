@@ -1,0 +1,39 @@
+<div class="container">
+    <h2 class="form-title">Cadastrar Novo Grupo de Categoria</h2>
+    <div class="form-container">
+        <form id="categoryGroupForm">
+            <div class="form-group">
+                <label for="groupName" class="form-label">Nome do Grupo</label>
+                <input type="text" id="groupName" name="Name" class="form-input" required>
+            </div>
+            <button type="submit" class="submit-btn">Salvar Grupo</button>
+        </form>
+    </div>
+
+    <hr class="section-divider">
+    <h2>Grupos de Categorias Cadastrados</h2>
+
+    <div class="filter-bar">
+        <div class="filter-group large">
+            <label for="historySearch">Buscar por Nome:</label>
+            <input type="text" id="historySearch" class="form-input">
+        </div>
+        <div class="filter-group-buttons">
+            <button type="button" id="historyFilterBtn" class="search-btn">Filtrar</button>
+            <button type="button" id="historyClearBtn" class="btn-cancel">Limpar</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Nome do Grupo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="category-group-history-body"></tbody>
+        </table>
+    </div>
+    <div id="pagination-controls" class="pagination-controls"></div>
+</div>
