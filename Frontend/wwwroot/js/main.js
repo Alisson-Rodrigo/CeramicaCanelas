@@ -22,6 +22,7 @@ const originalRowHTML_LaunchCategory = {};
 const originalRowHTML_Launch = {};
 const originalEntryRowHTML = {};
 const originalHistoryRowHTML = {};
+const originalRowHTML_CategoryGroup = {};
 
 // Variáveis de estado para paginação
 let currentPage = 1;
