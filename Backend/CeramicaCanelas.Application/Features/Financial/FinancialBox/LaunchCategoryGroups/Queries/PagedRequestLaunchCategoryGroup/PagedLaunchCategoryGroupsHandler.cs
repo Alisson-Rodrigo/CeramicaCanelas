@@ -35,7 +35,9 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.LaunchCate
                 .Select(g => new LaunchCategoryGroupResult
                 {
                     Id = g.Id,
-                    Name = g.Name
+                    Name = g.Name,
+                    Categories = g.Categories,
+                    
                 })
                 .ToList();
 
