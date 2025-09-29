@@ -40,6 +40,7 @@ namespace CeramicaCanelas.Persistence.Repositories
         public IQueryable<LaunchCategory> QueryAllWithIncludes()
         {
             return Context.LaunchCategories
+                .Include(c => c.Group)
                 .AsQueryable();
         }
     }
