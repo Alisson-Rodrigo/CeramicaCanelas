@@ -265,19 +265,35 @@ window.cancelEditCategoryGroup = (groupId) => {
     }
 };
 
+/**
+ * ## FUNÇÃO CORRIGIDA ##
+ * Exclui um grupo de categoria.
+ * Ajustada para enviar o ID no corpo (body) da requisição como JSON, 
+ * conforme a nova especificação da API.
+ */
 window.deleteCategoryGroup = async (id) => {
     if (!confirm('Tem certeza que deseja excluir este grupo?')) return;
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/financial/launch-category-groups/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/financial/launch-category-groups`, { // CORRIGIDO: URL sem o ID no final
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${accessToken}` }
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json' // ADICIONADO: Especifica o tipo de conteúdo
+            },
+            body: JSON.stringify({ id: id }) // ADICIONADO: Envia o ID no corpo da requisição
         });
+
         if (response.ok) {
             alert('Grupo de categoria excluído com sucesso!');
-            fetchAndRenderHistory(currentHistoryPage);
+            // Lógica para recarregar a tabela na página atual
+            const tableBody = document.getElementById('category-group-history-body');
+            const rowCount = tableBody.rows.length;
+            // Se o item excluído era o último da página, volta uma página
+            const pageToFetch = (rowCount === 1 || (rowCount > 1 && document.getElementById(`sub-row-group-${id}`))) && currentHistoryPage > 1 ? currentHistoryPage - 1 : currentHistoryPage;
+            fetchAndRenderHistory(pageToFetch);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Excluir" }));
+            const errorData = await response.json().catch(() => ({ title: "Erro ao Excluir", detail: "Não foi possível processar a resposta do servidor." }));
             showErrorModal(errorData);
         }
     } catch (error) {
