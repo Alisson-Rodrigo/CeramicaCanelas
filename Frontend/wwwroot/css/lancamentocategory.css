@@ -280,7 +280,24 @@ h2::after, .form-title::after {
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
-
+.btn-editar {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.btn-editar:hover {
+    background: linear-gradient(45deg, #2980b9, #1f618d);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);
+}
 .btn-edit {
     background: linear-gradient(45deg, #3498db, #2980b9);
     box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);

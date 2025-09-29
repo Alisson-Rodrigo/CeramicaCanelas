@@ -301,7 +301,7 @@ window.editCategory = (item) => {
     // CORRIGIDO: Usa `item.nameGroupCategory`
     row.querySelector('[data-field="groupName"]').innerHTML = `
         <span class="group-name-display">${item.nameGroupCategory || 'N/A'}</span>
-        <button type="button" class="btn-action" onclick="openGroupModalForEdit('${item.id}')">Trocar...</button>
+        <button type="button" class="btn-editar" onclick="openGroupModalForEdit('${item.id}')">Trocar...</button>
     `;
 
     row.querySelector('[data-field="actions"]').innerHTML = `
