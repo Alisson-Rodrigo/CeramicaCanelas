@@ -15,179 +15,261 @@
     </div>
 
     <div class="menu">
+        <!-- ALMOXARIFADO -->
         <div class="menu-section" id="almoxarifado-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
-                <svg class="expand-icon" viewBox="0 0 24 24"><path d="M7,10L12,15L17,10H7Z" /></svg>
+                <svg class="expand-icon" viewBox="0 0 24 24">
+                    <path d="M7,10L12,15L17,10H7Z" />
+                </svg>
                 <span>Almoxarifado</span>
             </div>
             <div class="submenu-container expanded" id="almoxarifado-submenu">
+                <!-- Dashboards -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Dashboards</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicio'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" />
+                        </svg>
                         <span class="menu-text">Início</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('categoriadash'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M3 13H15V11H3M3 6V8H21V6M3 18H9V16H3V18Z" /></svg>
-                        <span class="menu-text">Gastos por categorias</span>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M16,11.78L20.24,4.45L21.97,5.45L16.74,14.5L10.23,10.75L5.46,19H22V21H2V3H4V17.54L9.5,8L16,11.78Z" />
+                        </svg>
+                        <span class="menu-text">Gastos por Categorias</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('produtosndevolvidos'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2M13 14.9V22H11V14.9C8.7 14.4 7 12.4 7 10V8H17V10C17 12.4 15.3 14.4 13 14.9M12 8.5C11.2 8.5 10.5 9.2 10.5 10S11.2 11.5 12 11.5 13.5 10.8 13.5 10 12.8 8.5 12 8.5M8.5 18L7 16.5L8.5 15L10 16.5L8.5 18Z" /></svg>
-                        <span class="menu-text">Produtos não devolvidos</span>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z" />
+                        </svg>
+                        <span class="menu-text">Produtos Não Devolvidos</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('produtosemfalta'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2M13 14.9V22H11V14.9C8.7 14.4 7 12.4 7 10V8H17V10C17 12.4 15.3 14.4 13 14.9M18 17V15H20V17H22V19H20V21H18V19H16V17H18Z" /></svg>
-                        <span class="menu-text">Produtos em falta</span>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12C4,14.4 5,16.5 6.7,18C8.1,16.7 10.7,15.8 13.5,15.8C16.3,15.8 18.9,16.7 20.3,18C22,16.5 23,14.4 23,12A8,8 0 0,0 12,4M14,5.89C15.87,6.31 17.43,7.59 18.24,9.26L17.12,9.83C16.47,8.46 15.17,7.4 13.62,7.05L14,5.89M10,6C10.8,6 11.5,6.7 11.5,7.5C11.5,8.3 10.8,9 10,9C9.2,9 8.5,8.3 8.5,7.5C8.5,6.7 9.2,6 10,6M5.76,9.26C6.57,7.59 8.13,6.31 10,5.89L10.38,7.05C8.83,7.4 7.53,8.46 6.88,9.83L5.76,9.26Z" />
+                        </svg>
+                        <span class="menu-text">Produtos em Falta</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('saidasrecorrentes'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16 2V4H20.5L16 8H18L22 4V8.5H24V2M12 4C13.1 4 14 4.9 14 6C14 7.1 13.1 8 12 8C10.9 8 10 7.1 10 6C10 4.9 10.9 4 12 4M13 16.9V24H11V16.9C8.7 16.4 7 14.4 7 12V10H17V12C17 14.4 15.3 16.4 13 16.9Z" /></svg>
-                        <span class="menu-text">Saidas Recorrentes</span>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M17,13.5V11.5L14,9L11,11.5V13.5L14,16M10,9V7H7V9M10,11V9L12,10.5L10,12M14,12L16,10.5L14,9M10,13V11L12,12.5L10,14M14,14L16,12.5L14,11" />
+                        </svg>
+                        <span class="menu-text">Saídas Recorrentes</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('retiradasfuncionarios'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16 2V4H20.5L16 8H18L22 4V8.5H24V2M12 4C13.1 4 14 4.9 14 6C14 7.1 13.1 8 12 8C10.9 8 10 7.1 10 6C10 4.9 10.9 4 12 4M13 16.9V24H11V16.9C8.7 16.4 7 14.4 7 12V10H17V12C17 14.4 15.3 16.4 13 16.9Z" /></svg>
-                        <span class="menu-text">Retiradas por funcionarios</span>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14M13,6H11V8H13V6M13,10H11V12H13V10M17,13H15V20H17V13Z" />
+                        </svg>
+                        <span class="menu-text">Retiradas por Funcionários</span>
                     </a>
                 </div>
+
+                <!-- Cadastros -->
                 <div class="menu-subsection">
-                    <div class="menu-subtitle">Cadastro</div>
+                    <div class="menu-subtitle">Cadastros</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('product'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2M13 14.9V22H11V14.9C8.7 14.4 7 12.4 7 10V8H17V10C17 12.4 15.3 14.4 13 14.9Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M4,6H20V10H4V6M5,2H19A2,2 0 0,1 21,4V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2M5,11H11V13H5V11M5,14H11V16H5V14M5,17H11V19H5V17M13,11H19V19H13V11Z" />
+                        </svg>
                         <span class="menu-text">Produtos</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('employees'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12 4A4 4 0 0 1 16 8A4 4 0 0 1 12 12A4 4 0 0 1 8 8A4 4 0 0 1 12 4M12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M16,17V19H2V17S2,13 9,13 16,17 16,17M12.5,7.5A3.5,3.5 0 0,1 9,11A3.5,3.5 0 0,1 5.5,7.5A3.5,3.5 0 0,1 9,4A3.5,3.5 0 0,1 12.5,7.5M15.94,13A5.32,5.32 0 0,1 18,17V19H22V17S22,13.37 15.94,13M15,4A3.39,3.39 0 0,0 13.07,4.59A5,5 0 0,1 13.07,10.41A3.39,3.39 0 0,0 15,11A3.5,3.5 0 0,0 18.5,7.5A3.5,3.5 0 0,0 15,4Z" />
+                        </svg>
                         <span class="menu-text">Funcionários</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('category'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M4 6H6V8H4V6M4 10H6V12H4V10M4 14H6V16H4V14M8 6H20V4H8V6M8 8V10H20V8H8M8 12V14H20V12H8M8 16V18H20V16H8Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,17V16H9V14H13V13H10A1,1 0 0,1 9,12V9A1,1 0 0,1 10,8H11V7H13V8H15V10H11V11H14A1,1 0 0,1 15,12V15A1,1 0 0,1 14,16H13V17H11Z" />
+                        </svg>
                         <span class="menu-text">Categorias</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('suppliers'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M20 8L17 4H11V12H2V7H4V4H2A2 2 0 0 0 0 6V17A2 2 0 0 0 2 19H3A3 3 0 0 0 6 22A3 3 0 0 0 9 19H15A3 3 0 0 0 18 22A3 3 0 0 0 21 19H22V12H24V10L20 8M7.5 19A1.5 1.5 0 1 1 6 17.5A1.5 1.5 0 0 1 7.5 19M13 9H16L18.5 12H13V9M19.5 19A1.5 1.5 0 1 1 18 17.5A1.5 1.5 0 0 1 19.5 19Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M18,18.5A1.5,1.5 0 0,1 16.5,17A1.5,1.5 0 0,1 18,15.5A1.5,1.5 0 0,1 19.5,17A1.5,1.5 0 0,1 18,18.5M19.5,9.5L21.46,12H17V9.5M6,18.5A1.5,1.5 0 0,1 4.5,17A1.5,1.5 0 0,1 6,15.5A1.5,1.5 0 0,1 7.5,17A1.5,1.5 0 0,1 6,18.5M20,8H17V4H3C1.89,4 1,4.89 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8Z" />
+                        </svg>
                         <span class="menu-text">Fornecedores</span>
                     </a>
                 </div>
+
+                <!-- Movimentação de Produtos -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Movimentação de Produtos</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('entrada'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M9,3L3.36,8.62L4.78,10.04L8,6.83V18H10V6.83L13.22,10.04L14.64,8.62L9,3M16,6V17.17L12.78,13.96L11.36,15.38L17,21L22.64,15.38L21.22,13.96L18,17.17V6H16Z" />
+                        </svg>
                         <span class="menu-text">Entrada de Produtos</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('saida'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16 13V11H8V8L3 12L8 16V13H16M20 3H12V5H20V19H12V21H20A2 2 0 0 0 22 19V5A2 2 0 0 0 20 3Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M9,3L3.36,8.62L4.78,10.04L8,6.83V18H10V6.83L13.22,10.04L14.64,8.62L9,3M16,6V17.17L12.78,13.96L11.36,15.38L17,21L22.64,15.38L21.22,13.96L18,17.17V6H16Z" />
+                        </svg>
                         <span class="menu-text">Saída de Produtos</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('devolucao'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M7.5 5.6L5 7L6.4 8.5L8.9 7.1L7.5 5.6M19 12.5V10.5H21V12.5H19M12 2L13.09 6.26L16.5 5L15.24 8.26L19 9.5L15.24 10.74L16.5 14L13.09 12.74L12 17L10.91 12.74L7.5 14L8.76 10.74L5 9.5L8.76 8.26L7.5 5L10.91 6.26L12 2Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z" />
+                        </svg>
                         <span class="menu-text">Devolução de Produtos</span>
                     </a>
                 </div>
             </div>
         </div>
 
+        <!-- FINANCEIRO -->
         <div class="menu-section" id="financeiro-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
-                <svg class="expand-icon" viewBox="0 0 24 24"><path d="M7,10L12,15L17,10H7Z" /></svg>
+                <svg class="expand-icon" viewBox="0 0 24 24">
+                    <path d="M7,10L12,15L17,10H7Z" />
+                </svg>
                 <span>Financeiro</span>
             </div>
             <div class="submenu-container expanded" id="financeiro-submenu">
                 <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicioFinancial'); setActive(this); closeMobileMenu();">
-                    <svg class="menu-icon" viewBox="0 0 24 24"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" /></svg>
+                    <svg class="menu-icon" viewBox="0 0 24 24">
+                        <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" />
+                    </svg>
                     <span class="menu-text">Início</span>
                 </a>
+
+                <!-- Cadastros e Lançamentos -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Cadastros e Lançamentos</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('lancamentocategory'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21A7,7 0 0,1 14,26H10A7,7 0 0,1 3,19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.56,13.34 9.5,12.68 9.5,12C9.5,11.32 9.56,10.65 9.66,10H14.34C14.43,10.65 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,8H5.08C6.03,6.34 7.57,5.06 9.4,4.44C8.8,5.55 8.35,6.75 8,8M5.08,16H8C8.35,17.25 8.8,18.45 9.4,19.56C7.57,18.93 6.03,17.65 5.08,16M4.26,14C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H7.64C7.56,10.66 7.5,11.32 7.5,12C7.5,12.68 7.56,13.34 7.64,14M12,4.03C12.83,5.23 13.5,6.57 13.91,8H10.09C10.5,6.57 11.17,5.23 12,4.03M18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44C16.43,5.07 17.96,6.34 18.92,8M12,2C6.47,2 2,6.5 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
+                        </svg>
                         <span class="menu-text">Categorias Financeiras</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('cadastroclientes'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,10V7H4V10H1V12H4V15H6V12H9V10M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z" />
+                        </svg>
                         <span class="menu-text">Cadastro de Clientes</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('lancamentos'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M19,19H5V8H19M19,3H18V1H16V3H8V1H6V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M16.53,11.06L15.47,10L10.59,14.88L8.47,12.76L7.41,13.82L10.59,17L16.53,11.06Z" />
+                        </svg>
                         <span class="menu-text">Lançamentos</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('pendentesfinancial'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M10,17L15,12L10,7V17Z" />
+                        </svg>
                         <span class="menu-text">Pendentes</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('cadextrato'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" /></svg>
-                        <span class="menu-text">Cadastrar Extrato </span>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10,19L12,15H9V10H13V15L11,19H10Z" />
+                        </svg>
+                        <span class="menu-text">Cadastrar Extrato</span>
                     </a>
-                      <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('categoriasprincipais'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" /></svg>
-                        <span class="menu-text">Cadastrar Categorias Princiais</span>
+                    <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('categoriasprincipais'); setActive(this); closeMobileMenu();">
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M3,11H11V3H3M3,21H11V13H3M13,21H21V13H13M13,3V11H21V3" />
+                        </svg>
+                        <span class="menu-text">Categorias Principais</span>
                     </a>
-                    
                 </div>
+
+                <!-- Relatórios e Balancetes -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Relatórios e Balancetes</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('movimentocaixa'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M5,6H23V18H5V6M14,9A3,3 0 0,1 17,12A3,3 0 0,1 14,15A3,3 0 0,1 11,12A3,3 0 0,1 14,9M9,8A2,2 0 0,1 7,10V14A2,2 0 0,1 9,16H19A2,2 0 0,1 21,14V10A2,2 0 0,1 19,8H9M1,10H3V20H19V22H1V10Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M3,6H21V18H3V6M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M7,8A2,2 0 0,1 5,10V14A2,2 0 0,1 7,16H17A2,2 0 0,1 19,14V10A2,2 0 0,1 17,8H7Z" />
+                        </svg>
                         <span class="menu-text">Movimento Caixa</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('saidafinancial'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V16A2,2 0 0,1 20,18H16V20A2,2 0 0,1 14,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2H14M4,4V20H14V18H8A2,2 0 0,1 6,16V8A2,2 0 0,1 8,6H14V4H4Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M19,13H5V11H19V13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
+                        </svg>
                         <span class="menu-text">Balancete de Saídas</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('entradafinancial'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V16A2,2 0 0,1 20,18H16V20A2,2 0 0,1 14,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2H14M4,4V20H14V18H8A2,2 0 0,1 6,16V8A2,2 0 0,1 8,6H14V4H4Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M11,13H5V11H11V13M19,13H13V11H19V13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
+                        </svg>
                         <span class="menu-text">Balancete de Entradas</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('relatorioclientes'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" /></svg>
-                        <span class="menu-text">Relatorio dos Clientes </span>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M9,13V19H7V13H9M15,15V19H13V15H15M12,10V19H10V10H12Z" />
+                        </svg>
+                        <span class="menu-text">Relatório dos Clientes</span>
                     </a>
-                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('extratodash'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13A1,1 0 0,1 11,12V8A1,1 0 0,1 12,7A1,1 0 0,1 13,8V12A1,1 0 0,1 12,13Z" /></svg>
-                        <span class="menu-text">Relatorio de Extratos</span>
+                    <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('extratodash'); setActive(this); closeMobileMenu();">
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" />
+                        </svg>
+                        <span class="menu-text">Relatório de Extratos</span>
                     </a>
-                    
                 </div>
             </div>
         </div>
-        
+
+        <!-- VENDAS -->
         <div class="menu-section" id="vendas-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
-                <svg class="expand-icon" viewBox="0 0 24 24"><path d="M7,10L12,15L17,10H7Z" /></svg>
+                <svg class="expand-icon" viewBox="0 0 24 24">
+                    <path d="M7,10L12,15L17,10H7Z" />
+                </svg>
                 <span>Vendas</span>
             </div>
             <div class="submenu-container expanded" id="vendas-submenu">
+                <!-- Dashboards e Lançamentos -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Dashboards e Lançamentos</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicioVendas'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" />
+                        </svg>
                         <span class="menu-text">Início</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('registrarVenda'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M5,6H23V18H5V6M14,9A3,3 0 0,1 17,12A3,3 0 0,1 14,15A3,3 0 0,1 11,12A3,3 0 0,1 14,9M9,8A2,2 0 0,1 7,10V14A2,2 0 0,1 9,16H19A2,2 0 0,1 21,14V10A2,2 0 0,1 19,8H9M1,10H3V20H19V22H1V10Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M17,18A2,2 0 0,1 19,20A2,2 0 0,1 17,22C15.89,22 15,21.1 15,20C15,18.89 15.89,18 17,18M1,2H4.27L5.21,4H20A1,1 0 0,1 21,5C21,5.17 20.95,5.34 20.88,5.5L17.3,11.97C16.96,12.58 16.3,13 15.55,13H8.1L7.2,14.63L7.17,14.75A0.25,0.25 0 0,0 7.42,15H19V17H7C5.89,17 5,16.1 5,15C5,14.65 5.09,14.32 5.24,14.04L6.6,11.59L3,4H1V2M7,18A2,2 0 0,1 9,20A2,2 0 0,1 7,22C5.89,22 5,21.1 5,20C5,18.89 5.89,18 7,18M16,11L18.78,6H6.14L8.5,11H16Z" />
+                        </svg>
                         <span class="menu-text">Registrar Venda</span>
                     </a>
                 </div>
+
+                <!-- Relatórios -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Relatórios</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('vendasPendentes'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V5H19V19M17,17H7V15H17V17M17,13H7V11H17V13M17,9H7V7H17V9Z" />
+                        </svg>
                         <span class="menu-text">Relatório de Vendas Pendentes</span>
                     </a>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('vendas'); setActive(this); closeMobileMenu();">
-                        <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" /></svg>
+                        <svg class="menu-icon" viewBox="0 0 24 24">
+                            <path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z" />
+                        </svg>
                         <span class="menu-text">Relatório de Vendas</span>
                     </a>
                 </div>
             </div>
         </div>
-        
+
+        <!-- SEÇÃO DE LOGOUT E ADMIN -->
         <div class="menu-section logout-section">
             <a href="#" class="menu-item admin-only" id="userSystemMenu" onclick="event.preventDefault(); loadForm('usersys'); setActive(this); closeMobileMenu();" style="display: none;">
-                <svg class="menu-icon" viewBox="0 0 24 24"><path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1M12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7M12 13C13.37 13 15.14 13.5 16 14.38V11C16 9.67 12.33 9 12 9S8 9.67 8 11V14.38C8.86 13.5 10.63 13 12 13Z" /></svg>
+                <svg class="menu-icon" viewBox="0 0 24 24">
+                    <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.1,7 14,7.9 14,9C14,10.1 13.1,11 12,11C10.9,11 10,10.1 10,9C10,7.9 10.9,7 12,7M12,13C13.37,13 15.14,13.5 16,14.38V11C16,9.67 12.33,9 12,9S8,9.67 8,11V14.38C8.86,13.5 10.63,13 12,13Z" />
+                </svg>
                 <span class="menu-text">Usuários do Sistema</span>
             </a>
             <a href="#" class="menu-item logout" onclick="logout(); closeMobileMenu();">
-                <svg class="menu-icon" viewBox="0 0 24 24"><path d="M16 13V11H8V8L3 12L8 16V13H16M20 3H12V5H20V19H12V21H20A2 2 0 0 0 22 19V5A2 2 0 0 0 20 3Z" /></svg>
+                <svg class="menu-icon" viewBox="0 0 24 24">
+                    <path d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z" />
+                </svg>
                 <span class="menu-text">Sair</span>
             </a>
         </div>
@@ -334,5 +416,4 @@
             }
         }, 100);
     });
-
 </script>
