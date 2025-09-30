@@ -62,7 +62,7 @@ namespace CeramicaCanelas.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Pay(Guid id, CancellationToken cancellationToken)
         {
-            await _mediator.Send(new PaySalesCommand { Id = id }, cancellationToken);
+            await _mediator.Send(new PaySalesCommand { SaleId = id }, cancellationToken);
             return NoContent();
         }
 
