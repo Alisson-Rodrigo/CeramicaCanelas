@@ -1,10 +1,9 @@
-﻿using CeramicaCanelas.Domain.Abstract;          // BaseEntity
-using CeramicaCanelas.Domain.Enums;             // SaleStatus
+﻿using CeramicaCanelas.Domain.Abstract;
+using CeramicaCanelas.Domain.Entities.Sales;
 using CeramicaCanelas.Domain.Enums.Sales;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PaymentMethod = CeramicaCanelas.Domain.Enums.Financial.PaymentMethod; // seu PaymentMethod
 
 namespace CeramicaCanelas.Domain.Entities
 {
@@ -21,11 +20,10 @@ namespace CeramicaCanelas.Domain.Entities
         public string City { get; set; } = string.Empty;    // Cidade
         public string State { get; set; } = string.Empty;   // UF
         public string? CustomerName { get; set; }
-        public string? CustomerAddress { get; set; }
+        public string? CustomerAddress { get; set; }        // Corrigido para set
         public string? CustomerPhone { get; set; }
 
-        // Pagamento/Status
-        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Dinheiro;
+        // Status da venda
         public SaleStatus Status { get; set; } = SaleStatus.Pending;
 
         // Totais
@@ -36,7 +34,32 @@ namespace CeramicaCanelas.Domain.Entities
         // Itens
         public ICollection<SaleItem> Items { get; set; } = new List<SaleItem>();
 
-        // --- Regras ---
+        // Pagamentos
+        public ICollection<SalePayment> Payments { get; set; } = new List<SalePayment>();
+
+        // --- Regras de Pagamento ---
+        public decimal GetTotalPaid() => Payments.Sum(p => p.Amount);
+        public decimal GetRemainingBalance() => TotalNet - GetTotalPaid();
+
+        public void AddPayment(SalePayment payment)
+        {
+            Payments.Add(payment);
+            ModifiedOn = DateTime.UtcNow;
+
+            AtualizarStatus();
+        }
+
+        private void AtualizarStatus()
+        {
+            if (GetRemainingBalance() <= 0)
+                Status = SaleStatus.Confirmed;
+            else if (GetTotalPaid() > 0)
+                Status = SaleStatus.PartiallyPaid; // precisa adicionar no seu enum
+            else
+                Status = SaleStatus.Pending;
+        }
+
+        // --- Regras de Totais ---
         public void ApplyDiscount(decimal discount)
         {
             if (discount < 0) throw new ArgumentOutOfRangeException(nameof(discount));
@@ -49,6 +72,7 @@ namespace CeramicaCanelas.Domain.Entities
         {
             TotalGross = Items.Sum(i => i.Subtotal);
             TotalNet = Math.Max(0, TotalGross - Discount);
+            AtualizarStatus();
         }
 
         public void SetItems(IEnumerable<SaleItem> items)

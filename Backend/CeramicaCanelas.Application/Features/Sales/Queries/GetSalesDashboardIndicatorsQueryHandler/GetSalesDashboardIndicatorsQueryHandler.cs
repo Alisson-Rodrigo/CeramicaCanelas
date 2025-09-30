@@ -6,7 +6,6 @@ using CeramicaCanelas.Domain.Enums.Sales;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
 {
     public class GetSalesDashboardIndicatorsQueryHandler : IRequestHandler<GetSalesDashboardIndicatorsQuery, GetSalesDashboardIndicatorsResult>
@@ -55,6 +54,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                     PendingSales = g.Where(s => s.Status == SaleStatus.Pending).Count(),
                     ConfirmedSales = g.Where(s => s.Status == SaleStatus.Confirmed).Count(),
                     CancelledSales = g.Where(s => s.Status == SaleStatus.Cancelled).Count(),
+                    PartiallyPaidSales = g.Where(s => s.Status == SaleStatus.PartiallyPaid).Count(),
 
                     AverageTicket = g.Where(s => s.Status == SaleStatus.Confirmed && s.TotalNet > 0)
                         .Average(s => (decimal?)s.TotalNet) ?? 0,
@@ -76,7 +76,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                     TotalSales = g.Count(),
                     TotalRevenue = g.Where(s => s.Status == SaleStatus.Confirmed).Sum(s => s.TotalNet),
                     ConfirmedSales = g.Where(s => s.Status == SaleStatus.Confirmed).Count(),
-                    PendingSales = g.Where(s => s.Status == SaleStatus.Pending).Count()
+                    PendingSales = g.Where(s => s.Status == SaleStatus.Pending).Count(),
+                    PartiallyPaidSales = g.Where(s => s.Status == SaleStatus.PartiallyPaid).Count()
                 })
                 .ToListAsync(cancellationToken);
 
@@ -92,8 +93,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
             }
 
             // ===== TOP PRODUTOS =====
+            var last30DaysUtc = last30Days;
             var topProducts = salesQuery
-                .Where(s => s.Status == SaleStatus.Confirmed && s.Date >= last30Days)
+                .Where(s => (s.Status == SaleStatus.Confirmed || s.Status == SaleStatus.PartiallyPaid) && s.Date >= last30DaysUtc)
                 .SelectMany(s => s.Items)
                 .AsEnumerable()
                 .GroupBy(i => i.Product)
@@ -111,14 +113,15 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
 
             // ===== VENDAS POR FORMA DE PAGAMENTO =====
             var paymentMethodStats = await salesQuery
-                .Where(s => s.Status == SaleStatus.Confirmed && s.Date >= last30Days)
-                .GroupBy(s => s.PaymentMethod)
+                .Where(s => (s.Status == SaleStatus.Confirmed || s.Status == SaleStatus.PartiallyPaid) && s.Date >= last30Days)
+                .SelectMany(s => s.Payments) // CORREÇÃO: consulta na tabela de pagamentos
+                .GroupBy(p => p.PaymentMethod)
                 .Select(g => new PaymentMethodStats
                 {
                     PaymentMethod = g.Key,
                     PaymentMethodDescription = g.Key.GetDescription(),
                     Count = g.Count(),
-                    TotalRevenue = g.Sum(s => s.TotalNet),
+                    TotalRevenue = g.Sum(p => p.Amount),
                     Percentage = 0
                 })
                 .ToListAsync(cancellationToken);
@@ -134,7 +137,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
 
             // ===== VENDAS POR CIDADE/ESTADO =====
             var topCities = await salesQuery
-                .Where(s => s.Status == SaleStatus.Confirmed &&
+                .Where(s => (s.Status == SaleStatus.Confirmed || s.Status == SaleStatus.PartiallyPaid) &&
                            s.Date >= last30Days &&
                            !string.IsNullOrEmpty(s.City))
                 .GroupBy(s => new { s.City, s.State })
@@ -163,6 +166,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                 PendingSales = generalStats?.PendingSales ?? 0,
                 ConfirmedSales = generalStats?.ConfirmedSales ?? 0,
                 CancelledSales = generalStats?.CancelledSales ?? 0,
+                PartiallyPaidSales = generalStats?.PartiallyPaidSales ?? 0,
 
                 AverageTicket = Math.Round(generalStats?.AverageTicket ?? 0, 2),
                 UniqueCustomers = generalStats?.UniqueCustomers ?? 0,
@@ -175,7 +179,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                 TopCities = topCities
             };
         }
-
 
         // ===== CLASSES DE RESULTADO =====
         public class TopProductItem

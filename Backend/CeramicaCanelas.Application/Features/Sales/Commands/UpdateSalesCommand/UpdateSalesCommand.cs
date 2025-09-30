@@ -2,11 +2,6 @@
 using CeramicaCanelas.Domain.Enums.Financial;
 using CeramicaCanelas.Domain.Enums.Sales;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
 {
@@ -16,18 +11,16 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
 
         // Cabeçalho
         public int NoteNumber { get; set; }
-        // Obs.: Data NÃO vem no update (mantemos a data original da venda)
         public string City { get; set; } = string.Empty;
         public string State { get; set; } = string.Empty;
         public string? CustomerName { get; set; }
         public string? CustomerAddress { get; set; }
         public string? CustomerPhone { get; set; }
 
-        public DateOnly? Date { get; set; } // Opcional: se fornecido, pode ser usado para validações
+        public DateOnly? Date { get; set; } // opcional, preserva se não for passado
 
-        // Pagamento/Status
-        public PaymentMethod PaymentMethod { get; set; }
-        public SaleStatus Status { get; set; }
+        // Status
+        public SaleStatus Status { get; set; } = SaleStatus.Pending;
 
         // Totais
         public decimal Discount { get; set; } = 0m;
@@ -35,42 +28,23 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
         // Itens
         public List<UpdateSalesItem> Items { get; set; } = new();
 
-        /// <summary>
-        /// Aplica os dados do comando na entidade existente.
-        /// NÃO altera a data da venda.
-        /// </summary>
-        public void MapToSale(Sale sale)
-        {
-            sale.NoteNumber = NoteNumber;
-            // sale.Date          = sale.Date; // intencional: preserva a data existente
-            sale.City = City;
-            sale.State = State;
-            sale.CustomerName = CustomerName;
-            sale.CustomerAddress = CustomerAddress;
-            sale.Date = Date ?? sale.Date; // se Date for fornecido, atualiza; senão mantém o original
-            sale.CustomerPhone = CustomerPhone;
-            sale.PaymentMethod = PaymentMethod;
-            sale.Status = Status;
-
-            var newItems = Items.Select(i => new SaleItem
-            {
-                Product = i.Product,
-                UnitPrice = i.UnitPrice,
-                Quantity = i.Quantity
-            }).ToList();
-
-            sale.SetItems(newItems);      // recalcula TotalGross
-            sale.ApplyDiscount(Discount); // recalcula TotalNet
-            sale.ModifiedOn = DateTime.UtcNow;
-        }
+        // Pagamentos
+        public List<UpdateSalesPayment> Payments { get; set; } = new();
     }
 
     public class UpdateSalesItem
     {
-        public Guid? Id { get; set; }                 // <— agora é nullable
+        public Guid? Id { get; set; }
         public ProductType Product { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }
     }
 
+    public class UpdateSalesPayment
+    {
+        public Guid? Id { get; set; }
+        public DateOnly PaymentDate { get; set; }
+        public decimal Amount { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
+    }
 }

@@ -1,9 +1,4 @@
 ﻿using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
 {
@@ -25,9 +20,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
                 .NotEmpty().WithMessage("UF é obrigatória.")
                 .MaximumLength(2);
 
-            RuleFor(x => x.PaymentMethod)
-                .IsInEnum().WithMessage("Forma de pagamento inválida.");
-
             RuleFor(x => x.Status)
                 .IsInEnum().WithMessage("Status inválido.");
 
@@ -46,7 +38,19 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
                 item.RuleFor(i => i.Quantity)
                     .GreaterThan(0).WithMessage("Quantidade deve ser maior que zero.");
             });
+
+            // ✅ Nova validação para pagamentos
+            RuleForEach(x => x.Payments).ChildRules(payment =>
+            {
+                payment.RuleFor(p => p.Amount)
+                    .GreaterThan(0).WithMessage("O valor do pagamento deve ser maior que zero.");
+
+                payment.RuleFor(p => p.PaymentMethod)
+                    .IsInEnum().WithMessage("Forma de pagamento inválida.");
+
+                payment.RuleFor(p => p.PaymentDate)
+                    .NotEmpty().WithMessage("A data do pagamento é obrigatória.");
+            });
         }
     }
-
 }
