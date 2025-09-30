@@ -1,14 +1,10 @@
 ﻿using CeramicaCanelas.Application.Contracts.Application.Services;
 using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Domain.Entities;
+using CeramicaCanelas.Domain.Entities.Sales;
 using CeramicaCanelas.Domain.Exception;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
 {
@@ -32,14 +28,15 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             var validation = await validator.ValidateAsync(request, cancellationToken);
             if (!validation.IsValid) throw new BadRequestException(validation);
 
-            // Carrega a venda + itens (rastreados)
+            // Carrega venda com itens e pagamentos
             var sale = await _salesRepository.QueryAllWithIncludes()
                 .Include(s => s.Items)
+                .Include(s => s.Payments)
                 .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
 
             if (sale == null) throw new BadRequestException("Venda não encontrada.");
 
-            // Duplicidade de número de nota (se mudou)
+            // Checa duplicidade de número de nota
             if (sale.NoteNumber != request.NoteNumber)
             {
                 var exists = await _salesRepository.ExistsActiveNoteNumberAsync(request.NoteNumber, cancellationToken);
@@ -53,24 +50,15 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             sale.CustomerName = request.CustomerName;
             sale.CustomerAddress = request.CustomerAddress;
             sale.CustomerPhone = request.CustomerPhone;
-            sale.PaymentMethod = request.PaymentMethod;
+            if (request.Date.HasValue) sale.Date = request.Date.Value;
             sale.Status = request.Status;
 
-            // ---- ITENS: diff & patch ----
+            // ---- ITENS ----
             var itemsById = sale.Items.ToDictionary(i => i.Id, i => i);
-
-            // Atualiza ou adiciona
             foreach (var dto in request.Items)
             {
-                if (dto.Id.HasValue)
+                if (dto.Id.HasValue && itemsById.ContainsKey(dto.Id.Value))
                 {
-                    // Verifica se o item com esse Id realmente pertence à venda
-                    if (!itemsById.ContainsKey(dto.Id.Value))
-                    {
-                        throw new BadRequestException($"O item com ID {dto.Id.Value} não pertence à venda.");
-                    }
-
-                    // Atualiza o item existente
                     var existing = itemsById[dto.Id.Value];
                     existing.Product = dto.Product;
                     existing.UnitPrice = dto.UnitPrice;
@@ -79,7 +67,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
                 }
                 else
                 {
-                    // Adiciona novo item
                     sale.Items.Add(new SaleItem
                     {
                         Id = Guid.NewGuid(),
@@ -91,27 +78,46 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
                     });
                 }
             }
+            var dtoItemIds = request.Items.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
+            var toRemoveItems = sale.Items.Where(i => !dtoItemIds.Contains(i.Id)).ToList();
+            foreach (var r in toRemoveItems) sale.Items.Remove(r);
 
-            // Remover os que não vieram no DTO
-            var dtoIds = request.Items.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
-            var toRemove = sale.Items.Where(i => !dtoIds.Contains(i.Id)).ToList();
-            foreach (var r in toRemove)
+            // ---- PAGAMENTOS ----
+            var paymentsById = sale.Payments.ToDictionary(p => p.Id, p => p);
+            foreach (var dto in request.Payments)
             {
-                // Remoção por orfandade (configure o relacionamento para deletar órfãos)
-                sale.Items.Remove(r);
+                if (dto.Id.HasValue && paymentsById.ContainsKey(dto.Id.Value))
+                {
+                    var existing = paymentsById[dto.Id.Value];
+                    existing.PaymentDate = dto.PaymentDate;
+                    existing.Amount = dto.Amount;
+                    existing.PaymentMethod = dto.PaymentMethod;
+                    existing.ModifiedOn = DateTime.UtcNow;
+                }
+                else
+                {
+                    sale.Payments.Add(new SalePayment
+                    {
+                        Id = Guid.NewGuid(),
+                        PaymentDate = dto.PaymentDate,
+                        Amount = dto.Amount,
+                        PaymentMethod = dto.PaymentMethod,
+                        CreatedOn = DateTime.UtcNow,
+                        ModifiedOn = DateTime.UtcNow
+                    });
+                }
             }
+            var dtoPaymentIds = request.Payments.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
+            var toRemovePayments = sale.Payments.Where(p => !dtoPaymentIds.Contains(p.Id)).ToList();
+            foreach (var r in toRemovePayments) sale.Payments.Remove(r);
 
-            // Totais e metadados
+            // Totais e desconto
             sale.ApplyDiscount(request.Discount);
             sale.ModifiedOn = DateTime.UtcNow;
 
-            // Persiste usando o que sua interface oferece
             await _salesRepository.Update(sale);
 
             return Unit.Value;
         }
-
-
-
     }
 }

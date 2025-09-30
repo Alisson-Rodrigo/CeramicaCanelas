@@ -1,9 +1,4 @@
 ﻿using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
 {
@@ -11,8 +6,14 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
     {
         public PaySalesCommandValidator()
         {
-            RuleFor(x => x.Id)
+            RuleFor(x => x.SaleId)
                 .NotEmpty().WithMessage("O ID da venda é obrigatório.");
+
+            RuleFor(x => x.Amount)
+                .GreaterThan(0).WithMessage("O valor do pagamento deve ser maior que zero.");
+
+            RuleFor(x => x.PaymentMethod)
+                .IsInEnum().WithMessage("Forma de pagamento inválida.");
         }
     }
 }

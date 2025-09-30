@@ -3,6 +3,7 @@ using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.GetProductItemsReportPdfQuery;
 using CeramicaCanelas.Application.Services.EnumExtensions;
 using CeramicaCanelas.Application.Services.Reports;
+using CeramicaCanelas.Domain.Enums.Financial;
 using CeramicaCanelas.Domain.Enums.Sales;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ public class GetProductItemsReportPdfHandler
     public async Task<byte[]> Handle(GetProductItemsReportPdfQuery req, CancellationToken ct)
     {
         // Período padrão (últimos 30 dias) e normalização
-        var today = DateOnly.FromDateTime(System.DateTime.UtcNow.Date);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
         var startDate = req.StartDate == default ? today.AddDays(-30) : req.StartDate;
         var endDate = req.EndDate == default ? today : req.EndDate;
         if (endDate < startDate) (startDate, endDate) = (endDate, startDate);
@@ -41,14 +42,18 @@ public class GetProductItemsReportPdfHandler
         // Query base (só ativas pelo HasQueryFilter)
         var q = _salesRepository.QueryAllWithIncludes();
 
-        // CORREÇÃO: Aplicar filtro de status apenas se não for "All"
+        // Status
         if (req.Status is not null)
         {
             q = q.Where(s => s.Status == req.Status);
         }
 
+        // Forma de pagamento → agora consulta os pagamentos vinculados
+        if (req.PaymentMethod.HasValue)
+        {
+            q = q.Where(s => s.Payments.Any(p => p.PaymentMethod == req.PaymentMethod.Value));
+        }
 
-        if (req.PaymentMethod.HasValue) q = q.Where(s => s.PaymentMethod == req.PaymentMethod.Value);
         if (!string.IsNullOrWhiteSpace(req.City))
         {
             var city = req.City.Trim().ToLower();
@@ -123,25 +128,26 @@ public class GetProductItemsReportPdfHandler
         string? logoPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, LogoRelative));
         if (!File.Exists(logoPath)) logoPath = null;
 
-        // CORREÇÃO: Função helper para obter descrição do status
-        string GetStatusDescription(SaleStatus? status)
-        {
-            return status switch
+        // Helpers para descrever filtros
+        string GetStatusDescription(SaleStatus? status) =>
+            status switch
             {
                 null => "Todos",
                 SaleStatus.Pending => "Pendente",
                 SaleStatus.Confirmed => "Confirmado",
                 SaleStatus.Cancelled => "Cancelado",
+                SaleStatus.PartiallyPaid => "Parcialmente Pago",
                 _ => status.ToString()
             };
-        }
 
+        string GetPaymentMethodDescription(PaymentMethod? pm) =>
+            pm.HasValue ? pm.Value.ToString() : "Todos";
 
         var filtrosAplicados = new List<AppliedFilter>
         {
             new("Período", $"{startDate:dd/MM/yyyy} a {endDate:dd/MM/yyyy}"),
             new("Status", GetStatusDescription(req.Status)),
-            new("Forma de Pagamento", req.PaymentMethod.HasValue ? req.PaymentMethod.Value.ToString() : "Todos"),
+            new("Forma de Pagamento", GetPaymentMethodDescription(req.PaymentMethod)),
             new("Cidade", string.IsNullOrWhiteSpace(req.City) ? "Todas" : req.City!.Trim()),
             new("UF", string.IsNullOrWhiteSpace(req.State) ? "Todas" : req.State!.Trim().ToUpperInvariant()),
             new("Produto", req.Product.HasValue ? req.Product.Value.GetDescription() : "Todos"),

@@ -1,9 +1,7 @@
 ﻿using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Application.Features.Sales.Queries.Pages;
-using CeramicaCanelas.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,12 +12,12 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
     {
         private readonly ISalesRepository _salesRepository;
 
-        public GetPagedSalesHandler(ISalesRepository salesRepository) => _salesRepository = salesRepository;
+        public GetPagedSalesHandler(ISalesRepository salesRepository)
+            => _salesRepository = salesRepository;
 
         public async Task<PagedResultSales> Handle(PagedRequestSales request, CancellationToken ct)
         {
-            var q = _salesRepository.QueryAllWithIncludes()
-                .AsQueryable();
+            var q = _salesRepository.QueryAllWithIncludes().AsQueryable();
 
             // Busca textual
             if (!string.IsNullOrWhiteSpace(request.Search))
@@ -37,17 +35,18 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
                     || (s.CustomerPhone != null && s.CustomerPhone.ToLower().Contains(termLower)));
             }
 
-            // 🔹 Período (sem UTC, direto com DateOnly)
+            // 🔹 Período
             if (request.StartDate.HasValue)
                 q = q.Where(s => s.Date >= request.StartDate.Value);
 
             if (request.EndDate.HasValue)
                 q = q.Where(s => s.Date <= request.EndDate.Value);
 
-            // Filtros extras
+            // 🔹 Filtro por método de pagamento (agora pela tabela SalePayments)
             if (request.PaymentMethod.HasValue)
-                q = q.Where(s => s.PaymentMethod == request.PaymentMethod.Value);
+                q = q.Where(s => s.Payments.Any(p => p.PaymentMethod == request.PaymentMethod.Value));
 
+            // 🔹 Filtro por status
             if (request.Status.HasValue)
                 q = q.Where(s => s.Status == request.Status.Value);
 
@@ -68,6 +67,5 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
                 Items = items
             };
         }
-
     }
 }

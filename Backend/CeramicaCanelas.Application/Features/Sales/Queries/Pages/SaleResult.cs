@@ -16,7 +16,10 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
         public string State { get; set; } = string.Empty;
         public string? CustomerName { get; set; }
         public string? CustomerPhone { get; set; }
-        public PaymentMethod PaymentMethod { get; set; }
+
+        // Agora não é mais um único PaymentMethod
+        public List<SalePaymentResult> Payments { get; set; } = new();
+
         public SaleStatus Status { get; set; }
         public decimal TotalGross { get; set; }
         public decimal Discount { get; set; }
@@ -29,14 +32,22 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
             Id = s.Id;
             NoteNumber = s.NoteNumber;
 
-            // Converter de UTC -> São Paulo
-            var tz = GetSaoPauloTz();
             SaleDate = s.Date;
             City = s.City;
             State = s.State;
             CustomerName = s.CustomerName;
             CustomerPhone = s.CustomerPhone;
-            PaymentMethod = s.PaymentMethod;
+
+            // Mapear os pagamentos da venda
+            Payments = s.Payments?
+                .Select(p => new SalePaymentResult
+                {
+                    PaymentMethod = p.PaymentMethod,
+                    Amount = p.Amount,
+                    Date = DateOnly.FromDateTime(p.CreatedOn.Date) // ✅ usa CreatedOn
+                })
+                .ToList() ?? new List<SalePaymentResult>();
+
             Status = s.Status;
             TotalGross = s.TotalGross;
             Discount = s.Discount;
@@ -44,18 +55,12 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
             ItemsCount = s.Items?.Count ?? 0;
             Items = s.Items.ToList();
         }
+    }
 
-        private static TimeZoneInfo GetSaoPauloTz()
-        {
-            try
-            {
-                return TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
-            }
-            catch
-            {
-                // fallback para Windows
-                return TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-            }
-        }
+    public class SalePaymentResult
+    {
+        public PaymentMethod PaymentMethod { get; set; }
+        public decimal Amount { get; set; }
+        public DateOnly Date { get; set; }
     }
 }

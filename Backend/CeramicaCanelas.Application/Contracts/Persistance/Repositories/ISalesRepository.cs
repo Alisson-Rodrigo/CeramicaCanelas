@@ -16,5 +16,8 @@ namespace CeramicaCanelas.Application.Contracts.Persistance.Repositories
 
         Task DeactivateAsync(Guid id, CancellationToken ct = default);
 
+        Task<Sale?> GetByIdWithPaymentsAsync(Guid id, CancellationToken ct = default);
+
+
     }
 }

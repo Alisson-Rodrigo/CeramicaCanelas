@@ -2,7 +2,6 @@
 using MediatR;
 using static CeramicaCanelas.Application.Features.Sales.Queries.Dashboard.GetSalesDashboardIndicatorsQueryHandler;
 
-
 namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSalesDashboardIndicatorsQueryHandler
 {
     public class GetSalesDashboardIndicatorsQuery : IRequest<GetSalesDashboardIndicatorsResult>
@@ -33,6 +32,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSalesDashboardIn
         public int PendingSales { get; set; }
         public int ConfirmedSales { get; set; }
         public int CancelledSales { get; set; }
+
+        /// <summary>
+        /// Vendas parcialmente pagas
+        /// </summary>
+        public int PartiallyPaidSales { get; set; }
 
         // ===== MÉTRICAS =====
         public decimal AverageTicket { get; set; }
@@ -96,6 +100,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSalesDashboardIn
         /// <summary>
         /// Total geral de vendas ativas no sistema
         /// </summary>
-        public int TotalActiveSales => PendingSales + ConfirmedSales;
+        public int TotalActiveSales => PendingSales + ConfirmedSales + PartiallyPaidSales;
     }
 }

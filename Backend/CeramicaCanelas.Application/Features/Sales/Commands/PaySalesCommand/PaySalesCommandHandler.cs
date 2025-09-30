@@ -1,9 +1,9 @@
 ﻿using CeramicaCanelas.Application.Contracts.Application.Services;
 using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
+using CeramicaCanelas.Domain.Entities.Sales;
 using CeramicaCanelas.Domain.Enums.Sales;
 using CeramicaCanelas.Domain.Exception;
 using MediatR;
-
 
 namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
 {
@@ -31,23 +31,50 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
             if (!validation.IsValid)
                 throw new BadRequestException(validation);
 
-            // 3) Carrega somente vendas ativas
-            var sale = await _salesRepository.GetByIdAsync(request.Id);
-            if (sale is null)
+            // 3) Carregar venda
+            var sale = await _salesRepository
+                .GetByIdWithPaymentsAsync(request.SaleId, cancellationToken);
+
+            if (sale is null || !sale.IsActive)
                 throw new BadRequestException("Venda não encontrada ou inativa.");
 
-            // 4) Regras de status
             if (sale.Status == SaleStatus.Cancelled)
-                throw new BadRequestException("Não é possível marcar como paga uma venda cancelada.");
+                throw new BadRequestException("Não é possível pagar uma venda cancelada.");
 
-            if (sale.Status == SaleStatus.Confirmed)
-                return Unit.Value; // idempotente: já está paga
+            // 4) Criar pagamento
+            var payment = new SalePayment
+            {
+                Id = Guid.NewGuid(),
+                SaleId = sale.Id,
+                Amount = request.Amount,
+                PaymentMethod = request.PaymentMethod,
+                PaymentDate = request.PaymentDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
+                CreatedOn = DateTime.UtcNow,
+                ModifiedOn = DateTime.UtcNow
+            };
 
-            // 5) Marca como paga
-            sale.Status = SaleStatus.Confirmed;
+            sale.Payments.Add(payment);
+
+            // 5) Recalcular status
+            var totalPaid = sale.Payments.Sum(p => p.Amount);
+            if (totalPaid <= 0)
+            {
+                sale.Status = SaleStatus.Pending;
+            }
+            else if (totalPaid < sale.TotalNet)
+            {
+                sale.Status = SaleStatus.PartiallyPaid;
+            }
+            else
+            {
+                sale.Status = SaleStatus.Confirmed;
+            }
+
             sale.ModifiedOn = DateTime.UtcNow;
 
+            // 6) Atualizar no repositório
             await _salesRepository.Update(sale);
+
             return Unit.Value;
         }
     }

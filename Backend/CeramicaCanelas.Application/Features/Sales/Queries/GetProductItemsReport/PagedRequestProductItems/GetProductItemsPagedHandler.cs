@@ -2,11 +2,6 @@
 using CeramicaCanelas.Application.Features.Almoxarifado.Product.Queries.Pages;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.PagedRequestProductItems
 {
@@ -42,8 +37,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             if (req.Status.HasValue)
                 q = q.Where(s => s.Status == req.Status.Value);
 
+            // CORREÇÃO → agora consulta na coleção Payments
             if (req.PaymentMethod.HasValue)
-                q = q.Where(s => s.PaymentMethod == req.PaymentMethod.Value);
+                q = q.Where(s => s.Payments.Any(p => p.PaymentMethod == req.PaymentMethod.Value));
 
             if (!string.IsNullOrWhiteSpace(req.City))
                 q = q.Where(s => s.City!.ToLower() == req.City.ToLower());
@@ -61,8 +57,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             var itemsQ = q.SelectMany(s => s.Items.Select(i => new
             {
                 i.Product,
-                Milheiros = (decimal)i.Quantity,                   // garante decimal
-                Subtotal = i.UnitPrice * (decimal)i.Quantity,     // decimal * decimal
+                Milheiros = (decimal)i.Quantity,
+                Subtotal = i.UnitPrice * (decimal)i.Quantity,
                 SaleGross = s.TotalGross,
                 SaleDiscount = s.Discount
             }))
@@ -70,7 +66,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             {
                 x.Product,
                 x.Milheiros,
-                NetRevenueRounded = Math.Round(                     // limita a escala antes do SUM
+                NetRevenueRounded = Math.Round(
                     (x.SaleGross > 0m)
                         ? x.Subtotal * (1m - (x.SaleDiscount / x.SaleGross))
                         : x.Subtotal,
@@ -86,11 +82,10 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 {
                     Product = g.Key,
                     Milheiros = g.Sum(z => z.Milheiros),
-                    Revenue = g.Sum(z => z.NetRevenueRounded)     // soma do valor já arredondado
+                    Revenue = g.Sum(z => z.NetRevenueRounded)
                 })
                 .OrderByDescending(r => r.Revenue)
                 .ToListAsync(ct);
-
 
             var total = grouped.Count;
             var paged = grouped
@@ -106,6 +101,5 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 PageSize = req.PageSize
             };
         }
-
     }
 }

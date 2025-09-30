@@ -37,6 +37,14 @@ namespace CeramicaCanelas.Persistence.Repositories
             return q;
         }
 
+        public async Task<Sale?> GetByIdWithPaymentsAsync(Guid id, CancellationToken ct = default)
+        {
+            return await Context.Sales
+                .Include(s => s.Items)       // inclui os itens
+                .Include(s => s.Payments)    // inclui os pagamentos
+                .FirstOrDefaultAsync(s => s.Id == id, ct);
+        }
+
 
         public async Task DeactivateAsync(Guid id, CancellationToken ct = default)
         {
