@@ -60,7 +60,10 @@ public class GetProductItemsReportPdfHandler
             q = q.Where(s => s.State.ToLower() == uf);
         }
 
-        q = q.Where(s => s.Date >= startUtc && s.Date <= endUtc);
+        var startDateOnly = DateOnly.FromDateTime(startUtc.Date);
+        var endDateOnly = DateOnly.FromDateTime(endUtc.Date);
+
+        q = q.Where(s => s.Date >= startDateOnly && s.Date <= endDateOnly);
 
         // Explode itens e calcula RECEITA LÍQUIDA do item (rateio proporcional do desconto da venda)
         var itemsQ = q.SelectMany(s => s.Items.Select(i => new

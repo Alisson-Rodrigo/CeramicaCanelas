@@ -1,5 +1,6 @@
 ﻿using CeramicaCanelas.Application.Features.Sales.Queries.Dashboard;
 using MediatR;
+using static CeramicaCanelas.Application.Features.Sales.Queries.Dashboard.GetSalesDashboardIndicatorsQueryHandler;
 
 
 namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSalesDashboardIndicatorsQueryHandler

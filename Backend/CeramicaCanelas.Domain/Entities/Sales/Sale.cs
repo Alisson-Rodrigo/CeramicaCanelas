@@ -14,7 +14,7 @@ namespace CeramicaCanelas.Domain.Entities
         public bool IsActive { get; set; } = true;
 
         // Data da venda (mantemos separado de CreatedOn/ModifiedOn)
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateOnly Date { get; set; }
 
         // Cabeçalho
         public int NoteNumber { get; set; }                 // Nº da nota/talão

@@ -18,17 +18,15 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
 
         public async Task<PagedResultSales> Handle(PagedRequestSales request, CancellationToken ct)
         {
-            // Use QueryAllWithIncludes() para obter as vendas com os itens incluídos
-            var q = _salesRepository.QueryAllWithIncludes() // Obtendo vendas com itens
-                .AsQueryable(); // Convertendo para IQueryable
+            var q = _salesRepository.QueryAllWithIncludes()
+                .AsQueryable();
 
-            // Busca textual (case-insensitive, compatível com qualquer provider)
+            // Busca textual
             if (!string.IsNullOrWhiteSpace(request.Search))
             {
                 var term = request.Search.Trim();
                 var termLower = term.ToLower();
 
-                // Se o termo for número, filtra NoteNumber por igualdade
                 if (int.TryParse(term, out var noteNumber))
                     q = q.Where(s => s.NoteNumber == noteNumber);
 
@@ -39,26 +37,12 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
                     || (s.CustomerPhone != null && s.CustomerPhone.ToLower().Contains(termLower)));
             }
 
-            // Período
-            // Período (interprete as datas como SP e converta explicitamente para UTC)
-            TimeZoneInfo tz;
-            try { tz = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo"); }
-            catch { tz = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time"); }
-
+            // 🔹 Período (sem UTC, direto com DateOnly)
             if (request.StartDate.HasValue)
-            {
-                var localStart = request.StartDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-                var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, tz);
-                q = q.Where(s => s.Date >= startUtc);
-            }
+                q = q.Where(s => s.Date >= request.StartDate.Value);
 
             if (request.EndDate.HasValue)
-            {
-                var localEnd = request.EndDate.Value.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Unspecified);
-                var endUtc = TimeZoneInfo.ConvertTimeToUtc(localEnd, tz);
-                q = q.Where(s => s.Date <= endUtc);
-            }
-
+                q = q.Where(s => s.Date <= request.EndDate.Value);
 
             // Filtros extras
             if (request.PaymentMethod.HasValue)
@@ -73,7 +57,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
                 .OrderByDescending(s => s.Date)
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
-                .Select(s => new SaleResult(s)) // Passando a venda com seus itens
+                .Select(s => new SaleResult(s))
                 .ToListAsync(ct);
 
             return new PagedResultSales
@@ -84,5 +68,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
                 Items = items
             };
         }
+
     }
 }

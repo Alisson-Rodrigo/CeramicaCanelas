@@ -23,6 +23,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
         public string? CustomerAddress { get; set; }
         public string? CustomerPhone { get; set; }
 
+        public DateOnly? Date { get; set; } // Opcional: se fornecido, pode ser usado para validações
+
         // Pagamento/Status
         public PaymentMethod PaymentMethod { get; set; }
         public SaleStatus Status { get; set; }
@@ -45,6 +47,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             sale.State = State;
             sale.CustomerName = CustomerName;
             sale.CustomerAddress = CustomerAddress;
+            sale.Date = Date ?? sale.Date; // se Date for fornecido, atualiza; senão mantém o original
             sale.CustomerPhone = CustomerPhone;
             sale.PaymentMethod = PaymentMethod;
             sale.Status = Status;

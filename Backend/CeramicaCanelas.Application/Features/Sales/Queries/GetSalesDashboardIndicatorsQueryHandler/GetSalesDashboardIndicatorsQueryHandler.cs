@@ -25,14 +25,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
             var firstDayOfYear = new DateOnly(today.Year, 1, 1);
             var last30Days = today.AddDays(-30);
             var last7Days = today.AddDays(-7);
+            var firstDayOf12MonthsAgo = new DateOnly(today.Year, today.Month, 1).AddMonths(-11);
 
-            // CORREÇÃO: Converter DateOnly para DateTime UTC para PostgreSQL
-            var currentMonthUtc = currentMonth.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-            var firstDayOfYearUtc = firstDayOfYear.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-            var last30DaysUtc = last30Days.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-            var last7DaysUtc = last7Days.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-
-            // Query base com todas as vendas ativas
+            // Query base
             var salesQuery = _salesRepository.QueryAllWithIncludes()
                 .Where(s => s.IsActive);
 
@@ -41,46 +36,38 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                 .GroupBy(s => 1)
                 .Select(g => new
                 {
-                    // Vendas do mês atual
-                    SalesThisMonth = g.Where(s => s.Date >= currentMonthUtc).Count(),
-                    RevenueThisMonth = g.Where(s => s.Date >= currentMonthUtc && s.Status == SaleStatus.Confirmed)
+                    SalesThisMonth = g.Where(s => s.Date >= currentMonth).Count(),
+                    RevenueThisMonth = g.Where(s => s.Date >= currentMonth && s.Status == SaleStatus.Confirmed)
                         .Sum(s => s.TotalNet),
 
-                    // Vendas do ano
-                    SalesThisYear = g.Where(s => s.Date >= firstDayOfYearUtc).Count(),
-                    RevenueThisYear = g.Where(s => s.Date >= firstDayOfYearUtc && s.Status == SaleStatus.Confirmed)
+                    SalesThisYear = g.Where(s => s.Date >= firstDayOfYear).Count(),
+                    RevenueThisYear = g.Where(s => s.Date >= firstDayOfYear && s.Status == SaleStatus.Confirmed)
                         .Sum(s => s.TotalNet),
 
-                    // Últimos 30 dias
-                    SalesLast30Days = g.Where(s => s.Date >= last30DaysUtc).Count(),
-                    RevenueLast30Days = g.Where(s => s.Date >= last30DaysUtc && s.Status == SaleStatus.Confirmed)
+                    SalesLast30Days = g.Where(s => s.Date >= last30Days).Count(),
+                    RevenueLast30Days = g.Where(s => s.Date >= last30Days && s.Status == SaleStatus.Confirmed)
                         .Sum(s => s.TotalNet),
 
-                    // Últimos 7 dias
-                    SalesLast7Days = g.Where(s => s.Date >= last7DaysUtc).Count(),
-                    RevenueLast7Days = g.Where(s => s.Date >= last7DaysUtc && s.Status == SaleStatus.Confirmed)
+                    SalesLast7Days = g.Where(s => s.Date >= last7Days).Count(),
+                    RevenueLast7Days = g.Where(s => s.Date >= last7Days && s.Status == SaleStatus.Confirmed)
                         .Sum(s => s.TotalNet),
 
-                    // Totais por status
                     PendingSales = g.Where(s => s.Status == SaleStatus.Pending).Count(),
                     ConfirmedSales = g.Where(s => s.Status == SaleStatus.Confirmed).Count(),
                     CancelledSales = g.Where(s => s.Status == SaleStatus.Cancelled).Count(),
 
-                    // Valor médio das vendas confirmadas
                     AverageTicket = g.Where(s => s.Status == SaleStatus.Confirmed && s.TotalNet > 0)
                         .Average(s => (decimal?)s.TotalNet) ?? 0,
 
-                    // Total de clientes únicos que compraram
-                    UniqueCustomers = g.Where(s => !string.IsNullOrEmpty(s.CustomerName)).Select(s => s.CustomerName).Distinct().Count()
+                    UniqueCustomers = g.Where(s => !string.IsNullOrEmpty(s.CustomerName))
+                        .Select(s => s.CustomerName)
+                        .Distinct().Count()
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
             // ===== VENDAS POR MÊS (12 meses) =====
-            var firstDayOf12MonthsAgo = new DateOnly(today.Year, today.Month, 1).AddMonths(-11);
-            var firstDayOf12MonthsAgoUtc = firstDayOf12MonthsAgo.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-
             var monthlySales = await salesQuery
-                .Where(s => s.Date >= firstDayOf12MonthsAgoUtc)
+                .Where(s => s.Date >= firstDayOf12MonthsAgo)
                 .GroupBy(s => new { s.Date.Year, s.Date.Month })
                 .Select(g => new
                 {
@@ -93,7 +80,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                 })
                 .ToListAsync(cancellationToken);
 
-            // Preencher array com dados dos 12 meses
             var salesByMonth = new int[12];
             var revenueByMonth = new decimal[12];
 
@@ -105,11 +91,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                 revenueByMonth[i] = monthData?.TotalRevenue ?? 0;
             }
 
-            // Alteração: Remover o 'await' ao usar 'ToList()'
+            // ===== TOP PRODUTOS =====
             var topProducts = salesQuery
-                .Where(s => s.Status == SaleStatus.Confirmed && s.Date >= last30DaysUtc)
+                .Where(s => s.Status == SaleStatus.Confirmed && s.Date >= last30Days)
                 .SelectMany(s => s.Items)
-                .AsEnumerable() // Mover para a execução no lado do cliente aqui
+                .AsEnumerable()
                 .GroupBy(i => i.Product)
                 .Select(g => new TopProductItem
                 {
@@ -121,13 +107,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                 })
                 .OrderByDescending(p => p.TotalQuantity)
                 .Take(10)
-                .ToList(); // Use ToList() sem 'await'
-
-
+                .ToList();
 
             // ===== VENDAS POR FORMA DE PAGAMENTO =====
             var paymentMethodStats = await salesQuery
-                .Where(s => s.Status == SaleStatus.Confirmed && s.Date >= last30DaysUtc)
+                .Where(s => s.Status == SaleStatus.Confirmed && s.Date >= last30Days)
                 .GroupBy(s => s.PaymentMethod)
                 .Select(g => new PaymentMethodStats
                 {
@@ -135,11 +119,10 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                     PaymentMethodDescription = g.Key.GetDescription(),
                     Count = g.Count(),
                     TotalRevenue = g.Sum(s => s.TotalNet),
-                    Percentage = 0 // Será calculado depois
+                    Percentage = 0
                 })
                 .ToListAsync(cancellationToken);
 
-            // Calcular percentuais
             var totalConfirmedSales = paymentMethodStats.Sum(p => p.Count);
             if (totalConfirmedSales > 0)
             {
@@ -152,7 +135,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
             // ===== VENDAS POR CIDADE/ESTADO =====
             var topCities = await salesQuery
                 .Where(s => s.Status == SaleStatus.Confirmed &&
-                           s.Date >= last30DaysUtc &&
+                           s.Date >= last30Days &&
                            !string.IsNullOrEmpty(s.City))
                 .GroupBy(s => new { s.City, s.State })
                 .Select(g => new CityStats
@@ -168,7 +151,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
 
             return new GetSalesDashboardIndicatorsResult
             {
-                // Indicadores gerais
                 SalesThisMonth = generalStats?.SalesThisMonth ?? 0,
                 RevenueThisMonth = generalStats?.RevenueThisMonth ?? 0,
                 SalesThisYear = generalStats?.SalesThisYear ?? 0,
@@ -178,51 +160,48 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Dashboard
                 SalesLast7Days = generalStats?.SalesLast7Days ?? 0,
                 RevenueLast7Days = generalStats?.RevenueLast7Days ?? 0,
 
-                // Status das vendas
                 PendingSales = generalStats?.PendingSales ?? 0,
                 ConfirmedSales = generalStats?.ConfirmedSales ?? 0,
                 CancelledSales = generalStats?.CancelledSales ?? 0,
 
-                // Métricas
                 AverageTicket = Math.Round(generalStats?.AverageTicket ?? 0, 2),
                 UniqueCustomers = generalStats?.UniqueCustomers ?? 0,
 
-                // Arrays para gráficos
                 SalesByMonth = salesByMonth,
                 RevenueByMonth = revenueByMonth,
 
-                // Listas detalhadas
                 TopProducts = topProducts,
                 PaymentMethodStats = paymentMethodStats,
                 TopCities = topCities
             };
         }
-    }
 
-    // ===== CLASSES DE RESULTADO =====
-    public class TopProductItem
-    {
-        public ProductType Product { get; set; }
-        public string ProductDescription { get; set; } = string.Empty;
-        public decimal TotalQuantity { get; set; }
-        public decimal TotalRevenue { get; set; }
-        public int SalesCount { get; set; }
-    }
 
-    public class PaymentMethodStats
-    {
-        public PaymentMethod PaymentMethod { get; set; }
-        public string PaymentMethodDescription { get; set; } = string.Empty;
-        public int Count { get; set; }
-        public decimal TotalRevenue { get; set; }
-        public decimal Percentage { get; set; }
-    }
+        // ===== CLASSES DE RESULTADO =====
+        public class TopProductItem
+        {
+            public ProductType Product { get; set; }
+            public string ProductDescription { get; set; } = string.Empty;
+            public decimal TotalQuantity { get; set; }
+            public decimal TotalRevenue { get; set; }
+            public int SalesCount { get; set; }
+        }
 
-    public class CityStats
-    {
-        public string City { get; set; } = string.Empty;
-        public string State { get; set; } = string.Empty;
-        public int SalesCount { get; set; }
-        public decimal TotalRevenue { get; set; }
+        public class PaymentMethodStats
+        {
+            public PaymentMethod PaymentMethod { get; set; }
+            public string PaymentMethodDescription { get; set; } = string.Empty;
+            public int Count { get; set; }
+            public decimal TotalRevenue { get; set; }
+            public decimal Percentage { get; set; }
+        }
+
+        public class CityStats
+        {
+            public string City { get; set; } = string.Empty;
+            public string State { get; set; } = string.Empty;
+            public int SalesCount { get; set; }
+            public decimal TotalRevenue { get; set; }
+        }
     }
 }

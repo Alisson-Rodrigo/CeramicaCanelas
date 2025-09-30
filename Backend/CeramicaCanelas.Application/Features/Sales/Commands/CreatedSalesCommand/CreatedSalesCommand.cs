@@ -14,6 +14,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
         public string State { get; set; } = string.Empty;
         public string? CustomerName { get; set; }
         public string? CustomerAddress { get; set; }
+
+        public DateOnly Date { get; set; }
         public string? CustomerPhone { get; set; }
 
         // Pagamento
@@ -35,7 +37,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
             var sale = new Sale
             {
                 NoteNumber = NoteNumber,
-                Date = DateTime.UtcNow,
+                Date = Date,
                 City = City,
                 State = State,
                 CustomerName = CustomerName,
