@@ -56,13 +56,13 @@ namespace CeramicaCanelas.WebApi.Controllers
         }
 
         [Authorize(Roles = "Sales,Financial,Admin")]
-        [HttpPost("{id:guid}/pay")]
+        [HttpPost("pay-pending")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Pay(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Pay([FromForm] PaySalesCommand request, CancellationToken cancellationToken)
         {
-            await _mediator.Send(new PaySalesCommand { SaleId = id }, cancellationToken);
+            await _mediator.Send(request, cancellationToken);
             return NoContent();
         }
 
