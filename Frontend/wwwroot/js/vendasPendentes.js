@@ -7,6 +7,7 @@ console.log('Script js/vendas-pendentes.js DEFINIDO.');
 function initDynamicForm() {
     console.log('▶️ initDynamicForm() de vendas-pendentes.js foi chamada.');
     initializeFilters();
+    initializePaymentModal();
     fetchReportData(1);
 }
 
@@ -32,13 +33,14 @@ function clearFilters() {
 }
 
 // =======================================================
-// LÓGICA DE BUSCA E RENDERIZAÇÃO
+// LÓGICA DE BUSCA E RENDERIZAÇÃO DA TABELA
 // =======================================================
 async function fetchReportData(page = 1) {
     currentPage = page;
     const loadingDiv = document.getElementById('loading');
     const resultsSection = document.getElementById('resultsSection');
-    
+    const tableBody = document.getElementById('report-table-body');
+
     if(loadingDiv) loadingDiv.style.display = 'flex';
     if(resultsSection) resultsSection.style.display = 'none';
 
@@ -47,34 +49,35 @@ async function fetchReportData(page = 1) {
         if (!accessToken) throw new Error("Não autenticado.");
 
         const params = new URLSearchParams({ Page: currentPage, PageSize: 10 });
-        
+
         const search = document.getElementById('search-input')?.value;
         const paymentMethod = document.getElementById('payment-method-filter')?.value;
         const startDate = document.getElementById('start-date')?.value;
         const endDate = document.getElementById('end-date')?.value;
-        
+
         if (search) params.append('Search', search);
         if (paymentMethod) params.append('PaymentMethod', paymentMethod);
         if (startDate) params.append('StartDate', startDate);
         if (endDate) params.append('EndDate', endDate);
 
         const url = `${API_BASE_URL}/sales/pending/paged?${params.toString()}`;
-        
+
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar dados (Status: ${response.status})`);
 
         const data = await response.json();
-        
+
         renderReportTable(data.items);
         renderPagination(data);
-        
+
         if(resultsSection) resultsSection.style.display = 'block';
 
     } catch (error) {
+        if(tableBody) tableBody.innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">${error.message}</td></tr>`;
         if(typeof showErrorModal === 'function') {
-            
+            showErrorModal({ title: "Erro na Pesquisa", detail: error.message });
         } else {
-           
+            alert(`Erro na Pesquisa: ${error.message}`);
         }
     } finally {
         if(loadingDiv) loadingDiv.style.display = 'none';
@@ -109,7 +112,7 @@ function renderReportTable(items) {
             <td>${item.itemsCount || 0}</td>
             <td>${formattedTotal}</td>
             <td class="actions-cell">
-                <button class="btn-action btn-success" onclick="markSaleAsPaid('${item.id}')">Marcar como Pago</button>
+                <button class="btn-action btn-success" onclick="openPaymentModal('${item.id}', ${item.totalNet})">Marcar como Pago</button>
             </td>
         `;
     });
@@ -146,22 +149,50 @@ function renderPagination(paginationData) {
 }
 
 // =======================================================
-// FUNÇÃO PARA MARCAR COMO PAGO (CORRIGIDA)
+// LÓGICA DA MODAL DE PAGAMENTO (NOVO)
 // =======================================================
-window.markSaleAsPaid = async (saleId) => {
-    if (!confirm('Tem certeza que deseja marcar esta venda como paga?')) return;
+function initializePaymentModal() {
+    const modal = document.getElementById('paymentModal');
+    const form = document.getElementById('paymentForm');
+    const closeBtn = document.getElementById('closePaymentModalBtn');
 
+    populateSelect(document.getElementById('paymentMethodModal'), paymentMethodMap, 'Selecione um método');
+
+    closeBtn?.addEventListener('click', () => modal.style.display = 'none');
+    form?.addEventListener('submit', handlePaymentSubmit);
+}
+
+window.openPaymentModal = (saleId, totalAmount) => {
+    const modal = document.getElementById('paymentModal');
+    document.getElementById('paymentSaleId').value = saleId;
+    document.getElementById('paymentAmount').value = totalAmount.toFixed(2);
+    document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+    modal.style.display = 'block';
+};
+
+async function handlePaymentSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processando...';
+
+    const formData = new FormData(form);
+    
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const url = `${API_BASE_URL}/sales/${saleId}/pay`;
+        const url = `${API_BASE_URL}/sales/pay-pending`;
         
         const response = await fetch(url, {
-            method: 'POST', // CORREÇÃO: A rota é POST, não PUT
-            headers: { 'Authorization': `Bearer ${accessToken}` }
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+            body: formData
         });
 
         if (response.ok) {
             alert('Venda atualizada para "Confirmada" com sucesso!');
+            document.getElementById('paymentModal').style.display = 'none';
             fetchReportData(currentPage);
         } else {
             const errorData = await response.json().catch(() => ({ title: "Erro" }));
@@ -169,5 +200,19 @@ window.markSaleAsPaid = async (saleId) => {
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirmar Pagamento';
     }
-};
+}
+
+// =======================================================
+// FUNÇÃO AUXILIAR
+// =======================================================
+function populateSelect(selectElement, map, defaultOptionText) {
+    if (!selectElement || typeof map === 'undefined') return;
+    selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+    for (const [key, value] of Object.entries(map)) {
+        selectElement.appendChild(new Option(value, key));
+    }
+}

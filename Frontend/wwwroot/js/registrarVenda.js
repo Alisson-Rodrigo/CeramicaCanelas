@@ -23,6 +23,14 @@ function initializeSaleForm() {
     const itemsTbody = document.getElementById('saleItemsTbody');
     const addItemBtn = document.getElementById('add-sale-item-btn');
 
+    // Define as datas padrão como hoje
+    const today = new Date().toISOString().split('T')[0];
+    const saleDateInput = document.getElementById('saleDate');
+    const paymentDateInput = document.getElementById('paymentDate');
+    if (saleDateInput) saleDateInput.value = today;
+    if (paymentDateInput) paymentDateInput.value = today;
+
+
     saleForm.addEventListener('submit', handleSaleSubmit);
     if (discountInput) discountInput.addEventListener('input', updateTotals);
     if (addItemBtn) addItemBtn.addEventListener('click', addProductToCart);
@@ -74,8 +82,8 @@ function updateTotals() {
     const total = subtotal - discount;
 
     // Formatação dos valores com 2 casas decimais
-    document.getElementById('subtotal').textContent = subtotal.toFixed(2).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    document.getElementById('total').textContent = total.toFixed(2).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('subtotal').textContent = subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('total').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 
@@ -86,6 +94,14 @@ async function handleSaleSubmit(event) {
         showErrorModal({ title: "Validação", detail: "Adicione pelo menos um produto." });
         return;
     }
+
+    const saleDate = document.getElementById('saleDate').value;
+    const paymentDate = document.getElementById('paymentDate').value;
+    if (!saleDate || !paymentDate) {
+        showErrorModal({ title: "Validação", detail: "As datas da venda e do pagamento são obrigatórias." });
+        return;
+    }
+
     const saleItems = [];
     for (const row of itemsRows) {
         saleItems.push({
@@ -94,6 +110,15 @@ async function handleSaleSubmit(event) {
             unitPrice: parseFloat(row.dataset.price)
         });
     }
+    
+    // Calcula o total para o payload de pagamento
+    let subtotal = 0;
+    saleItems.forEach(item => {
+        subtotal += item.quantity * item.unitPrice;
+    });
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const totalAmount = subtotal - discount;
+
     const payload = {
         noteNumber: parseInt(document.getElementById('noteNumber').value) || 0,
         city: document.getElementById('city').value,
@@ -101,11 +126,19 @@ async function handleSaleSubmit(event) {
         customerName: document.getElementById('customerName').value,
         customerAddress: document.getElementById('customerAddress').value,
         customerPhone: document.getElementById('customerPhone').value,
-        paymentMethod: parseInt(document.getElementById('paymentMethod').value),
-        discount: parseFloat(document.getElementById('discount').value) || 0,
+        date: saleDate,
         saleStatus: parseInt(document.getElementById('saleStatus').value),
-        items: saleItems
+        discount: discount,
+        items: saleItems,
+        payments: [
+            {
+                paymentDate: paymentDate,
+                amount: totalAmount,
+                paymentMethod: parseInt(document.getElementById('paymentMethod').value)
+            }
+        ]
     };
+
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
@@ -116,6 +149,7 @@ async function handleSaleSubmit(event) {
         if (response.ok) {
             alert('Venda registrada com sucesso!');
             document.getElementById('saleForm').reset();
+            initializeSaleForm(); // Para resetar as datas para hoje
             populateSelects();
             document.getElementById('saleItemsTbody').innerHTML = '<tr id="placeholder-row"><td colspan="5">Nenhum produto adicionado.</td></tr>';
             updateTotals();
@@ -136,8 +170,8 @@ function addProductToCart() {
     
     const productId = productSelect.value;
     const productName = productSelect.options[productSelect.selectedIndex].text;
-    const quantity = parseFloat(quantityInput.value).toFixed(2); // Quantidade com 2 casas decimais
-    const unitPrice = parseFloat(priceInput.value).toFixed(2); // Preço unitário com 2 casas decimais
+    const quantity = parseFloat(quantityInput.value);
+    const unitPrice = parseFloat(priceInput.value);
 
     if (!productId) { alert('Selecione um produto.'); return; }
     if (isNaN(quantity) || quantity <= 0) { alert('Insira uma quantidade válida (ex: 1.5).'); return; }
@@ -151,8 +185,7 @@ function addProductToCart() {
 
     checkPlaceholder();
 
-    // Calculando subtotal
-    const subtotal = (quantity * unitPrice).toFixed(2);
+    const subtotal = (quantity * unitPrice);
 
     const newRow = document.createElement('tr');
     newRow.dataset.productId = productId;
@@ -161,9 +194,9 @@ function addProductToCart() {
 
     newRow.innerHTML = `
         <td>${productName}</td>
-        <td>${parseFloat(quantity).toFixed(2)}</td> <!-- Exibindo quantidade com 2 casas decimais -->
-        <td>${parseFloat(unitPrice).toFixed(2)}</td> <!-- Exibindo preço unitário com 2 casas decimais -->
-        <td>R$ ${subtotal}</td> <!-- Exibindo subtotal formatado -->
+        <td>${quantity.toFixed(2)}</td>
+        <td>${unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        <td>${subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         <td><button type="button" class="btn-action btn-delete-item">Remover</button></td>
     `;
     tbody.appendChild(newRow);
@@ -173,7 +206,12 @@ function addProductToCart() {
 function checkPlaceholder() {
     const tbody = document.getElementById('saleItemsTbody');
     const placeholder = document.getElementById('placeholder-row');
-    if (placeholder) placeholder.remove();
+    const itemRows = tbody.querySelectorAll('tr:not(#placeholder-row)');
+
+    if (placeholder && itemRows.length > 0) {
+        placeholder.remove();
+    }
+    
     if (tbody.children.length === 0) {
         tbody.innerHTML = '<tr id="placeholder-row"><td colspan="5">Nenhum item adicionado.</td></tr>';
     }
@@ -231,7 +269,7 @@ async function fetchAndRenderHistory(page = 1) {
         renderHistoryTable(paginatedData.items);
         renderHistoryPagination(paginatedData);
     } catch (error) {
-        
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Erro: ${error.message}</td></tr>`;
     }
 }
 
@@ -280,7 +318,7 @@ function renderHistoryTable(items) {
             itemsHtml += `
                 <tr data-item-id="${saleItem.id}">
                     <td data-item-field="product">${productName}</td>
-                    <td data-item-field="quantity">${saleItem.quantity}</td>
+                    <td data-item-field="quantity">${saleItem.quantity.toFixed(2)}</td>
                     <td data-item-field="unitPrice">${(saleItem.unitPrice || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     <td>${subtotal}</td>
                 </tr>
@@ -355,10 +393,8 @@ window.editSale = (item) => {
     const itemsRow = document.getElementById(`items-${item.id}`);
     if (!row) return;
 
-    // ✅ Novo guard: evita bloquear edições subsequentes
     if (row.querySelector('.edit-input')) return;
 
-    // Salva HTML original apenas uma vez
     if (!originalRowHTML_Sale[item.id]) {
         originalRowHTML_Sale[item.id] = { main: row.innerHTML, items: itemsRow.innerHTML };
     }
@@ -383,11 +419,12 @@ window.editSale = (item) => {
     
     const itemsTableBody = itemsRow.querySelector('tbody');
     itemsTableBody.querySelectorAll('tr').forEach(itemRow => {
-        const saleItem = item.items.find(i => i.id === itemRow.dataset.itemId);
+        const saleItemId = itemRow.dataset.itemId;
+        const saleItem = item.items.find(i => i.id == saleItemId);
         if (!saleItem) return;
         
         itemRow.querySelector('[data-item-field="quantity"]').innerHTML =
-            `<input type="number" class="edit-input" name="quantity" value="${saleItem.quantity}">`;
+            `<input type="number" step="0.01" class="edit-input" name="quantity" value="${saleItem.quantity}">`;
         itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML =
             `<input type="number" step="0.01" class="edit-input" name="unitPrice" value="${saleItem.unitPrice}">`;
     });
@@ -398,7 +435,7 @@ window.saveSaleChanges = async (saleId) => {
     const itemsRow = document.getElementById(`items-${saleId}`);
     if (!row) return;
 
-    const originalItem = historyItemsCache.find(i => i.id === saleId);
+    const originalItem = historyItemsCache.find(i => i.id == saleId);
     if (!originalItem) {
         showErrorModal({title: "Erro", detail: "Não foi possível encontrar os dados originais da venda."});
         cancelEditSale(saleId);
@@ -406,8 +443,9 @@ window.saveSaleChanges = async (saleId) => {
     }
     
     const editedItems = [];
-    itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
-        const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
+    const itemTrs = itemsRow.querySelectorAll('tbody tr');
+    for (const itemTr of itemTrs) {
+        const originalSaleItem = originalItem.items.find(i => i.id == itemTr.dataset.itemId);
         if (originalSaleItem) {
             editedItems.push({
                 id: originalSaleItem.id,
@@ -416,7 +454,7 @@ window.saveSaleChanges = async (saleId) => {
                 unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value)
             });
         }
-    });
+    }
 
     const payload = {
         id: saleId,
@@ -441,7 +479,6 @@ window.saveSaleChanges = async (saleId) => {
         });
         if (response.ok) {
             alert('Venda atualizada com sucesso!');
-            // ✅ limpa o cache desta venda para permitir nova edição
             delete originalRowHTML_Sale[saleId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
@@ -463,3 +500,4 @@ window.cancelEditSale = (saleId) => {
         delete originalRowHTML_Sale[saleId];
     }
 };
+
