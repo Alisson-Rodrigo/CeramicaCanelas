@@ -23,6 +23,10 @@ public interface IBaseRepository<T> where T : class {
     /// The <typeparamref name="T"/> entity, if found. Null otherwise. </returns>
     T? Get(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
 
+    public Task<IEnumerable<T>> FindAsync(
+    Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Updates an entity entry on the database
     /// </summary>
@@ -34,7 +38,6 @@ public interface IBaseRepository<T> where T : class {
     /// </summary>
     /// <param name="entity"> The entity to be deleted </param>
     Task Delete(T entity);
-
 
     public Task SaveChangesAsync(CancellationToken ct = default);
 

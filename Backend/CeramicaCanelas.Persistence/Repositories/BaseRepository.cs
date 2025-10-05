@@ -14,6 +14,16 @@ public class BaseRepository<T>(DefaultContext defaultContext) : IBaseRepository<
         await Context.SaveChangesAsync(cancellationToken);
         return entity;
     }
+    public async Task<IEnumerable<T>> FindAsync(
+    Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken = default)
+    {
+        return await Context.Set<T>()
+            .Where(predicate)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
 
     public async Task Update(T entity) {
         Context.Set<T>().Update(entity);
