@@ -20,7 +20,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
         public DateOnly? Date { get; set; } // opcional, preserva se não for passado
 
         // Status
-        public SaleStatus Status { get; set; } = SaleStatus.Pending;
+        public SaleStatus Status { get; set; }
 
         // Totais
         public decimal Discount { get; set; } = 0m;
