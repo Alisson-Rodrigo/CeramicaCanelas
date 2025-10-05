@@ -83,8 +83,9 @@ namespace CeramicaCanelas.Domain.Entities
 
         public void RecalculateTotals()
         {
-            TotalGross = Items.Sum(i => i.Subtotal);
+            TotalGross = Items.Sum(i => i.UnitPrice * i.Quantity);
             TotalNet = Math.Max(0, TotalGross - Discount);
+
 
         }
 
