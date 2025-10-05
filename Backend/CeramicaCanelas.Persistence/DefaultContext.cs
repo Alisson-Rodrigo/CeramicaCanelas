@@ -158,7 +158,10 @@ public class DefaultContext : IdentityDbContext<User>
             entity.Property(s => s.TotalNet).HasPrecision(18, 2);
             entity.Property(s => s.Discount).HasPrecision(18, 2);
 
-            entity.HasMany(s => s.Items).WithOne().HasForeignKey(i => i.SaleId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(s => s.Items)
+                  .WithOne(i => i.Sale) // 🔹 define a navegação inversa
+                  .HasForeignKey(i => i.SaleId)
+                  .OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(s => s.Payments).WithOne(p => p.Sale).HasForeignKey(p => p.SaleId).OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(s => s.Date);
@@ -173,7 +176,17 @@ public class DefaultContext : IdentityDbContext<User>
             entity.Property(i => i.Quantity).HasPrecision(18, 3);
             entity.Property(i => i.Product).HasConversion<int>();
             entity.HasIndex(i => i.SaleId);
+
+            // 🔹 Define a relação corretamente
+            entity.HasOne(i => i.Sale)
+                  .WithMany(s => s.Items)
+                  .HasForeignKey(i => i.SaleId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // 🔹 Adiciona filtro alinhado com o filtro global de Sale
+            entity.HasQueryFilter(i => i.Sale.IsActive);
         });
+
 
         builder.Entity<SalePayment>(entity =>
         {
