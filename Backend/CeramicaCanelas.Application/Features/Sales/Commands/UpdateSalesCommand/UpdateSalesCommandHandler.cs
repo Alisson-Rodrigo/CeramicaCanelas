@@ -4,7 +4,6 @@ using CeramicaCanelas.Domain.Entities;
 using CeramicaCanelas.Domain.Entities.Sales;
 using CeramicaCanelas.Domain.Exception;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
 {
@@ -12,38 +11,47 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
     {
         private readonly ILogged _logged;
         private readonly ISalesRepository _salesRepository;
+        private readonly ISalesItemsRepository _saleItemsRepository;
+        private readonly ISalesPaymentsRepository _salesPaymentsRepository;
 
-        public UpdateSalesCommandHandler(ILogged logged, ISalesRepository salesRepository)
+        public UpdateSalesCommandHandler(
+            ILogged logged,
+            ISalesRepository salesRepository,
+            ISalesItemsRepository saleItemsRepository,
+            ISalesPaymentsRepository salesPaymentsRepository)
         {
             _logged = logged;
             _salesRepository = salesRepository;
+            _saleItemsRepository = saleItemsRepository;
+            _salesPaymentsRepository = salesPaymentsRepository;
         }
 
         public async Task<Unit> Handle(UpdateSalesCommand request, CancellationToken cancellationToken)
         {
+            // 1️⃣ Autenticação
             var user = await _logged.UserLogged();
-            if (user == null) throw new UnauthorizedAccessException("Usuário não autenticado.");
+            if (user == null)
+                throw new UnauthorizedAccessException("Usuário não autenticado.");
 
+            // 2️⃣ Validação FluentValidation
             var validator = new UpdateSalesCommandValidator();
             var validation = await validator.ValidateAsync(request, cancellationToken);
-            if (!validation.IsValid) throw new BadRequestException(validation);
+            if (!validation.IsValid)
+                throw new BadRequestException(validation);
 
-            // Carrega venda com itens e pagamentos
-            var sale = await _salesRepository.QueryAllWithIncludes()
-                .Include(s => s.Items)
-                .Include(s => s.Payments)
-                .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+            // 3️⃣ Busca a venda principal
+            var sale = await _salesRepository.GetByIdAsync(request.Id);
+            if (sale == null)
+                throw new BadRequestException("Venda não encontrada.");
 
-            if (sale == null) throw new BadRequestException("Venda não encontrada.");
-
-            // Checa duplicidade de número de nota
-            if (sale.NoteNumber != request.NoteNumber)
+            // 4️⃣ Verifica duplicidade de número de nota
+            if (sale.NoteNumber != request.NoteNumber &&
+                await _salesRepository.ExistsActiveNoteNumberAsync(request.NoteNumber, cancellationToken))
             {
-                var exists = await _salesRepository.ExistsActiveNoteNumberAsync(request.NoteNumber, cancellationToken);
-                if (exists) throw new BadRequestException($"Já existe uma venda ativa com o número {request.NoteNumber}.");
+                throw new BadRequestException($"Já existe uma venda ativa com o número {request.NoteNumber}.");
             }
 
-            // Cabeçalho
+            // 5️⃣ Atualiza cabeçalho
             sale.NoteNumber = request.NoteNumber;
             sale.City = request.City;
             sale.State = request.State;
@@ -52,70 +60,83 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             sale.CustomerPhone = request.CustomerPhone;
             if (request.Date.HasValue) sale.Date = request.Date.Value;
             sale.Status = request.Status;
+            sale.ApplyDiscount(request.Discount);
+            sale.ModifiedOn = DateTime.UtcNow;
 
-            // ---- ITENS ----
-            var itemsById = sale.Items.ToDictionary(i => i.Id, i => i);
+            await _salesRepository.Update(sale);
+
+            // 6️⃣ Atualiza ITENS
+            var existingItems = await _saleItemsRepository.FindAsync(i => i.SaleId == sale.Id, cancellationToken);
+            var existingItemIds = existingItems.Select(i => i.Id).ToHashSet();
+            var dtoItemIds = request.Items.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
+
+            // Atualiza ou cria
             foreach (var dto in request.Items)
             {
-                if (dto.Id.HasValue && itemsById.ContainsKey(dto.Id.Value))
+                if (dto.Id.HasValue && existingItemIds.Contains(dto.Id.Value))
                 {
-                    var existing = itemsById[dto.Id.Value];
-                    existing.Product = dto.Product;
-                    existing.UnitPrice = dto.UnitPrice;
-                    existing.Quantity = dto.Quantity;
-                    existing.ModifiedOn = DateTime.UtcNow;
+                    var item = existingItems.First(i => i.Id == dto.Id.Value);
+                    item.Product = dto.Product;
+                    item.UnitPrice = dto.UnitPrice;
+                    item.Quantity = dto.Quantity;
+                    item.ModifiedOn = DateTime.UtcNow;
+                    await _saleItemsRepository.Update(item);
                 }
                 else
                 {
-                    sale.Items.Add(new SaleItem
+                    var newItem = new SaleItem
                     {
-                        Id = Guid.NewGuid(),
+                        SaleId = sale.Id,
                         Product = dto.Product,
                         UnitPrice = dto.UnitPrice,
                         Quantity = dto.Quantity,
                         CreatedOn = DateTime.UtcNow,
                         ModifiedOn = DateTime.UtcNow
-                    });
+                    };
+                    await _saleItemsRepository.CreateAsync(newItem, cancellationToken);
                 }
             }
-            var dtoItemIds = request.Items.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
-            var toRemoveItems = sale.Items.Where(i => !dtoItemIds.Contains(i.Id)).ToList();
-            foreach (var r in toRemoveItems) sale.Items.Remove(r);
 
-            // ---- PAGAMENTOS ----
-            var paymentsById = sale.Payments.ToDictionary(p => p.Id, p => p);
+            // Remove os itens que não estão mais na requisição
+            var toRemoveItems = existingItems.Where(i => !dtoItemIds.Contains(i.Id)).ToList();
+            foreach (var item in toRemoveItems)
+                await _saleItemsRepository.Delete(item);
+
+            // 7️⃣ Atualiza PAGAMENTOS
+            var existingPayments = await _salesPaymentsRepository.FindAsync(p => p.SaleId == sale.Id, cancellationToken);
+            var existingPayIds = existingPayments.Select(p => p.Id).ToHashSet();
+            var dtoPayIds = request.Payments.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
+
             foreach (var dto in request.Payments)
             {
-                if (dto.Id.HasValue && paymentsById.ContainsKey(dto.Id.Value))
+                if (dto.Id.HasValue && existingPayIds.Contains(dto.Id.Value))
                 {
-                    var existing = paymentsById[dto.Id.Value];
-                    existing.PaymentDate = dto.PaymentDate;
-                    existing.Amount = dto.Amount;
-                    existing.PaymentMethod = dto.PaymentMethod;
-                    existing.ModifiedOn = DateTime.UtcNow;
+                    var pay = existingPayments.First(p => p.Id == dto.Id.Value);
+                    pay.PaymentDate = dto.PaymentDate;
+                    pay.Amount = dto.Amount;
+                    pay.PaymentMethod = dto.PaymentMethod;
+                    pay.ModifiedOn = DateTime.UtcNow;
+                    await _salesPaymentsRepository.Update(pay);
                 }
                 else
                 {
-                    sale.Payments.Add(new SalePayment
+                    var newPay = new SalePayment
                     {
-                        Id = Guid.NewGuid(),
+                        SaleId = sale.Id,
                         PaymentDate = dto.PaymentDate,
                         Amount = dto.Amount,
                         PaymentMethod = dto.PaymentMethod,
                         CreatedOn = DateTime.UtcNow,
                         ModifiedOn = DateTime.UtcNow
-                    });
+                    };
+                    await _salesPaymentsRepository.CreateAsync(newPay, cancellationToken);
                 }
             }
-            var dtoPaymentIds = request.Payments.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
-            var toRemovePayments = sale.Payments.Where(p => !dtoPaymentIds.Contains(p.Id)).ToList();
-            foreach (var r in toRemovePayments) sale.Payments.Remove(r);
 
-            // Totais e desconto
-            sale.ApplyDiscount(request.Discount);
-            sale.ModifiedOn = DateTime.UtcNow;
-
-            await _salesRepository.Update(sale);
+            // Remove os pagamentos ausentes
+            var toRemovePayments = existingPayments.Where(p => !dtoPayIds.Contains(p.Id)).ToList();
+            foreach (var pay in toRemovePayments)
+                await _salesPaymentsRepository.Delete(pay);
 
             return Unit.Value;
         }
