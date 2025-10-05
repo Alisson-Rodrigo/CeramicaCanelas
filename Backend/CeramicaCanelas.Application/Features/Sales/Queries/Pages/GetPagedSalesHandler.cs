@@ -1,5 +1,6 @@
 ﻿using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Application.Features.Sales.Queries.Pages;
+using CeramicaCanelas.Domain.Enums.Sales;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -48,7 +49,18 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
 
             // 🔹 Filtro por status
             if (request.Status.HasValue)
-                q = q.Where(s => s.Status == request.Status.Value);
+            {
+                if (request.Status.Value == SaleStatus.Pending)
+                {
+                    // Busca tanto pendentes quanto parcialmente pagas
+                    q = q.Where(s => s.Status == SaleStatus.Pending || s.Status == SaleStatus.PartiallyPaid);
+                }
+                else
+                {
+                    // Busca apenas o status selecionado
+                    q = q.Where(s => s.Status == request.Status.Value);
+                }
+            }
 
             var total = await q.CountAsync(ct);
 
