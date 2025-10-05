@@ -50,46 +50,50 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                 ModifiedOn = DateTime.UtcNow,
             };
 
-            // Adiciona itens
-            var items = new List<SaleItem>();
+            // 🔹 Adiciona itens com vínculo
             foreach (var i in Items)
             {
-                items.Add(new SaleItem
+                var item = new SaleItem
                 {
                     Product = i.Product,
                     UnitPrice = i.UnitPrice,
-                    Quantity = i.Quantity
-                });
+                    Quantity = i.Quantity,
+                    Sale = sale
+                };
+                sale.Items.Add(item);
             }
-            sale.SetItems(items);
+
             sale.ApplyDiscount(Discount);
 
-            // Adiciona pagamentos (se houver)
+            // 🔹 Adiciona pagamentos (se houver)
             foreach (var p in Payments)
             {
-                sale.AddPayment(new SalePayment
+                var payment = new SalePayment
                 {
                     PaymentDate = p.PaymentDate,
                     Amount = p.Amount,
-                    PaymentMethod = p.PaymentMethod
-                });
+                    PaymentMethod = p.PaymentMethod,
+                    Sale = sale
+                };
+                sale.Payments.Add(payment);
             }
 
             return sale;
         }
-    }
 
-    public class CreatedSalesItem
-    {
-        public ProductType Product { get; set; }
-        public decimal UnitPrice { get; set; }
-        public decimal Quantity { get; set; }
-    }
 
-    public class CreatedSalesPayment
-    {
-        public DateOnly PaymentDate { get; set; }
-        public decimal Amount { get; set; }
-        public PaymentMethod PaymentMethod { get; set; }
+        public class CreatedSalesItem
+        {
+            public ProductType Product { get; set; }
+            public decimal UnitPrice { get; set; }
+            public decimal Quantity { get; set; }
+        }
+
+        public class CreatedSalesPayment
+        {
+            public DateOnly PaymentDate { get; set; }
+            public decimal Amount { get; set; }
+            public PaymentMethod PaymentMethod { get; set; }
+        }
     }
 }

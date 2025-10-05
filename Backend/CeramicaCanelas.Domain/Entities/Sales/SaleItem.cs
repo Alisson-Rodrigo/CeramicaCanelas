@@ -9,6 +9,7 @@ namespace CeramicaCanelas.Domain.Entities
     {
         // FK para a venda
         public Guid SaleId { get; set; }
+        public Sale Sale { get; set; }
 
         // Produto (enum fixo)
         public ProductType Product { get; set; }
