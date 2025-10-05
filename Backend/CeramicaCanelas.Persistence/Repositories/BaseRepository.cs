@@ -25,10 +25,12 @@ public class BaseRepository<T>(DefaultContext defaultContext) : IBaseRepository<
     }
 
 
-    public async Task Update(T entity) {
-        Context.Set<T>().Update(entity);
+    public async Task Update(T entity)
+    {
+        Context.Entry(entity).State = EntityState.Modified; // ✅ força atualização
         await Context.SaveChangesAsync();
     }
+
 
     public async Task Delete(T entity) {
         Context.Set<T>().Remove(entity);
