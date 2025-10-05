@@ -76,8 +76,9 @@ namespace CeramicaCanelas.Domain.Entities
         {
             TotalGross = Items.Sum(i => i.Subtotal);
             TotalNet = Math.Max(0, TotalGross - Discount);
-            AtualizarStatus();
+
         }
+
 
         public void SetItems(IEnumerable<SaleItem> items)
         {
