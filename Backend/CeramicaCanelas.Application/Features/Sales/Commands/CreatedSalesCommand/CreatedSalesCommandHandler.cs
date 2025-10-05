@@ -60,6 +60,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                 await _saleItemsRepository.CreateAsync(item, cancellationToken);
             }
 
+            Console.WriteLine($"Pagamentos recebidos: {request.Payments?.Count ?? 0}");
             // 🔹 6) Cria os pagamentos vinculando o SaleId
             foreach (var p in request.Payments)
             {

@@ -29,6 +29,7 @@ namespace CeramicaCanelas.Persistence.Repositories
         {
             var q = Context.Sales
                 .Include(s => s.Items)
+                .Include(s => s.Payments)
                 .AsNoTracking();
 
             if (includeInactive)
