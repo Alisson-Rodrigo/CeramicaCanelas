@@ -43,14 +43,22 @@ namespace CeramicaCanelas.Domain.Entities
 
         public void AddPayment(SalePayment payment)
         {
+            if (Status == SaleStatus.Cancelled)
+                throw new InvalidOperationException("Não é possível adicionar pagamentos a uma venda cancelada.");
+
             Payments.Add(payment);
             ModifiedOn = DateTime.UtcNow;
 
             AtualizarStatus();
         }
 
+
         private void AtualizarStatus()
         {
+            // 🔒 Protege vendas canceladas
+            if (Status == SaleStatus.Cancelled)
+                return;
+
             var totalPago = GetTotalPaid();
             var saldo = GetRemainingBalance();
 
@@ -61,6 +69,7 @@ namespace CeramicaCanelas.Domain.Entities
             else
                 Status = SaleStatus.Pending;
         }
+
 
 
         // --- Regras de Totais ---
