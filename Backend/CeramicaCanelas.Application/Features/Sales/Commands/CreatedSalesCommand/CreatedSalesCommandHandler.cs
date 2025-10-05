@@ -35,7 +35,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
 
             // 🔹 2) Verifica duplicidade de número de nota
             if (await _salesRepository.ExistsActiveNoteNumberAsync(request.NoteNumber, cancellationToken))
-                throw new BadRequestException($"Já existe uma venda ativa com o número {request.NoteNumber}. Inative a existente ou informe outro número.");
+                throw new BadRequestException($"Já existe uma venda ativa com o número {request.NoteNumber}.");
 
             // 🔹 3) Validação
             var validator = new CreatedSalesCommandValidator();
@@ -43,10 +43,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
             if (!validation.IsValid)
                 throw new BadRequestException(validation);
 
-            // 🔹 4) Cria a venda
+            // 🔹 4) Cria a venda (ainda sem totais)
             var sale = request.AssignToSale();
             await _salesRepository.CreateAsync(sale, cancellationToken);
 
+            // 🔹 5) Cria os itens vinculando o SaleId
             // 🔹 5) Cria os itens vinculando o SaleId
             foreach (var i in request.Items)
             {
@@ -56,22 +57,32 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                     Product = i.Product,
                     UnitPrice = i.UnitPrice,
                     Quantity = i.Quantity
+                    // Subtotal é calculado automaticamente
                 };
                 await _saleItemsRepository.CreateAsync(item, cancellationToken);
             }
 
-            Console.WriteLine($"Pagamentos recebidos: {request.Payments?.Count ?? 0}");
-            // 🔹 6) Cria os pagamentos vinculando o SaleId
-            foreach (var p in request.Payments)
+            // 🔹 6) Atualiza os totais da venda com base nos itens
+            sale.RecalculateTotals();
+
+            // ✅ Atualiza a venda com os totais calculados
+            await _salesRepository.Update(sale);
+
+
+            // 🔹 7) Cria os pagamentos vinculando o SaleId
+            if (request.Payments?.Any() == true)
             {
-                var payment = new SalePayment
+                foreach (var p in request.Payments)
                 {
-                    SaleId = sale.Id,
-                    PaymentDate = p.PaymentDate,
-                    Amount = p.Amount,
-                    PaymentMethod = p.PaymentMethod
-                };
-                await _salesPaymentsRepository.CreateAsync(payment, cancellationToken);
+                    var payment = new SalePayment
+                    {
+                        SaleId = sale.Id,
+                        PaymentDate = p.PaymentDate,
+                        Amount = p.Amount,
+                        PaymentMethod = p.PaymentMethod
+                    };
+                    await _salesPaymentsRepository.CreateAsync(payment, cancellationToken);
+                }
             }
 
             return sale.Id;
