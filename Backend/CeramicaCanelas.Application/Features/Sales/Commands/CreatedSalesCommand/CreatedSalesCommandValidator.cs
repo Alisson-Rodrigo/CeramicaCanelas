@@ -22,16 +22,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                 .NotEmpty().WithMessage("UF é obrigatória.")
                 .MaximumLength(2);
 
-            RuleFor(x => x.Payments)
-                .NotEmpty().WithMessage("A venda deve possuir pelo menos um pagamento.");
-
             RuleForEach(x => x.Payments).ChildRules(payment =>
             {
                 payment.RuleFor(p => p.PaymentMethod)
                     .IsInEnum().WithMessage("Forma de pagamento inválida.");
 
-                payment.RuleFor(p => p.Amount)
-                    .GreaterThan(0).WithMessage("O valor do pagamento deve ser maior que zero.");
             });
 
             RuleFor(x => x.Discount)
