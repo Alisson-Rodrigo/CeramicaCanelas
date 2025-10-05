@@ -15,7 +15,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
         public string? CustomerName { get; set; }
         public string? CustomerAddress { get; set; }
         public string? CustomerPhone { get; set; }
-
         public DateOnly Date { get; set; }
 
         // Status inicial
@@ -47,40 +46,15 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                 Status = SaleStatus,
                 IsActive = true,
                 CreatedOn = DateTime.UtcNow,
-                ModifiedOn = DateTime.UtcNow,
+                ModifiedOn = DateTime.UtcNow
             };
 
-            // 🔹 Adiciona itens com vínculo
-            foreach (var i in Items)
-            {
-                var item = new SaleItem
-                {
-                    Product = i.Product,
-                    UnitPrice = i.UnitPrice,
-                    Quantity = i.Quantity,
-                    Sale = sale
-                };
-                sale.Items.Add(item);
-            }
+            // Itens e pagamentos são tratados separadamente no handler.
+            // Aqui criamos apenas a estrutura base da venda.
 
             sale.ApplyDiscount(Discount);
-
-            // 🔹 Adiciona pagamentos (se houver)
-            foreach (var p in Payments)
-            {
-                var payment = new SalePayment
-                {
-                    PaymentDate = p.PaymentDate,
-                    Amount = p.Amount,
-                    PaymentMethod = p.PaymentMethod,
-                    Sale = sale
-                };
-                sale.Payments.Add(payment);
-            }
-
             return sale;
         }
-
 
         public class CreatedSalesItem
         {
