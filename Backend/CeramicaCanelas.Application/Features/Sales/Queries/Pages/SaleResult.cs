@@ -25,7 +25,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
         public decimal Discount { get; set; }
         public decimal TotalNet { get; set; }
         public int ItemsCount { get; set; }
-        public List<SaleItem> Items { get; set; } = new(); // Itens da venda
+        public List<SaleItemResult> Items { get; set; } = new();
 
         public SaleResult(Sale s)
         {
@@ -53,7 +53,16 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
             Discount = s.Discount;
             TotalNet = s.TotalNet;
             ItemsCount = s.Items?.Count ?? 0;
-            Items = s.Items.ToList();
+            Items = s.Items?
+                .Select(i => new SaleItemResult
+                {
+                    Id = i.Id,
+                    Product = i.Product.ToString(),
+                    UnitPrice = i.UnitPrice,
+                    Quantity = i.Quantity,
+                    Subtotal = i.Subtotal
+                })
+                .ToList() ?? new List<SaleItemResult>();
         }
     }
 
