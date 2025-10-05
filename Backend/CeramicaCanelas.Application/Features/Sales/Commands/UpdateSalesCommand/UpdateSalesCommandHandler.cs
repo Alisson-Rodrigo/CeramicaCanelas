@@ -63,14 +63,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             sale.ApplyDiscount(request.Discount);
             sale.ModifiedOn = DateTime.UtcNow;
 
-            await _salesRepository.Update(sale);
-
-            // 6️⃣ Atualiza ITENS
+            // ⚙️ Atualiza ITENS
             var existingItems = await _saleItemsRepository.FindAsync(i => i.SaleId == sale.Id, cancellationToken);
             var existingItemIds = existingItems.Select(i => i.Id).ToHashSet();
             var dtoItemIds = request.Items.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
 
-            // Atualiza ou cria
             foreach (var dto in request.Items)
             {
                 if (dto.Id.HasValue && existingItemIds.Contains(dto.Id.Value))
@@ -97,12 +94,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
                 }
             }
 
-            // Remove os itens que não estão mais na requisição
             var toRemoveItems = existingItems.Where(i => !dtoItemIds.Contains(i.Id)).ToList();
             foreach (var item in toRemoveItems)
                 await _saleItemsRepository.Delete(item);
 
-            // 7️⃣ Atualiza PAGAMENTOS
+            // ⚙️ Atualiza PAGAMENTOS
             var existingPayments = await _salesPaymentsRepository.FindAsync(p => p.SaleId == sale.Id, cancellationToken);
             var existingPayIds = existingPayments.Select(p => p.Id).ToHashSet();
             var dtoPayIds = request.Payments.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
@@ -133,10 +129,12 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
                 }
             }
 
-            // Remove os pagamentos ausentes
             var toRemovePayments = existingPayments.Where(p => !dtoPayIds.Contains(p.Id)).ToList();
             foreach (var pay in toRemovePayments)
                 await _salesPaymentsRepository.Delete(pay);
+
+            // ✅ Só agora atualize a venda
+            await _salesRepository.Update(sale);
 
             return Unit.Value;
         }
