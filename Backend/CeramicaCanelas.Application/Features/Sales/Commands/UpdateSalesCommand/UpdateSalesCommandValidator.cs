@@ -42,9 +42,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             // ✅ Nova validação para pagamentos
             RuleForEach(x => x.Payments).ChildRules(payment =>
             {
-                payment.RuleFor(p => p.Amount)
-                    .GreaterThan(0).WithMessage("O valor do pagamento deve ser maior que zero.");
-
                 payment.RuleFor(p => p.PaymentMethod)
                     .IsInEnum().WithMessage("Forma de pagamento inválida.");
 
