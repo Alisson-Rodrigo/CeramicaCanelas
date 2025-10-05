@@ -77,4 +77,11 @@ public class BaseRepository<T>(DefaultContext defaultContext) : IBaseRepository<
     }
 
 
+    public async Task SaveChangesAsync(CancellationToken ct = default)
+    {
+        await Context.SaveChangesAsync(ct);
+    }
+
+
+
 }
