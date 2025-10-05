@@ -11,11 +11,16 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
     {
         private readonly ILogged _logged;
         private readonly ISalesRepository _salesRepository;
+        private readonly ISalesPaymentsRepository _salesPaymentsRepository;
 
-        public PaySalesCommandHandler(ILogged logged, ISalesRepository salesRepository)
+        public PaySalesCommandHandler(
+            ILogged logged,
+            ISalesRepository salesRepository,
+            ISalesPaymentsRepository salesPaymentsRepository)
         {
             _logged = logged;
             _salesRepository = salesRepository;
+            _salesPaymentsRepository = salesPaymentsRepository;
         }
 
         public async Task<Unit> Handle(PaySalesCommand request, CancellationToken cancellationToken)
@@ -32,19 +37,16 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
                 throw new BadRequestException(validation);
 
             // 3) Carregar venda
-            var sale = await _salesRepository
-                .GetByIdWithPaymentsAsync(request.SaleId, cancellationToken);
-
+            var sale = await _salesRepository.GetByIdWithPaymentsAsync(request.SaleId, cancellationToken);
             if (sale is null || !sale.IsActive)
                 throw new BadRequestException("Venda não encontrada ou inativa.");
 
             if (sale.Status == SaleStatus.Cancelled)
                 throw new BadRequestException("Não é possível pagar uma venda cancelada.");
 
-            // 4) Criar pagamento
+            // 4) Criar pagamento (persistência isolada)
             var payment = new SalePayment
             {
-                Id = Guid.NewGuid(),
                 SaleId = sale.Id,
                 Amount = request.Amount,
                 PaymentMethod = request.PaymentMethod,
@@ -53,26 +55,20 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
                 ModifiedOn = DateTime.UtcNow
             };
 
-            sale.Payments.Add(payment);
+            await _salesPaymentsRepository.CreateAsync(payment, cancellationToken);
 
-            // 5) Recalcular status
-            var totalPaid = sale.Payments.Sum(p => p.Amount);
+            // 5) Atualizar status da venda
+            var totalPaid = sale.Payments.Sum(p => p.Amount) + request.Amount;
+
             if (totalPaid <= 0)
-            {
                 sale.Status = SaleStatus.Pending;
-            }
             else if (totalPaid < sale.TotalNet)
-            {
                 sale.Status = SaleStatus.PartiallyPaid;
-            }
             else
-            {
                 sale.Status = SaleStatus.Confirmed;
-            }
 
             sale.ModifiedOn = DateTime.UtcNow;
 
-            // 6) Atualizar no repositório
             await _salesRepository.Update(sale);
 
             return Unit.Value;

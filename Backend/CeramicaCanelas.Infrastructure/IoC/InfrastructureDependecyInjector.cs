@@ -44,6 +44,7 @@ public static class InfrastructureDependecyInjector {
         services.AddScoped<IExtractRepository, ExtractRepository>();
         services.AddScoped<IPdfReportService, PdfReportService>();
         services.AddScoped<ILaunchCategoryGroupRepository, LaunchCategoryGroupRepository>();
+        services.AddScoped<ISalesPaymentsRepository, SalesPaymentsRepository>();
 
 
 
