@@ -51,13 +51,17 @@ namespace CeramicaCanelas.Domain.Entities
 
         private void AtualizarStatus()
         {
-            if (GetRemainingBalance() <= 0)
+            var totalPago = GetTotalPaid();
+            var saldo = GetRemainingBalance();
+
+            if (Payments.Any() && saldo <= 0)
                 Status = SaleStatus.Confirmed;
-            else if (GetTotalPaid() > 0)
-                Status = SaleStatus.PartiallyPaid; // precisa adicionar no seu enum
+            else if (totalPago > 0)
+                Status = SaleStatus.PartiallyPaid;
             else
                 Status = SaleStatus.Pending;
         }
+
 
         // --- Regras de Totais ---
         public void ApplyDiscount(decimal discount)
