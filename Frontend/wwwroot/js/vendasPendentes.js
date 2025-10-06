@@ -73,7 +73,6 @@ async function fetchReportData(page = 1) {
         if (resultsSection) resultsSection.style.display = 'block';
 
     } catch (error) {
-        // ✅ Colspan atualizado para 8 colunas
         if (tableBody) tableBody.innerHTML = `<tr><td colspan="8" style="color: red; text-align: center;">${error.message}</td></tr>`;
         if (typeof showErrorModal === 'function') {
             showErrorModal({ title: "Erro na Pesquisa", detail: error.message });
@@ -104,8 +103,7 @@ function renderReportTable(items) {
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
         const totalValue = item.totalNet || 0;
         const formattedTotal = totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-        // ✅✅✅ NOVA LÓGICA PARA CALCULAR O SALDO DEVEDOR ✅✅✅
+        
         const totalPaid = (item.payments && item.payments.length > 0)
             ? item.payments.reduce((sum, payment) => sum + payment.amount, 0)
             : 0;
@@ -113,9 +111,7 @@ function renderReportTable(items) {
         const remainingBalance = totalValue - totalPaid;
         const formattedBalance = remainingBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-
         const row = tableBody.insertRow();
-        // ✅ Linha da tabela atualizada com a nova coluna e o valor correto no botão
         row.innerHTML = `
             <td>${item.noteNumber || 'N/A'}</td>
             <td>${item.customerName || 'N/A'}</td>
@@ -125,7 +121,7 @@ function renderReportTable(items) {
             <td>${formattedTotal}</td>
             <td>${formattedBalance}</td>
             <td class="actions-cell">
-                <button class="btn-action btn-success" onclick="openPaymentModal('${item.id}', ${remainingBalance})">Marcar como Pago</button>
+                <button class="btn-action btn-success" onclick="openPaymentModal('${item.id}', ${remainingBalance})">Registrar Pagamento</button>
             </td>
         `;
     });
@@ -175,15 +171,21 @@ function initializePaymentModal() {
     form?.addEventListener('submit', handlePaymentSubmit);
 }
 
-// ✅ Função atualizada para receber o valor a ser pago (saldo devedor)
+// ✅✅✅ ALTERAÇÃO 1: Armazenar o saldo devedor original no formulário
 window.openPaymentModal = (saleId, amountToPay) => {
     const modal = document.getElementById('paymentModal');
+    const form = document.getElementById('paymentForm');
+
+    // Armazena o saldo devedor original como um data attribute para uso posterior
+    form.dataset.remainingBalance = amountToPay;
+
     document.getElementById('paymentSaleId').value = saleId;
-    document.getElementById('paymentAmount').value = amountToPay.toFixed(2);
+    document.getElementById('paymentAmount').value = amountToPay > 0 ? amountToPay.toFixed(2) : '0.00';
     document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
     modal.style.display = 'block';
 };
 
+// ✅✅✅ ALTERAÇÃO 2: Lógica para decidir o status antes de enviar
 async function handlePaymentSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -193,6 +195,18 @@ async function handlePaymentSubmit(event) {
     submitBtn.textContent = 'Processando...';
 
     const formData = new FormData(form);
+    const amountBeingPaid = parseFloat(formData.get('Amount'));
+    const originalBalance = parseFloat(form.dataset.remainingBalance || '0');
+
+    // Lógica para determinar o novo status
+    // Se o valor pago for menor que o saldo devedor, o status deve ser "Pago Parcialmente" (1)
+    // Caso contrário, é "Confirmada" (2)
+    const newStatus = (amountBeingPaid < originalBalance && amountBeingPaid > 0) ? 1 : 2;
+    
+    // Adiciona o status ao FormData. O backend precisa estar preparado para receber este campo.
+    formData.append('Status', newStatus);
+
+    console.log(`Pagamento de ${amountBeingPaid} em um saldo de ${originalBalance}. Novo status sugerido: ${newStatus}`);
 
     try {
         const accessToken = localStorage.getItem('accessToken');
@@ -205,12 +219,12 @@ async function handlePaymentSubmit(event) {
         });
 
         if (response.ok) {
-            alert('Venda atualizada com sucesso!');
+            alert('Pagamento registrado e venda atualizada com sucesso!');
             document.getElementById('paymentModal').style.display = 'none';
             fetchReportData(currentPage);
         } else {
             const errorData = await response.json().catch(() => ({ title: "Erro" }));
-            showErrorModal({ title: "Falha ao Atualizar", detail: errorData.message || "Não foi possível marcar como pago." });
+            showErrorModal({ title: "Falha ao Atualizar", detail: errorData.message || "Não foi possível registrar o pagamento." });
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
