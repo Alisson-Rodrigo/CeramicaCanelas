@@ -1118,3 +1118,21 @@ input[id="typeExpense"]:checked + .type-button:hover::before {
     letter-spacing: 0.3px;
     box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
 }
+/* Estilos para os indicadores de Entrada/Saída na tabela */
+.type-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espaço entre o emoji e o texto */
+    font-weight: bold;
+}
+
+.type-indicator.income {
+    color: #28a745; /* Verde para entradas */
+}
+
+.type-indicator.expense {
+    color: #dc3545; /* Vermelho para saídas */
+}
+.btn-edit-modal{
+    background-color: #28a745; 
+}

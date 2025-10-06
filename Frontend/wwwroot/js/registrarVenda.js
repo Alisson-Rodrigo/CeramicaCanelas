@@ -1,7 +1,5 @@
 console.log('Script js/venda.js DEFINIDO.');
 
-
-
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -19,14 +17,18 @@ function initDynamicForm() {
 // =======================================================
 function initializeSaleForm() {
     const saleForm = document.getElementById('saleForm');
-    const discountInput = document.getElementById('discount');
+    const amountPaidInput = document.getElementById('amountPaid');
     const itemsTbody = document.getElementById('saleItemsTbody');
     const addItemBtn = document.getElementById('add-sale-item-btn');
 
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('saleDate').value = today;
+    document.getElementById('paymentDate').value = today;
+
     saleForm.addEventListener('submit', handleSaleSubmit);
-    if (discountInput) discountInput.addEventListener('input', updateTotals);
+    if (amountPaidInput) amountPaidInput.addEventListener('input', updateTotals);
     if (addItemBtn) addItemBtn.addEventListener('click', addProductToCart);
-    
+
     itemsTbody.addEventListener('click', (event) => {
         if (event.target.classList.contains('btn-delete-item')) {
             event.target.closest('tr').remove();
@@ -39,13 +41,13 @@ function initializeSaleForm() {
 function populateSelects() {
     const paymentSelect = document.getElementById('paymentMethod');
     const statusSelect = document.getElementById('saleStatus');
-    if (paymentSelect) {
+    if (paymentSelect && typeof paymentMethodMap !== 'undefined') {
         paymentSelect.innerHTML = '';
         for (const [key, value] of Object.entries(paymentMethodMap)) {
             paymentSelect.appendChild(new Option(value, key));
         }
     }
-    if (statusSelect) {
+    if (statusSelect && typeof saleStatusMap !== 'undefined') {
         statusSelect.innerHTML = '';
         for (const [key, value] of Object.entries(saleStatusMap)) {
             statusSelect.appendChild(new Option(value, key));
@@ -55,7 +57,7 @@ function populateSelects() {
 
 function populateProductSelect() {
     const select = document.getElementById('product-select');
-    if (!select) return;
+    if (!select || typeof productTypeMap === 'undefined') return;
     select.innerHTML = '<option value="">Selecione um produto</option>';
     for (const [key, value] of Object.entries(productTypeMap)) {
         select.appendChild(new Option(value, key));
@@ -70,61 +72,95 @@ function updateTotals() {
         const price = parseFloat(row.dataset.price) || 0;
         subtotal += quantity * price;
     });
-    const discount = parseFloat(document.getElementById('discount').value) || 0;
-    const total = subtotal - discount;
 
-    // Formatação dos valores com 2 casas decimais
-    document.getElementById('subtotal').textContent = subtotal.toFixed(2).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    document.getElementById('total').textContent = total.toFixed(2).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const total = subtotal;
+    const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
+    const balance = total - amountPaid;
+
+    document.getElementById('subtotal').textContent = subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('total').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('balance').textContent = balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
-
 
 async function handleSaleSubmit(event) {
     event.preventDefault();
+
     const itemsRows = document.querySelectorAll('#saleItemsTbody tr:not(#placeholder-row)');
     if (itemsRows.length === 0) {
-        showErrorModal({ title: "Validação", detail: "Adicione pelo menos um produto." });
+        showErrorModal({ title: "Validação", detail: "A venda deve possuir ao menos um item." });
         return;
     }
-    const saleItems = [];
-    for (const row of itemsRows) {
-        saleItems.push({
-            product: parseInt(row.dataset.productId, 10),
-            quantity: parseFloat(row.dataset.quantity),
-            unitPrice: parseFloat(row.dataset.price)
+
+    const items = Array.from(itemsRows).map(row => ({
+        product: parseInt(row.dataset.productId, 10),
+        quantity: parseFloat(row.dataset.quantity),
+        unitPrice: parseFloat(row.dataset.price)
+    }));
+
+    const payments = [];
+    const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
+    if (amountPaid > 0) {
+        payments.push({
+            paymentDate: document.getElementById('paymentDate').value,
+            amount: amountPaid,
+            paymentMethod: parseInt(document.getElementById('paymentMethod').value, 10)
         });
     }
-    const payload = {
-        noteNumber: parseInt(document.getElementById('noteNumber').value) || 0,
-        city: document.getElementById('city').value,
-        state: document.getElementById('state').value,
+
+    const selectedStatus = parseInt(document.getElementById('saleStatus').value, 10);
+
+    const salePayload = {
+        noteNumber: parseInt(document.getElementById('noteNumber').value, 10),
         customerName: document.getElementById('customerName').value,
         customerAddress: document.getElementById('customerAddress').value,
+        city: document.getElementById('city').value,
+        state: document.getElementById('state').value,
         customerPhone: document.getElementById('customerPhone').value,
-        paymentMethod: parseInt(document.getElementById('paymentMethod').value),
-        discount: parseFloat(document.getElementById('discount').value) || 0,
-        saleStatus: parseInt(document.getElementById('saleStatus').value),
-        items: saleItems
+        date: document.getElementById('saleDate').value,
+        discount: 0,
+        saleStatus: selectedStatus,
+        status: selectedStatus,
+        items: items,
+        payments: payments
     };
+
+    console.log("📤 Enviando payload JSON para Criação:", salePayload);
+
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify(payload)
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(salePayload)
         });
+
         if (response.ok) {
             alert('Venda registrada com sucesso!');
             document.getElementById('saleForm').reset();
+            initializeSaleForm();
             populateSelects();
-            document.getElementById('saleItemsTbody').innerHTML = '<tr id="placeholder-row"><td colspan="5">Nenhum produto adicionado.</td></tr>';
+            document.getElementById('saleItemsTbody').innerHTML = '';
+            checkPlaceholder();
             updateTotals();
             fetchAndRenderHistory(1);
         } else {
-            const errorData = await response.json();
-            showErrorModal(errorData);
+            const errorText = await response.text();
+            console.error("Erro da API:", response.status, errorText);
+            let errorData = { message: `Erro ${response.status}. Verifique o console.` };
+            try {
+                errorData = JSON.parse(errorText);
+            } catch (e) {
+                if (response.status === 415) {
+                    errorData.detail = "Erro 415: Formato de mídia não suportado.";
+                }
+            }
+            showErrorModal({ title: errorData.title || "Erro ao Salvar", detail: errorData.detail || errorData.message || errorText });
         }
     } catch (error) {
+        console.error("Erro de Conexão:", error);
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
     }
 }
@@ -133,14 +169,14 @@ function addProductToCart() {
     const productSelect = document.getElementById('product-select');
     const quantityInput = document.getElementById('sale-quantity');
     const priceInput = document.getElementById('sale-unit-price');
-    
+
     const productId = productSelect.value;
     const productName = productSelect.options[productSelect.selectedIndex].text;
-    const quantity = parseFloat(quantityInput.value).toFixed(2); // Quantidade com 2 casas decimais
-    const unitPrice = parseFloat(priceInput.value).toFixed(2); // Preço unitário com 2 casas decimais
+    const quantity = parseFloat(quantityInput.value);
+    const unitPrice = parseFloat(priceInput.value);
 
     if (!productId) { alert('Selecione um produto.'); return; }
-    if (isNaN(quantity) || quantity <= 0) { alert('Insira uma quantidade válida (ex: 1.5).'); return; }
+    if (isNaN(quantity) || quantity <= 0) { alert('Insira uma quantidade válida.'); return; }
     if (isNaN(unitPrice) || unitPrice < 0) { alert('Insira um preço válido.'); return; }
 
     const tbody = document.getElementById('saleItemsTbody');
@@ -151,9 +187,7 @@ function addProductToCart() {
 
     checkPlaceholder();
 
-    // Calculando subtotal
-    const subtotal = (quantity * unitPrice).toFixed(2);
-
+    const subtotal = (quantity * unitPrice);
     const newRow = document.createElement('tr');
     newRow.dataset.productId = productId;
     newRow.dataset.quantity = quantity;
@@ -161,23 +195,33 @@ function addProductToCart() {
 
     newRow.innerHTML = `
         <td>${productName}</td>
-        <td>${parseFloat(quantity).toFixed(2)}</td> <!-- Exibindo quantidade com 2 casas decimais -->
-        <td>${parseFloat(unitPrice).toFixed(2)}</td> <!-- Exibindo preço unitário com 2 casas decimais -->
-        <td>R$ ${subtotal}</td> <!-- Exibindo subtotal formatado -->
+        <td>${quantity.toFixed(2)}</td>
+        <td>${unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        <td>${subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         <td><button type="button" class="btn-action btn-delete-item">Remover</button></td>
     `;
+
     tbody.appendChild(newRow);
     updateTotals();
+
+    productSelect.value = '';
+    quantityInput.value = '1.00';
+    priceInput.value = '0.00';
+    productSelect.focus();
 }
 
 function checkPlaceholder() {
     const tbody = document.getElementById('saleItemsTbody');
     const placeholder = document.getElementById('placeholder-row');
-    if (placeholder) placeholder.remove();
-    if (tbody.children.length === 0) {
+    const hasItems = tbody.querySelector('tr:not(#placeholder-row)');
+
+    if (placeholder && hasItems) {
+        placeholder.remove();
+    } else if (!hasItems && !placeholder) {
         tbody.innerHTML = '<tr id="placeholder-row"><td colspan="5">Nenhum item adicionado.</td></tr>';
     }
 }
+
 
 // =======================================================
 // LÓGICA DA TABELA DE HISTÓRICO DE VENDAS
@@ -187,7 +231,7 @@ function initializeHistoryFilters() {
     const clearBtn = document.getElementById('historyClearBtn');
     const statusSelect = document.getElementById('historyStatus');
 
-    if (statusSelect) {
+    if (statusSelect && typeof saleStatusMap !== 'undefined') {
         statusSelect.innerHTML = '<option value="">Todos os Status</option>';
         for (const [key, value] of Object.entries(saleStatusMap)) {
             statusSelect.appendChild(new Option(value, key));
@@ -205,16 +249,15 @@ function initializeHistoryFilters() {
 
 async function fetchAndRenderHistory(page = 1) {
     currentHistoryPage = page;
-
-    // 🔄 Limpa qualquer cache de edição pendente ao recarregar a lista
     for (const k in originalRowHTML_Sale) delete originalRowHTML_Sale[k];
 
     const tableBody = document.getElementById('sales-history-body');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Buscando vendas...</td></tr>';
+    tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center;">Buscando vendas...</td></tr>`;
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const params = new URLSearchParams({ Page: page, PageSize: 10, OrderBy: 'SaleDate', Ascending: false });
+        const params = new URLSearchParams({ Page: page, PageSize: 10 });
+
         const search = document.getElementById('historySearch')?.value;
         const status = document.getElementById('historyStatus')?.value;
         const startDate = document.getElementById('historyStartDate')?.value;
@@ -224,14 +267,21 @@ async function fetchAndRenderHistory(page = 1) {
         if (startDate) params.append('StartDate', startDate);
         if (endDate) params.append('EndDate', endDate);
         const url = `${API_BASE_URL}/sales/paged?${params.toString()}`;
-        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const response = await fetch(url, { cache: 'no-cache', headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar vendas (Status: ${response.status})`);
         const paginatedData = await response.json();
+
+        console.log("📥 Dados recebidos da API de Histórico:", paginatedData);
+
+        if (paginatedData.items && paginatedData.items.length > 0) {
+            paginatedData.items.sort((a, b) => a.noteNumber - b.noteNumber);
+        }
+
         historyItemsCache = paginatedData.items;
         renderHistoryTable(paginatedData.items);
         renderHistoryPagination(paginatedData);
     } catch (error) {
-        
+        tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: red;">Erro: ${error.message}</td></tr>`;
     }
 }
 
@@ -239,53 +289,79 @@ function renderHistoryTable(items) {
     const tableBody = document.getElementById('sales-history-body');
     tableBody.innerHTML = '';
     if (!items || items.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhuma venda encontrada.</td></tr>';
+        tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center;">Nenhuma venda encontrada.</td></tr>`;
         return;
     }
-    items.forEach(item => {
-        const itemJsonString = JSON.stringify(item).replace(/'/g, "&apos;");
-        const date = new Date(item.saleDate);
+    items.forEach((item) => {
+        const dateStr = item.saleDate || item.date;
+        const date = new Date(dateStr);
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
-        const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const statusText = saleStatusMap[item.status] || 'N/A';
+
+        const totalValue = item.totalNet || 0;
+        const formattedTotal = totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         
+        // ✅✅✅ NOVA LÓGICA PARA CALCULAR O SALDO DEVEDOR ✅✅✅
+        const totalPaid = (item.payments && item.payments.length > 0)
+            ? item.payments.reduce((sum, payment) => sum + payment.amount, 0)
+            : 0;
+
+        const remainingBalance = totalValue - totalPaid;
+        const formattedBalance = remainingBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        const statusText = saleStatusMap[item.status ?? item.saleStatus] || 'Desconhecido';
+
         const saleRow = document.createElement('tr');
         saleRow.className = 'sale-row';
         saleRow.id = `row-sale-${item.id}`;
         saleRow.innerHTML = `
-            <td><button class="expand-btn" onclick="toggleItems(this, '${item.id}')">+</button></td>
+            <td><button class="expand-btn">+</button></td>
             <td data-field="noteNumber">${item.noteNumber}</td>
             <td data-field="customerName">${item.customerName}</td>
+            <td data-field="customerPhone">${item.customerPhone || 'N/A'}</td>
+            <td data-field="city">${item.city || 'N/A'}</td>
             <td data-field="saleDate">${formattedDate}</td>
+            <td data-field="itemsCount">${item.itemsCount || 0}</td>
             <td data-field="totalNet">${formattedTotal}</td>
-            <td data-field="status">${statusText}</td>
+            <td data-field="remainingBalance">${formattedBalance}</td> <td data-field="status">${statusText}</td>
             <td class="actions-cell" data-field="actions">
-                <button class="btn-action btn-edit" onclick='editSale(${itemJsonString})'>Editar</button>
-                <button class="btn-action btn-delete" onclick="deleteSale('${item.id}')">Excluir</button>
+                <button class="btn-action btn-edit">Editar</button>
+                <button class="btn-action btn-delete">Excluir</button>
             </td>
         `;
+
+        saleRow.querySelector('.expand-btn').addEventListener('click', (e) => toggleItems(e.target, item.id));
+        saleRow.querySelector('.btn-edit').addEventListener('click', () => editSale(item.id));
+        saleRow.querySelector('.btn-delete').addEventListener('click', () => deleteSale(item.id));
         tableBody.appendChild(saleRow);
 
         const itemsRow = document.createElement('tr');
         itemsRow.className = 'items-row';
         itemsRow.id = `items-${item.id}`;
         itemsRow.style.display = 'none';
-        
-        let itemsHtml = `<td colspan="7" class="items-container"><table class="nested-table">
+
+        let itemsHtml = `<td colspan="11" class="items-container"><table class="nested-table">
             <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
             <tbody>`;
-        item.items.forEach(saleItem => {
-            const productName = productTypeMap[saleItem.product] || 'Produto desconhecido';
-            const subtotal = (saleItem.quantity * saleItem.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            itemsHtml += `
-                <tr data-item-id="${saleItem.id}">
-                    <td data-item-field="product">${productName}</td>
-                    <td data-item-field="quantity">${saleItem.quantity}</td>
-                    <td data-item-field="unitPrice">${(saleItem.unitPrice || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                    <td>${subtotal}</td>
-                </tr>
-            `;
-        });
+        if (item.items && item.items.length > 0) {
+            item.items.forEach(saleItem => {
+                let productName = 'Produto desconhecido';
+                if (typeof saleItem.product === 'string' && typeof productNameMap !== 'undefined') {
+                    productName = productNameMap[saleItem.product] || saleItem.product;
+                } else if (typeof saleItem.product === 'number') {
+                    productName = productTypeMap[saleItem.product] || 'Produto desconhecido';
+                }
+
+                const subtotal = (saleItem.quantity * saleItem.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                itemsHtml += `
+                    <tr data-item-id="${saleItem.id}">
+                        <td data-item-field="product">${productName}</td>
+                        <td data-item-field="quantity">${saleItem.quantity.toFixed(2)}</td>
+                        <td data-item-field="unitPrice">${(saleItem.unitPrice || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                        <td>${subtotal}</td>
+                    </tr>
+                `;
+            });
+        }
         itemsHtml += '</tbody></table></td>';
         itemsRow.innerHTML = itemsHtml;
         tableBody.appendChild(itemsRow);
@@ -315,6 +391,10 @@ function renderHistoryPagination(paginationData) {
     controlsContainer.appendChild(pageInfo);
     controlsContainer.appendChild(nextButton);
 }
+
+// =======================================================
+// EDIÇÃO E AÇÕES DA TABELA
+// =======================================================
 
 window.toggleItems = (button, saleId) => {
     const itemsRow = document.getElementById(`items-${saleId}`);
@@ -347,51 +427,47 @@ window.deleteSale = async (saleId) => {
     }
 };
 
-// =======================
-// EDIÇÃO INLINE DA VENDA
-// =======================
-window.editSale = (item) => {
+window.editSale = (saleId) => {
+    const item = historyItemsCache.find(i => i.id === saleId);
+    if (!item) return;
+
     const row = document.getElementById(`row-sale-${item.id}`);
     const itemsRow = document.getElementById(`items-${item.id}`);
-    if (!row) return;
+    if (!row || originalRowHTML_Sale[item.id]) return;
 
-    // ✅ Novo guard: evita bloquear edições subsequentes
-    if (row.querySelector('.edit-input')) return;
+    originalRowHTML_Sale[item.id] = { main: row.innerHTML, items: itemsRow.innerHTML };
 
-    // Salva HTML original apenas uma vez
-    if (!originalRowHTML_Sale[item.id]) {
-        originalRowHTML_Sale[item.id] = { main: row.innerHTML, items: itemsRow.innerHTML };
-    }
+    row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="NoteNumber" class="edit-input" value="${item.noteNumber}">`;
+    row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="CustomerName" class="edit-input" value="${item.customerName}">`;
+    row.querySelector('[data-field="customerPhone"]').innerHTML = `<input type="text" name="CustomerPhone" class="edit-input" value="${item.customerPhone || ''}">`;
+    row.querySelector('[data-field="city"]').innerHTML = `<input type="text" name="City" class="edit-input" value="${item.city || ''}">`;
 
-    row.querySelector('[data-field="noteNumber"]').innerHTML =
-        `<input type="number" name="noteNumber" class="edit-input" value="${item.noteNumber}">`;
-    row.querySelector('[data-field="customerName"]').innerHTML =
-        `<input type="text" name="customerName" class="edit-input" value="${item.customerName}">`;
-    
+    const currentStatus = item.status ?? item.saleStatus ?? 0;
     let statusOptions = '';
     for (const [key, value] of Object.entries(saleStatusMap)) {
-        const selected = key == item.status ? 'selected' : '';
+        const selected = parseInt(key) === parseInt(currentStatus) ? 'selected' : '';
         statusOptions += `<option value="${key}" ${selected}>${value}</option>`;
     }
-    row.querySelector('[data-field="status"]').innerHTML =
-        `<select name="status" class="edit-input">${statusOptions}</select>`;
+    row.querySelector('[data-field="status"]').innerHTML = `<select name="Status" class="edit-input">${statusOptions}</select>`;
 
     row.querySelector('[data-field="actions"]').innerHTML = `
-        <button class="btn-action btn-save" onclick="saveSaleChanges('${item.id}')">Salvar</button>
-        <button class="btn-action btn-cancel" onclick="cancelEditSale('${item.id}')">Cancelar</button>
+        <button class="btn-action btn-save">Salvar</button>
+        <button class="btn-action btn-cancel">Cancelar</button>
     `;
-    
+
+    row.querySelector('.btn-save').addEventListener('click', () => saveSaleChanges(item.id));
+    row.querySelector('.btn-cancel').addEventListener('click', () => cancelEditSale(item.id));
+
     const itemsTableBody = itemsRow.querySelector('tbody');
     itemsTableBody.querySelectorAll('tr').forEach(itemRow => {
         const saleItem = item.items.find(i => i.id === itemRow.dataset.itemId);
         if (!saleItem) return;
-        
-        itemRow.querySelector('[data-item-field="quantity"]').innerHTML =
-            `<input type="number" class="edit-input" name="quantity" value="${saleItem.quantity}">`;
-        itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML =
-            `<input type="number" step="0.01" class="edit-input" name="unitPrice" value="${saleItem.unitPrice}">`;
+
+        itemRow.querySelector('[data-item-field="quantity"]').innerHTML = `<input type="number" step="0.01" class="edit-input" name="quantity" value="${saleItem.quantity}">`;
+        itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML = `<input type="number" step="0.01" class="edit-input" name="unitPrice" value="${saleItem.unitPrice}">`;
     });
 };
+
 
 window.saveSaleChanges = async (saleId) => {
     const row = document.getElementById(`row-sale-${saleId}`);
@@ -400,11 +476,11 @@ window.saveSaleChanges = async (saleId) => {
 
     const originalItem = historyItemsCache.find(i => i.id === saleId);
     if (!originalItem) {
-        showErrorModal({title: "Erro", detail: "Não foi possível encontrar os dados originais da venda."});
+        showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
         cancelEditSale(saleId);
         return;
     }
-    
+
     const editedItems = [];
     itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
         const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
@@ -418,30 +494,58 @@ window.saveSaleChanges = async (saleId) => {
         }
     });
 
-    const payload = {
-        id: saleId,
-        noteNumber: parseInt(row.querySelector('[name="noteNumber"]').value) || 0,
-        customerName: row.querySelector('[name="customerName"]').value,
-        status: parseInt(row.querySelector('[name="status"]').value),
-        city: originalItem.city,
-        state: originalItem.state,
-        customerAddress: originalItem.customerAddress,
-        customerPhone: originalItem.customerPhone,
-        paymentMethod: originalItem.paymentMethod,
-        discount: originalItem.discount,
-        items: editedItems
-    };
+    const formData = new FormData();
+    formData.append('Id', saleId);
+    formData.append('NoteNumber', row.querySelector('[name="NoteNumber"]').value || '0');
+    formData.append('CustomerName', row.querySelector('[name="CustomerName"]').value || '');
+    formData.append('CustomerPhone', row.querySelector('[name="CustomerPhone"]').value || '');
+    formData.append('City', row.querySelector('[name="City"]').value || '');
+
+    const statusValue = row.querySelector('[name="Status"]').value;
+    formData.append('Status', statusValue);
+
+    formData.append('State', originalItem.state || '');
+    formData.append('CustomerAddress', originalItem.customerAddress || '');
+    formData.append('Discount', originalItem.discount.toString());
+
+    let saleDateStr = originalItem.saleDate || originalItem.date;
+    if (typeof saleDateStr === 'string' && saleDateStr.includes('T')) {
+        saleDateStr = saleDateStr.split('T')[0];
+    }
+    formData.append('Date', saleDateStr);
+
+    editedItems.forEach((item, index) => {
+        let productId;
+        if (typeof item.product === 'number') {
+            productId = item.product;
+        } else if (typeof productEnumNameToIdMap !== 'undefined') {
+            productId = productEnumNameToIdMap[item.product];
+        }
+
+        formData.append(`Items[${index}].Id`, item.id);
+        if (productId !== undefined) {
+            formData.append(`Items[${index}].Product`, productId.toString());
+        }
+        formData.append(`Items[${index}].Quantity`, item.quantity.toString());
+        formData.append(`Items[${index}].UnitPrice`, item.unitPrice.toString());
+    });
+
+    console.log("📤 Enviando FormData para Atualização:");
+    for (let pair of formData.entries()) {
+        console.log(`   ${pair[0]}: ${pair[1]}`);
+    }
 
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify(payload)
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: formData
         });
         if (response.ok) {
             alert('Venda atualizada com sucesso!');
-            // ✅ limpa o cache desta venda para permitir nova edição
             delete originalRowHTML_Sale[saleId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
@@ -460,6 +564,13 @@ window.cancelEditSale = (saleId) => {
     if (row && originalRowHTML_Sale[saleId]) {
         row.innerHTML = originalRowHTML_Sale[saleId].main;
         itemsRow.innerHTML = originalRowHTML_Sale[saleId].items;
+
+        row.querySelector('.expand-btn').addEventListener('click', (e) => toggleItems(e.target, saleId));
+        row.querySelector('.btn-edit').addEventListener('click', () => editSale(saleId));
+        row.querySelector('.btn-delete').addEventListener('click', () => deleteSale(saleId));
         delete originalRowHTML_Sale[saleId];
     }
 };
+
+// Chamar a inicialização quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', initDynamicForm);

@@ -196,6 +196,7 @@ h2::after, .form-title::after {
 
 .results-table, .items-table {
     width: 100%;
+
     border-collapse: collapse;
     font-size: 0.9rem;
 }
@@ -206,6 +207,7 @@ h2::after, .form-title::after {
     padding: 1rem;
     text-align: left;
     font-weight: 600;
+  
     text-transform: uppercase;
     letter-spacing: 0.5px;
     position: sticky;
@@ -1623,4 +1625,8 @@ body {
         padding: 8px 12px;
         font-size: 0.85rem;
     }
+}
+h3{
+    margin-top: 50px;
+    margin-bottom: 50px;
 }

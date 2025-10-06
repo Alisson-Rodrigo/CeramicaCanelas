@@ -30,6 +30,7 @@ namespace CeramicaCanelas.Persistence.Repositories
             return Context.Launches
                 .Include(l => l.Category)
                 .Include(l => l.Customer)
+                .Include(l => l.ImageProofs)
                 .AsNoTracking() // Importante para queries de leitura
                 .AsQueryable();
         }

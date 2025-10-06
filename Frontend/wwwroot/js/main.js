@@ -7,7 +7,7 @@
 const APP_VERSION = '1.0.0';
 
 // const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
-const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
+const API_BASE_URL = 'http://localhost:5087/api';
 const originalRowHTML = {};
 
 // Cache para a tabela de histórico em páginas complexas
@@ -59,26 +59,54 @@ const paymentMethodMap = {
     6: 'Caixa Econômica',
     7: 'Débito Automático'
 };
+const productNameMap = {
+    "Brick1_6": "Tijolos de 1ª 06 Furos", "Brick2_6": "Tijolos de 2ª 06 Furos", "Brick1_8": "Tijolos de 1ª 08 Furos",
+    "Brick2_8": "Tijolos de 2ª 08 Furos", "Brick8G": "Tijolos de 08 Furos G", "Brick6Double": "Tijolo de 6 furos Duplo",
+    "Block9": "Blocos de 9 Furos", "Block9Double": "Blocos de 9 Furos Duplo", "Bands6": "Bandas 6 furos",
+    "Bands8": "Bandas 8 furos", "Bands9": "Bandas 9 furos", "RoofTile1": "Telhas de 1ª", "RoofTile2": "Telhas de 2ª",
+    "Slabs": "Lajotas", "GrillBricks": "Tijolos para churrasqueira", "Caldeado6": "Caldeado 6 furos",
+    "Caldeado8": "Caldeado 8 furos", "Caldeado9": "Caldeado 9 furos"
+};
+// ✅ NOVO MAPA CORRIGIDO: Para converter o Nome do Enum da API de volta para o ID numérico na hora de editar.
+const productEnumNameToIdMap = {
+    "Brick1_6": 0, "Brick2_6": 1, "Brick1_8": 2, "Brick2_8": 3, "Brick8G": 4, "Brick6Double": 5,
+    "Block9": 6, "Block9Double": 7, "Bands6": 8, "Bands8": 9, "Bands9": 10, "RoofTile1": 11,
+    "RoofTile2": 12, "Slabs": 13, "GrillBricks": 14, "Caldeado6": 15, "Caldeado8": 16, "Caldeado9": 17
+};
+
 const statusMap = { 0: 'Pendente', 1: 'Pago' };
 const productTypeMap = {
+    // 🔹 Tijolos
     0: "Tijolos de 1ª 06 Furos",
     1: "Tijolos de 2ª 06 Furos",
     2: "Tijolos de 1ª 08 Furos",
     3: "Tijolos de 2ª 08 Furos",
     4: "Tijolos de 08 Furos G",
-    5: "Blocos de 9 Furos",
-    6: "Blocos de 9 Furos Duplo",
-    7: "Bandas 6 furos",
-    8: "Telhas de 1ª",
-    9: "Telhas de 2ª",
-    10: "Lajotas",
-    11: "Tijolos para churrasqueira",
-    12: "Bandas 8 furos",
-    13: "Bandas 9 furos",
-    14: "Caldeado 6 furos",
-    15: "Caldeado 8 furos",
-    16: "Caldeado 9 furos",
-    17: "Tijolo de 6 furos Duplo"
+    5: "Tijolo de 6 furos Duplo",
+    
+    // 🔹 Blocos
+    6: "Blocos de 9 Furos",
+    7: "Blocos de 9 Furos Duplo",
+    
+    // 🔹 Bandas
+    8: "Bandas 6 furos",
+    9: "Bandas 8 furos",
+    10: "Bandas 9 furos",
+    
+    // 🔹 Telhas
+    11: "Telhas de 1ª",
+    12: "Telhas de 2ª",
+    
+    // 🔹 Lajotas
+    13: "Lajotas",
+    
+    // 🔹 Especiais
+    14: "Tijolos para churrasqueira",
+    
+    // 🔹 Caldeado
+    15: "Caldeado 6 furos",
+    16: "Caldeado 8 furos",
+    17: "Caldeado 9 furos"
 };
 
 const originalRowHTML_Sale = {};
@@ -88,7 +116,12 @@ let paymentMethodsChart = null;
 let topCitiesChart = null;
 // Função utilitária global
 const getPositionName = (positionId) => positionMap[positionId] || 'Desconhecido';
-const saleStatusMap = { 0: 'Pendente', 1: 'Confirmada', 2: 'Cancelada' };
+const saleStatusMap = { 
+    0: 'Pendente', 
+    1: 'Pago Parcialmente', 
+    2: 'Confirmada',
+    3: 'Cancelada' 
+};
 // =======================================================
 // FUNÇÃO PRINCIPAL DE CARREGAMENTO DE PÁGINAS (COM CACHE BUSTING)
 // =======================================================

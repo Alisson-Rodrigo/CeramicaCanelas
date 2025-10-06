@@ -1,7 +1,11 @@
+
+    <title>Relatório de Vendas Pendentes</title>
+
+
 <div class="container">
     <div class="header">
         <h1>Relatório de Vendas Pendentes</h1>
-        <p>Acompanhe todas as vendas com status "Pendente"</p>
+        <p>Acompanhe todas as vendas com status "Pendente" ou "Pago Parcialmente"</p>
     </div>
 
     <div class="search-section">
@@ -32,10 +36,9 @@
             <button id="clearButton" class="clear-button"><span>🗑️</span> Limpar Filtros</button>
         </div>
     </div>
-
-    <div class="loading" id="loading" style="display: none;">
-        <div class="spinner"></div>
-        Carregando relatório...
+    
+    <div id="loading" style="display: none; justify-content: center; padding: 2rem;">
+        <p>Carregando dados...</p>
     </div>
 
     <div class="results-section" id="resultsSection" style="display: none;">
@@ -48,15 +51,45 @@
                         <th>Data da Venda</th>
                         <th>Telefone</th>
                         <th>Itens</th>
-                        <th>Total</th>
-                        <th>Ações</th> </tr>
+                        <th>Total da Venda</th>
+                        <th>Saldo Devedor</th> <th>Ações</th>
+                    </tr>
                 </thead>
                 <tbody id="report-table-body"></tbody>
             </table>
         </div>
         <div class="no-results" id="noResults" style="display: none;">
-            <p>🎉 Nenhuma venda pendente encontrada.</p>
+            <p>🎉 Nenhuma venda pendente encontrada com os filtros aplicados.</p>
         </div>
         <div id="pagination-controls" class="pagination-controls"></div>
+    </div>
+</div>
+
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Registrar Pagamento</h2>
+            <button class="modal-close-btn" id="closePaymentModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="paymentForm">
+                <input type="hidden" id="paymentSaleId" name="SaleId">
+                <div class="form-group">
+                    <label for="paymentAmount">Valor do Pagamento</label>
+                    <input type="number" id="paymentAmount" name="Amount" class="form-input" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethodModal">Método de Pagamento</label>
+                    <select id="paymentMethodModal" name="PaymentMethod" class="form-input" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="paymentDate">Data do Pagamento</label>
+                    <input type="date" id="paymentDate" name="PaymentDate" class="form-input" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="submit-btn">Confirmar Pagamento</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
