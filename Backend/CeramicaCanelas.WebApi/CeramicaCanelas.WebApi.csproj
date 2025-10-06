@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\employees\images\" />
+    <Folder Include="wwwroot\financial\launch\proof\" />
   </ItemGroup>
 
 	<ItemGroup>
