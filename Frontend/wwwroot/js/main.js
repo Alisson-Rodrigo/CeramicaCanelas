@@ -74,6 +74,7 @@ const productEnumNameToIdMap = {
     "RoofTile2": 12, "Slabs": 13, "GrillBricks": 14, "Caldeado6": 15, "Caldeado8": 16, "Caldeado9": 17
 };
 
+let currentEditingLaunchId = null; // Rastreia qual item está sendo editado via modal
 const statusMap = { 0: 'Pendente', 1: 'Pago' };
 const productTypeMap = {
     // 🔹 Tijolos
@@ -120,7 +121,8 @@ const saleStatusMap = {
     0: 'Pendente', 
     1: 'Pago Parcialmente', 
     2: 'Confirmada',
-    3: 'Cancelada' 
+    3: 'Cancelada' ,
+    4: 'Doação'
 };
 // =======================================================
 // FUNÇÃO PRINCIPAL DE CARREGAMENTO DE PÁGINAS (COM CACHE BUSTING)

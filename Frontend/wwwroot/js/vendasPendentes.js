@@ -171,21 +171,19 @@ function initializePaymentModal() {
     form?.addEventListener('submit', handlePaymentSubmit);
 }
 
-// ✅✅✅ ALTERAÇÃO 1: Armazenar o saldo devedor original no formulário
 window.openPaymentModal = (saleId, amountToPay) => {
     const modal = document.getElementById('paymentModal');
     const form = document.getElementById('paymentForm');
-
-    // Armazena o saldo devedor original como um data attribute para uso posterior
-    form.dataset.remainingBalance = amountToPay;
-
+    
     document.getElementById('paymentSaleId').value = saleId;
     document.getElementById('paymentAmount').value = amountToPay > 0 ? amountToPay.toFixed(2) : '0.00';
     document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
     modal.style.display = 'block';
 };
 
-// ✅✅✅ ALTERAÇÃO 2: Lógica para decidir o status antes de enviar
+
+// ✅✅✅ FUNÇÃO CORRIGIDA ✅✅✅
+// Remove o cálculo e o envio do campo 'Status', pois a API é responsável por essa lógica.
 async function handlePaymentSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -195,18 +193,8 @@ async function handlePaymentSubmit(event) {
     submitBtn.textContent = 'Processando...';
 
     const formData = new FormData(form);
-    const amountBeingPaid = parseFloat(formData.get('Amount'));
-    const originalBalance = parseFloat(form.dataset.remainingBalance || '0');
-
-    // Lógica para determinar o novo status
-    // Se o valor pago for menor que o saldo devedor, o status deve ser "Pago Parcialmente" (1)
-    // Caso contrário, é "Confirmada" (2)
-    const newStatus = (amountBeingPaid < originalBalance && amountBeingPaid > 0) ? 1 : 2;
     
-    // Adiciona o status ao FormData. O backend precisa estar preparado para receber este campo.
-    formData.append('Status', newStatus);
-
-    console.log(`Pagamento de ${amountBeingPaid} em um saldo de ${originalBalance}. Novo status sugerido: ${newStatus}`);
+    // A lógica que calculava e adicionava o "Status" foi removida daqui.
 
     try {
         const accessToken = localStorage.getItem('accessToken');
