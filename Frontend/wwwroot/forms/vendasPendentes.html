@@ -1,7 +1,11 @@
+
+    <title>Relatório de Vendas Pendentes</title>
+
+
 <div class="container">
     <div class="header">
         <h1>Relatório de Vendas Pendentes</h1>
-        <p>Acompanhe todas as vendas com status "Pendente"</p>
+        <p>Acompanhe todas as vendas com status "Pendente" ou "Pago Parcialmente"</p>
     </div>
 
     <div class="search-section">
@@ -32,8 +36,12 @@
             <button id="clearButton" class="clear-button"><span>🗑️</span> Limpar Filtros</button>
         </div>
     </div>
+    
+    <div id="loading" style="display: none; justify-content: center; padding: 2rem;">
+        <p>Carregando dados...</p>
+    </div>
 
-    <div class="results-section" id="resultsSection">
+    <div class="results-section" id="resultsSection" style="display: none;">
         <div class="table-responsive">
             <table class="results-table" id="resultsTable">
                 <thead>
@@ -43,14 +51,15 @@
                         <th>Data da Venda</th>
                         <th>Telefone</th>
                         <th>Itens</th>
-                        <th>Total</th>
-                        <th>Ações</th> </tr>
+                        <th>Total da Venda</th>
+                        <th>Saldo Devedor</th> <th>Ações</th>
+                    </tr>
                 </thead>
                 <tbody id="report-table-body"></tbody>
             </table>
         </div>
         <div class="no-results" id="noResults" style="display: none;">
-            <p>🎉 Nenhuma venda pendente encontrada.</p>
+            <p>🎉 Nenhuma venda pendente encontrada com os filtros aplicados.</p>
         </div>
         <div id="pagination-controls" class="pagination-controls"></div>
     </div>

@@ -14,7 +14,7 @@ function initDynamicForm() {
 function initializeFilters() {
     document.getElementById('searchButton')?.addEventListener('click', () => fetchReportData(1));
     document.getElementById('clearButton')?.addEventListener('click', clearFilters);
-    
+
     const paymentSelect = document.getElementById('payment-method-filter');
     if (paymentSelect && typeof paymentMethodMap !== 'undefined') {
         paymentSelect.innerHTML = '<option value="">Todos</option>';
@@ -41,8 +41,8 @@ async function fetchReportData(page = 1) {
     const resultsSection = document.getElementById('resultsSection');
     const tableBody = document.getElementById('report-table-body');
 
-    if(loadingDiv) loadingDiv.style.display = 'flex';
-    if(resultsSection) resultsSection.style.display = 'none';
+    if (loadingDiv) loadingDiv.style.display = 'flex';
+    if (resultsSection) resultsSection.style.display = 'none';
 
     try {
         const accessToken = localStorage.getItem('accessToken');
@@ -70,24 +70,25 @@ async function fetchReportData(page = 1) {
         renderReportTable(data.items);
         renderPagination(data);
 
-        if(resultsSection) resultsSection.style.display = 'block';
+        if (resultsSection) resultsSection.style.display = 'block';
 
     } catch (error) {
-        if(tableBody) tableBody.innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">${error.message}</td></tr>`;
-        if(typeof showErrorModal === 'function') {
+        // ✅ Colspan atualizado para 8 colunas
+        if (tableBody) tableBody.innerHTML = `<tr><td colspan="8" style="color: red; text-align: center;">${error.message}</td></tr>`;
+        if (typeof showErrorModal === 'function') {
             showErrorModal({ title: "Erro na Pesquisa", detail: error.message });
         } else {
             alert(`Erro na Pesquisa: ${error.message}`);
         }
     } finally {
-        if(loadingDiv) loadingDiv.style.display = 'none';
+        if (loadingDiv) loadingDiv.style.display = 'none';
     }
 }
 
 function renderReportTable(items) {
     const tableBody = document.getElementById('report-table-body');
     const noResultsDiv = document.getElementById('noResults');
-    if(!tableBody || !noResultsDiv) return;
+    if (!tableBody || !noResultsDiv) return;
 
     tableBody.innerHTML = '';
 
@@ -95,15 +96,26 @@ function renderReportTable(items) {
         noResultsDiv.style.display = 'block';
         return;
     }
-    
+
     noResultsDiv.style.display = 'none';
 
     items.forEach(item => {
         const date = new Date(item.saleDate);
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
-        const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        
+        const totalValue = item.totalNet || 0;
+        const formattedTotal = totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        // ✅✅✅ NOVA LÓGICA PARA CALCULAR O SALDO DEVEDOR ✅✅✅
+        const totalPaid = (item.payments && item.payments.length > 0)
+            ? item.payments.reduce((sum, payment) => sum + payment.amount, 0)
+            : 0;
+
+        const remainingBalance = totalValue - totalPaid;
+        const formattedBalance = remainingBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+
         const row = tableBody.insertRow();
+        // ✅ Linha da tabela atualizada com a nova coluna e o valor correto no botão
         row.innerHTML = `
             <td>${item.noteNumber || 'N/A'}</td>
             <td>${item.customerName || 'N/A'}</td>
@@ -111,8 +123,9 @@ function renderReportTable(items) {
             <td>${item.customerPhone || 'N/A'}</td>
             <td>${item.itemsCount || 0}</td>
             <td>${formattedTotal}</td>
+            <td>${formattedBalance}</td>
             <td class="actions-cell">
-                <button class="btn-action btn-success" onclick="openPaymentModal('${item.id}', ${item.totalNet})">Marcar como Pago</button>
+                <button class="btn-action btn-success" onclick="openPaymentModal('${item.id}', ${remainingBalance})">Marcar como Pago</button>
             </td>
         `;
     });
@@ -122,34 +135,34 @@ function renderPagination(paginationData) {
     const controlsContainer = document.getElementById('pagination-controls');
     if (!controlsContainer) return;
     controlsContainer.innerHTML = '';
-    
+
     if (!paginationData || !paginationData.totalPages || paginationData.totalPages <= 1) return;
-    
+
     const { page, totalPages } = paginationData;
-    
+
     const prevButton = document.createElement('button');
     prevButton.textContent = 'Anterior';
     prevButton.className = 'pagination-btn';
     prevButton.disabled = page <= 1;
     prevButton.onclick = () => fetchReportData(page - 1);
-    
+
     const pageInfo = document.createElement('span');
     pageInfo.textContent = `Página ${page} de ${totalPages}`;
     pageInfo.className = 'pagination-info';
-    
+
     const nextButton = document.createElement('button');
     nextButton.textContent = 'Próxima';
     nextButton.className = 'pagination-btn';
     nextButton.disabled = page >= totalPages;
     nextButton.onclick = () => fetchReportData(page + 1);
-    
+
     controlsContainer.appendChild(prevButton);
     controlsContainer.appendChild(pageInfo);
     controlsContainer.appendChild(nextButton);
 }
 
 // =======================================================
-// LÓGICA DA MODAL DE PAGAMENTO (NOVO)
+// LÓGICA DA MODAL DE PAGAMENTO
 // =======================================================
 function initializePaymentModal() {
     const modal = document.getElementById('paymentModal');
@@ -162,10 +175,11 @@ function initializePaymentModal() {
     form?.addEventListener('submit', handlePaymentSubmit);
 }
 
-window.openPaymentModal = (saleId, totalAmount) => {
+// ✅ Função atualizada para receber o valor a ser pago (saldo devedor)
+window.openPaymentModal = (saleId, amountToPay) => {
     const modal = document.getElementById('paymentModal');
     document.getElementById('paymentSaleId').value = saleId;
-    document.getElementById('paymentAmount').value = totalAmount.toFixed(2);
+    document.getElementById('paymentAmount').value = amountToPay.toFixed(2);
     document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
     modal.style.display = 'block';
 };
@@ -179,11 +193,11 @@ async function handlePaymentSubmit(event) {
     submitBtn.textContent = 'Processando...';
 
     const formData = new FormData(form);
-    
+
     try {
         const accessToken = localStorage.getItem('accessToken');
         const url = `${API_BASE_URL}/sales/pay-pending`;
-        
+
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -191,12 +205,12 @@ async function handlePaymentSubmit(event) {
         });
 
         if (response.ok) {
-            alert('Venda atualizada para "Confirmada" com sucesso!');
+            alert('Venda atualizada com sucesso!');
             document.getElementById('paymentModal').style.display = 'none';
             fetchReportData(currentPage);
         } else {
             const errorData = await response.json().catch(() => ({ title: "Erro" }));
-            showErrorModal({ title: "Falha ao Atualizar", detail: errorData.message || "Não foi possível marcar como pago."});
+            showErrorModal({ title: "Falha ao Atualizar", detail: errorData.message || "Não foi possível marcar como pago." });
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });

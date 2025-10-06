@@ -59,6 +59,21 @@ const paymentMethodMap = {
     6: 'Caixa Econômica',
     7: 'Débito Automático'
 };
+const productNameMap = {
+    "Brick1_6": "Tijolos de 1ª 06 Furos", "Brick2_6": "Tijolos de 2ª 06 Furos", "Brick1_8": "Tijolos de 1ª 08 Furos",
+    "Brick2_8": "Tijolos de 2ª 08 Furos", "Brick8G": "Tijolos de 08 Furos G", "Brick6Double": "Tijolo de 6 furos Duplo",
+    "Block9": "Blocos de 9 Furos", "Block9Double": "Blocos de 9 Furos Duplo", "Bands6": "Bandas 6 furos",
+    "Bands8": "Bandas 8 furos", "Bands9": "Bandas 9 furos", "RoofTile1": "Telhas de 1ª", "RoofTile2": "Telhas de 2ª",
+    "Slabs": "Lajotas", "GrillBricks": "Tijolos para churrasqueira", "Caldeado6": "Caldeado 6 furos",
+    "Caldeado8": "Caldeado 8 furos", "Caldeado9": "Caldeado 9 furos"
+};
+// ✅ NOVO MAPA CORRIGIDO: Para converter o Nome do Enum da API de volta para o ID numérico na hora de editar.
+const productEnumNameToIdMap = {
+    "Brick1_6": 0, "Brick2_6": 1, "Brick1_8": 2, "Brick2_8": 3, "Brick8G": 4, "Brick6Double": 5,
+    "Block9": 6, "Block9Double": 7, "Bands6": 8, "Bands8": 9, "Bands9": 10, "RoofTile1": 11,
+    "RoofTile2": 12, "Slabs": 13, "GrillBricks": 14, "Caldeado6": 15, "Caldeado8": 16, "Caldeado9": 17
+};
+
 const statusMap = { 0: 'Pendente', 1: 'Pago' };
 const productTypeMap = {
     // 🔹 Tijolos

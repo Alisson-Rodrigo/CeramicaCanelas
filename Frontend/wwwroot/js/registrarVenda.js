@@ -82,9 +82,6 @@ function updateTotals() {
     document.getElementById('balance').textContent = balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-/**
- * ✅ CORRIGIDO para calcular e enviar o status da venda corretamente.
- */
 async function handleSaleSubmit(event) {
     event.preventDefault();
 
@@ -99,21 +96,10 @@ async function handleSaleSubmit(event) {
         quantity: parseFloat(row.dataset.quantity),
         unitPrice: parseFloat(row.dataset.price)
     }));
-    
-    // PASSO 1: Calcular o subtotal para determinar o status.
-    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
 
-    // PASSO 2: Processar pagamentos e calcular o status correto.
     const payments = [];
     const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
-    let calculatedStatus = 0; // Padrão: 0 (Pendente)
-
     if (amountPaid > 0) {
-        if (amountPaid >= subtotal) {
-            calculatedStatus = 2; // 2 (Confirmada)
-        } else {
-            calculatedStatus = 1; // 1 (Pago Parcialmente)
-        }
         payments.push({
             paymentDate: document.getElementById('paymentDate').value,
             amount: amountPaid,
@@ -121,7 +107,8 @@ async function handleSaleSubmit(event) {
         });
     }
 
-    // PASSO 3: Montar o payload JSON incluindo o 'saleStatus' calculado.
+    const selectedStatus = parseInt(document.getElementById('saleStatus').value, 10);
+
     const salePayload = {
         noteNumber: parseInt(document.getElementById('noteNumber').value, 10),
         customerName: document.getElementById('customerName').value,
@@ -131,12 +118,13 @@ async function handleSaleSubmit(event) {
         customerPhone: document.getElementById('customerPhone').value,
         date: document.getElementById('saleDate').value,
         discount: 0,
-        saleStatus: calculatedStatus, // <-- Status adicionado novamente ao payload
+        saleStatus: selectedStatus,
+        status: selectedStatus,
         items: items,
         payments: payments
     };
 
-    console.log("📤 Enviando payload JSON para Criação (com status):", salePayload);
+    console.log("📤 Enviando payload JSON para Criação:", salePayload);
 
     try {
         const accessToken = localStorage.getItem('accessToken');
@@ -162,11 +150,11 @@ async function handleSaleSubmit(event) {
             const errorText = await response.text();
             console.error("Erro da API:", response.status, errorText);
             let errorData = { message: `Erro ${response.status}. Verifique o console.` };
-            try { 
-                errorData = JSON.parse(errorText); 
+            try {
+                errorData = JSON.parse(errorText);
             } catch (e) {
                 if (response.status === 415) {
-                   errorData.detail = "Erro 415: Formato de mídia não suportado.";
+                    errorData.detail = "Erro 415: Formato de mídia não suportado.";
                 }
             }
             showErrorModal({ title: errorData.title || "Erro ao Salvar", detail: errorData.detail || errorData.message || errorText });
@@ -176,7 +164,6 @@ async function handleSaleSubmit(event) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
     }
 }
-
 
 function addProductToCart() {
     const productSelect = document.getElementById('product-select');
@@ -197,7 +184,7 @@ function addProductToCart() {
         alert('Este produto já foi adicionado.');
         return;
     }
-    
+
     checkPlaceholder();
 
     const subtotal = (quantity * unitPrice);
@@ -213,7 +200,7 @@ function addProductToCart() {
         <td>${subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         <td><button type="button" class="btn-action btn-delete-item">Remover</button></td>
     `;
-    
+
     tbody.appendChild(newRow);
     updateTotals();
 
@@ -266,10 +253,11 @@ async function fetchAndRenderHistory(page = 1) {
 
     const tableBody = document.getElementById('sales-history-body');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Buscando vendas...</td></tr>';
+    tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center;">Buscando vendas...</td></tr>`;
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const params = new URLSearchParams({ Page: page, PageSize: 10, OrderBy: 'SaleDate', Ascending: false });
+        const params = new URLSearchParams({ Page: page, PageSize: 10 });
+
         const search = document.getElementById('historySearch')?.value;
         const status = document.getElementById('historyStatus')?.value;
         const startDate = document.getElementById('historyStartDate')?.value;
@@ -282,14 +270,18 @@ async function fetchAndRenderHistory(page = 1) {
         const response = await fetch(url, { cache: 'no-cache', headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar vendas (Status: ${response.status})`);
         const paginatedData = await response.json();
-        
+
         console.log("📥 Dados recebidos da API de Histórico:", paginatedData);
+
+        if (paginatedData.items && paginatedData.items.length > 0) {
+            paginatedData.items.sort((a, b) => a.noteNumber - b.noteNumber);
+        }
 
         historyItemsCache = paginatedData.items;
         renderHistoryTable(paginatedData.items);
         renderHistoryPagination(paginatedData);
     } catch (error) {
-        tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: red;">Erro: ${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: red;">Erro: ${error.message}</td></tr>`;
     }
 }
 
@@ -297,14 +289,25 @@ function renderHistoryTable(items) {
     const tableBody = document.getElementById('sales-history-body');
     tableBody.innerHTML = '';
     if (!items || items.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Nenhuma venda encontrada.</td></tr>';
+        tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center;">Nenhuma venda encontrada.</td></tr>`;
         return;
     }
     items.forEach((item) => {
         const dateStr = item.saleDate || item.date;
         const date = new Date(dateStr);
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
-        const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        const totalValue = item.totalNet || 0;
+        const formattedTotal = totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        
+        // ✅✅✅ NOVA LÓGICA PARA CALCULAR O SALDO DEVEDOR ✅✅✅
+        const totalPaid = (item.payments && item.payments.length > 0)
+            ? item.payments.reduce((sum, payment) => sum + payment.amount, 0)
+            : 0;
+
+        const remainingBalance = totalValue - totalPaid;
+        const formattedBalance = remainingBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
         const statusText = saleStatusMap[item.status ?? item.saleStatus] || 'Desconhecido';
 
         const saleRow = document.createElement('tr');
@@ -319,7 +322,7 @@ function renderHistoryTable(items) {
             <td data-field="saleDate">${formattedDate}</td>
             <td data-field="itemsCount">${item.itemsCount || 0}</td>
             <td data-field="totalNet">${formattedTotal}</td>
-            <td data-field="status">${statusText}</td>
+            <td data-field="remainingBalance">${formattedBalance}</td> <td data-field="status">${statusText}</td>
             <td class="actions-cell" data-field="actions">
                 <button class="btn-action btn-edit">Editar</button>
                 <button class="btn-action btn-delete">Excluir</button>
@@ -336,14 +339,18 @@ function renderHistoryTable(items) {
         itemsRow.id = `items-${item.id}`;
         itemsRow.style.display = 'none';
 
-        let itemsHtml = `<td colspan="10" class="items-container"><table class="nested-table">
+        let itemsHtml = `<td colspan="11" class="items-container"><table class="nested-table">
             <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
             <tbody>`;
         if (item.items && item.items.length > 0) {
             item.items.forEach(saleItem => {
-                const productName = (typeof saleItem.product === 'number') 
-                    ? productTypeMap[saleItem.product] || 'Produto desconhecido'
-                    : saleItem.product;
+                let productName = 'Produto desconhecido';
+                if (typeof saleItem.product === 'string' && typeof productNameMap !== 'undefined') {
+                    productName = productNameMap[saleItem.product] || saleItem.product;
+                } else if (typeof saleItem.product === 'number') {
+                    productName = productTypeMap[saleItem.product] || 'Produto desconhecido';
+                }
+
                 const subtotal = (saleItem.quantity * saleItem.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 itemsHtml += `
                     <tr data-item-id="${saleItem.id}">
@@ -434,7 +441,7 @@ window.editSale = (saleId) => {
     row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="CustomerName" class="edit-input" value="${item.customerName}">`;
     row.querySelector('[data-field="customerPhone"]').innerHTML = `<input type="text" name="CustomerPhone" class="edit-input" value="${item.customerPhone || ''}">`;
     row.querySelector('[data-field="city"]').innerHTML = `<input type="text" name="City" class="edit-input" value="${item.city || ''}">`;
-    
+
     const currentStatus = item.status ?? item.saleStatus ?? 0;
     let statusOptions = '';
     for (const [key, value] of Object.entries(saleStatusMap)) {
@@ -447,19 +454,20 @@ window.editSale = (saleId) => {
         <button class="btn-action btn-save">Salvar</button>
         <button class="btn-action btn-cancel">Cancelar</button>
     `;
-    
+
     row.querySelector('.btn-save').addEventListener('click', () => saveSaleChanges(item.id));
     row.querySelector('.btn-cancel').addEventListener('click', () => cancelEditSale(item.id));
-    
+
     const itemsTableBody = itemsRow.querySelector('tbody');
     itemsTableBody.querySelectorAll('tr').forEach(itemRow => {
         const saleItem = item.items.find(i => i.id === itemRow.dataset.itemId);
         if (!saleItem) return;
-        
+
         itemRow.querySelector('[data-item-field="quantity"]').innerHTML = `<input type="number" step="0.01" class="edit-input" name="quantity" value="${saleItem.quantity}">`;
         itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML = `<input type="number" step="0.01" class="edit-input" name="unitPrice" value="${saleItem.unitPrice}">`;
     });
 };
+
 
 window.saveSaleChanges = async (saleId) => {
     const row = document.getElementById(`row-sale-${saleId}`);
@@ -468,19 +476,15 @@ window.saveSaleChanges = async (saleId) => {
 
     const originalItem = historyItemsCache.find(i => i.id === saleId);
     if (!originalItem) {
-        showErrorModal({title: "Erro", detail: "Dados originais não encontrados."});
+        showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
         cancelEditSale(saleId);
         return;
     }
-    
-    const productNameToIdMap = Object.fromEntries(
-        Object.entries(productTypeMap).map(([id, name]) => [name, parseInt(id, 10)])
-    );
 
     const editedItems = [];
     itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
         const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
-        if(originalSaleItem){
+        if (originalSaleItem) {
             editedItems.push({
                 id: originalSaleItem.id,
                 product: originalSaleItem.product,
@@ -490,50 +494,55 @@ window.saveSaleChanges = async (saleId) => {
         }
     });
 
+    const formData = new FormData();
+    formData.append('Id', saleId);
+    formData.append('NoteNumber', row.querySelector('[name="NoteNumber"]').value || '0');
+    formData.append('CustomerName', row.querySelector('[name="CustomerName"]').value || '');
+    formData.append('CustomerPhone', row.querySelector('[name="CustomerPhone"]').value || '');
+    formData.append('City', row.querySelector('[name="City"]').value || '');
+
+    const statusValue = row.querySelector('[name="Status"]').value;
+    formData.append('Status', statusValue);
+
+    formData.append('State', originalItem.state || '');
+    formData.append('CustomerAddress', originalItem.customerAddress || '');
+    formData.append('Discount', originalItem.discount.toString());
+
     let saleDateStr = originalItem.saleDate || originalItem.date;
     if (typeof saleDateStr === 'string' && saleDateStr.includes('T')) {
         saleDateStr = saleDateStr.split('T')[0];
     }
-    
-    const statusValue = parseInt(row.querySelector('[name="Status"]').value, 10);
+    formData.append('Date', saleDateStr);
 
-    const updatePayload = {
-        id: saleId,
-        noteNumber: parseInt(row.querySelector('[name="NoteNumber"]').value, 10) || 0,
-        customerName: row.querySelector('[name="CustomerName"]').value || '',
-        customerPhone: row.querySelector('[name="CustomerPhone"]').value || '',
-        city: row.querySelector('[name="City"]').value || '',
-        status: statusValue,
-        saleStatus: statusValue,
-        state: originalItem.state || '',
-        customerAddress: originalItem.customerAddress || '',
-        discount: originalItem.discount,
-        date: saleDateStr,
-        items: editedItems.map(item => {
-            const productId = typeof item.product === 'number' 
-                ? item.product 
-                : productNameToIdMap[item.product];
-            return {
-                id: item.id,
-                product: productId,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice
-            };
-        }),
-        payments: originalItem.payments || []
-    };
-    
-    console.log("📤 Enviando payload JSON para Atualização:", updatePayload);
+    editedItems.forEach((item, index) => {
+        let productId;
+        if (typeof item.product === 'number') {
+            productId = item.product;
+        } else if (typeof productEnumNameToIdMap !== 'undefined') {
+            productId = productEnumNameToIdMap[item.product];
+        }
+
+        formData.append(`Items[${index}].Id`, item.id);
+        if (productId !== undefined) {
+            formData.append(`Items[${index}].Product`, productId.toString());
+        }
+        formData.append(`Items[${index}].Quantity`, item.quantity.toString());
+        formData.append(`Items[${index}].UnitPrice`, item.unitPrice.toString());
+    });
+
+    console.log("📤 Enviando FormData para Atualização:");
+    for (let pair of formData.entries()) {
+        console.log(`   ${pair[0]}: ${pair[1]}`);
+    }
 
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
             method: 'PUT',
-            headers: { 
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
             },
-            body: JSON.stringify(updatePayload)
+            body: formData
         });
         if (response.ok) {
             alert('Venda atualizada com sucesso!');
@@ -549,14 +558,13 @@ window.saveSaleChanges = async (saleId) => {
     }
 };
 
-
 window.cancelEditSale = (saleId) => {
     const row = document.getElementById(`row-sale-${saleId}`);
     const itemsRow = document.getElementById(`items-${saleId}`);
     if (row && originalRowHTML_Sale[saleId]) {
         row.innerHTML = originalRowHTML_Sale[saleId].main;
         itemsRow.innerHTML = originalRowHTML_Sale[saleId].items;
-        
+
         row.querySelector('.expand-btn').addEventListener('click', (e) => toggleItems(e.target, saleId));
         row.querySelector('.btn-edit').addEventListener('click', () => editSale(saleId));
         row.querySelector('.btn-delete').addEventListener('click', () => deleteSale(saleId));
