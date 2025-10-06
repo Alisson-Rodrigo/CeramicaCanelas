@@ -81,9 +81,19 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                         Amount = p.Amount,
                         PaymentMethod = p.PaymentMethod
                     };
+
+                    // Usa a lógica de domínio (atualiza status internamente)
+                    sale.AddPayment(payment);
+
+                    // Persiste o pagamento
                     await _salesPaymentsRepository.CreateAsync(payment, cancellationToken);
                 }
             }
+
+            // 🔄 Atualiza status e timestamps da venda após todos os pagamentos
+            await _salesRepository.Update(sale);
+
+
 
             return sale.Id;
         }
