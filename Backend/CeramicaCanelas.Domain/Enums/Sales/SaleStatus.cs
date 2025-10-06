@@ -11,6 +11,8 @@ namespace CeramicaCanelas.Domain.Enums.Sales
         Pending = 0,        // aguardando pagamento
         PartiallyPaid = 1,  // pago em parte
         Confirmed = 2,      // totalmente pago
-        Cancelled = 3       // cancelado
+        Cancelled = 3,    // cancelado
+        Donation = 4        // doação
+
     }
 }

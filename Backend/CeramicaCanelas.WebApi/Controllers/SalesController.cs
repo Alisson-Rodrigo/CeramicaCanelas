@@ -40,7 +40,7 @@ namespace CeramicaCanelas.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateSale([FromForm] UpdateSalesCommand command, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateSale([FromBody] UpdateSalesCommand command, CancellationToken cancellationToken)
         {
             await _mediator.Send(command, cancellationToken);
             return NoContent();

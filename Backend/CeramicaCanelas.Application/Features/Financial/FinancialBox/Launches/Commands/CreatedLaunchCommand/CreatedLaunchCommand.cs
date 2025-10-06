@@ -1,6 +1,7 @@
 ﻿using CeramicaCanelas.Domain.Entities.Financial;
 using CeramicaCanelas.Domain.Enums.Financial;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,8 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
         public PaymentMethod PaymentMethod { get; set; }
         public PaymentStatus Status { get; set; }
         public DateOnly? DueDate { get; set; }
+        public List<IFormFile>? ImageProofs { get; set; }
+
 
         /// <summary>
         /// Método responsável por mapear os dados deste comando para uma nova entidade Launch.

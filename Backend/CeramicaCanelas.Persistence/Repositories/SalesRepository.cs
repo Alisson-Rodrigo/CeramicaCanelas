@@ -25,6 +25,15 @@ namespace CeramicaCanelas.Persistence.Repositories
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
+
+        public async Task<Sale?> GetByIdAsyncUpdate(Guid? id)
+        {
+            return await Context.Sales
+                .AsNoTracking()  // ✅ Esta linha resolve o problema
+                .Include(s => s.Items)
+                .FirstOrDefaultAsync(s => s.Id == id);
+        }
+
         public IQueryable<Sale> QueryAllWithIncludes(bool includeInactive = false)
         {
             var q = Context.Sales

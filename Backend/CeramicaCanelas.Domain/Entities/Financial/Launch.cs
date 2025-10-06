@@ -55,6 +55,8 @@ namespace CeramicaCanelas.Domain.Entities.Financial
         /// </summary>
         public Guid? CustomerId { get; set; }
 
+        public List<ProofImage>? ImageProofs { get; set; }
+
         /// <summary>
         /// Propriedade de navegação para acessar os dados do cliente relacionado.
         /// </summary>
