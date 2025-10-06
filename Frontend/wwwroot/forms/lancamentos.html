@@ -28,7 +28,7 @@
             </div>
 
             <div class="form-group" id="group-categoryId" style="display: none;">
-                <label class="form-label">Categoria (Opcional)</label>
+                <label class="form-label">Categoria</label>
                 <div class="selection-box">
                     <span id="selectedCategoryName">Nenhuma categoria selecionada</span>
                     <button type="button" id="openCategoryModalBtn" class="search-btn">Buscar Categoria...</button>
@@ -37,7 +37,7 @@
             </div>
 
             <div class="form-group" id="group-customerId" style="display: none;">
-                <label class="form-label">Cliente (Opcional)</label>
+                <label class="form-label">Cliente</label>
                 <div class="selection-box">
                     <span id="selectedCustomerName">Nenhum cliente selecionado</span>
                     <button type="button" id="openCustomerModalBtn" class="search-btn">Buscar Cliente...</button>
@@ -59,6 +59,12 @@
                 <label class="form-label" for="dueDate">Data de Vencimento (Opcional)</label>
                 <input type="date" id="dueDate" name="DueDate" class="form-input">
             </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="imageProofs">Comprovantes (Opcional, selecione múltiplos segurando Ctrl)</label>
+                <input type="file" id="imageProofs" name="ImageProofs" class="form-input" multiple accept="image/*">
+            </div>
+
             <button type="submit" class="submit-btn">Salvar Lançamento</button>
         </form>
     </div>
@@ -103,8 +109,11 @@
                     <th>Data</th>
                     <th>Categoria</th>
                     <th>Cliente</th>
+                    <th>Método Pag.</th>
                     <th>Status</th>
                     <th>Operador</th>
+                    <th>Comprovantes</th>
+                    <th>Data Venc.</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -119,13 +128,19 @@
         <span class="modal-close-btn">&times;</span>
         <h3>Selecione um Cliente</h3>
         <div class="filter-bar modal-filter-bar">
-            <div class="filter-group large"><label for="modalCustomerSearchInput">Buscar por Nome/Documento:</label><input type="text" id="modalCustomerSearchInput" class="form-input"></div>
-            <div class="filter-group-buttons"><button type="button" id="modalCustomerFilterBtn" class="search-btn">Buscar</button></div>
+            <div class="filter-group large">
+                <label for="modalCustomerSearchInput">Buscar por Nome/Documento:</label>
+                <input type="text" id="modalCustomerSearchInput" class="form-input">
+            </div>
+            <div class="filter-group-buttons">
+                <button type="button" id="modalCustomerFilterBtn" class="search-btn">Buscar</button>
+            </div>
         </div>
         <div id="modalCustomerResultsContainer" class="table-container"></div>
         <div id="modalCustomerPaginationControls" class="pagination-controls"></div>
     </div>
 </div>
+
 <div id="categorySearchModal" class="modal">
     <div class="modal-content">
         <span class="modal-close-btn">&times;</span>
@@ -141,5 +156,16 @@
         </div>
         <div id="modalCategoryResultsContainer" class="table-container"></div>
         <div id="modalCategoryPaginationControls" class="pagination-controls"></div>
+    </div>
+</div>
+
+<div id="imageProofModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Comprovantes do Lançamento</h3>
+            <span class="modal-close-btn" id="closeImageProofModalBtn">&times;</span>
+        </div>
+        <div id="imageProofContainer" class="image-proof-container">
+            </div>
     </div>
 </div>
