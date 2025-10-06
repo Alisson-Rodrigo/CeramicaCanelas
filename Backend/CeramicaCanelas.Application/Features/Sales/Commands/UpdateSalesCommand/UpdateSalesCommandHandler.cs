@@ -59,8 +59,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             sale.CustomerAddress = request.CustomerAddress;
             sale.CustomerPhone = request.CustomerPhone;
             if (request.Date.HasValue) sale.Date = request.Date.Value;
+            sale.ApplyDiscount(request.Discount, recalcStatus: false);
             sale.Status = request.Status;
-            sale.ApplyDiscount(request.Discount);
             sale.ModifiedOn = DateTime.UtcNow;
 
             // ⚙️ Atualiza ITENS

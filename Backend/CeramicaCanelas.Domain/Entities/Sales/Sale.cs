@@ -55,14 +55,14 @@ namespace CeramicaCanelas.Domain.Entities
 
         private void AtualizarStatus()
         {
-            // 🔒 Protege vendas canceladas
-            if (Status == SaleStatus.Cancelled)
+            // 🔒 Protege vendas canceladas ou confirmadas manualmente
+            if (Status == SaleStatus.Cancelled || Status == SaleStatus.Confirmed)
                 return;
 
             // ✅ Se for doação, o status é confirmado e não depende de pagamento
             if (Status == SaleStatus.Donation)
             {
-                TotalNet = 0; // opcional, garante que o total líquido é zero
+                TotalNet = 0;
                 return;
             }
 
@@ -80,28 +80,23 @@ namespace CeramicaCanelas.Domain.Entities
 
 
 
-        // --- Regras de Totais ---
-        public void ApplyDiscount(decimal discount)
+        public void ApplyDiscount(decimal discount, bool recalcStatus = true)
         {
             if (discount < 0) throw new ArgumentOutOfRangeException(nameof(discount));
             Discount = discount;
-            RecalculateTotals();
+            RecalculateTotals(recalcStatus);
             ModifiedOn = DateTime.UtcNow;
         }
 
-        public void RecalculateTotals()
+        public void RecalculateTotals(bool recalcStatus = true)
         {
-            if (Status == SaleStatus.Donation)
-            {
-                TotalGross = Items.Sum(i => i.UnitPrice * i.Quantity);
-                TotalNet = 0; // doação não tem cobrança
-                return;
-            }
-
             TotalGross = Items.Sum(i => i.UnitPrice * i.Quantity);
             TotalNet = Math.Max(0, TotalGross - Discount);
-            AtualizarStatus();
+
+            if (recalcStatus)
+                AtualizarStatus();
         }
+
 
 
 
