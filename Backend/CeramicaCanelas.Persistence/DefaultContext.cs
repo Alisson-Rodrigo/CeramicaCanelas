@@ -24,6 +24,8 @@ public class DefaultContext : IdentityDbContext<User>
     public DbSet<LaunchCategory> LaunchCategories { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Extract> Extracts { get; set; } = null!;
+    public DbSet<ProofImage> ProofImages { get; set; } = null!; // 👈 ADICIONE ESTA LINHA
+
 
     // Vendas
     public DbSet<SalePayment> SalePayments { get; set; } = null!;
@@ -112,6 +114,22 @@ public class DefaultContext : IdentityDbContext<User>
             entity.Property(l => l.Id).HasDefaultValueSql("uuid_generate_v4()");
             entity.HasOne(l => l.Category).WithMany().HasForeignKey(l => l.CategoryId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(l => l.Customer).WithMany(c => c.Launches).HasForeignKey(l => l.CustomerId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<ProofImage>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Id).HasDefaultValueSql("uuid_generate_v4()");
+
+            // Garante que a URL e o nome do arquivo sejam obrigatórios
+            entity.Property(p => p.FileUrl).IsRequired();
+            entity.Property(p => p.OriginalFileName).IsRequired();
+
+            // Define o relacionamento com Launch
+            entity.HasOne(p => p.Launch)              // Um ProofImage tem um Launch
+                  .WithMany(l => l.ImageProofs)       // Um Launch tem muitos ImageProofs (a coleção na classe Launch)
+                  .HasForeignKey(p => p.LaunchId)     // A chave estrangeira é LaunchId em ProofImage
+                  .OnDelete(DeleteBehavior.Cascade);  // Se o Launch for deletado, seus comprovantes também são
         });
 
         builder.Entity<LaunchCategory>(entity =>
