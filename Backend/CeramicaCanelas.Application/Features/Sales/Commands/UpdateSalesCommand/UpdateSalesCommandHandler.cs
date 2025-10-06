@@ -40,7 +40,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
                 throw new BadRequestException(validation);
 
             // 3️⃣ Busca a venda principal
-            var sale = await _salesRepository.GetByIdAsync(request.Id);
+            var sale = await _salesRepository.GetByIdAsyncUpdate(request.Id);
             if (sale == null)
                 throw new BadRequestException("Venda não encontrada.");
 
