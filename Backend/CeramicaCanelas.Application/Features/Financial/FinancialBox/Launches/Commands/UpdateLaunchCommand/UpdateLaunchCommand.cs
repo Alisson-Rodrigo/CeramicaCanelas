@@ -1,6 +1,7 @@
 ﻿using CeramicaCanelas.Domain.Entities.Financial;
 using CeramicaCanelas.Domain.Enums.Financial;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 
 namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.Commands.UpdateLaunchCommand
 {
@@ -17,8 +18,11 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
         public PaymentStatus Status { get; set; }
         public DateOnly? DueDate { get; set; }
 
+        // 🆕 Comprovantes enviados na atualização
+        public List<IFormFile>? ImageProofs { get; set; }
+
         /// <summary>
-        /// Método para mapear os dados deste comando para uma entidade Launch existente.
+        /// Mapeia dados do comando para uma entidade existente de Launch.
         /// </summary>
         public void MapToLaunch(Launch launchToUpdate)
         {
