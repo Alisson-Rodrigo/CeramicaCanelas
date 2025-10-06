@@ -41,5 +41,6 @@ namespace CeramicaCanelas.Persistence.Repositories
                 .AsNoTracking()
                 .AsQueryable();
         }
+
     }
 }

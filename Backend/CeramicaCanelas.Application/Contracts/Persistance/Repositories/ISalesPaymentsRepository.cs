@@ -9,5 +9,7 @@ namespace CeramicaCanelas.Application.Contracts.Persistance.Repositories
 {
     public interface ISalesPaymentsRepository : IBaseRepository<SalePayment>
     {
+        public Task<decimal> SumBySaleIdAsync(Guid saleId, CancellationToken ct);
+
     }
 }
