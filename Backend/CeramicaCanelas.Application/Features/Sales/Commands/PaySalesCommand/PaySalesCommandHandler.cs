@@ -44,7 +44,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
             if (sale.Status == SaleStatus.Cancelled)
                 throw new BadRequestException("Não é possível pagar uma venda cancelada.");
 
-            // 4) Criar pagamento (persistência isolada)
+            // 4) Criar pagamento
             var payment = new SalePayment
             {
                 SaleId = sale.Id,
@@ -53,13 +53,14 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
                 PaymentDate = request.PaymentDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
                 CreatedOn = DateTime.UtcNow,
                 ModifiedOn = DateTime.UtcNow
+
             };
 
             await _salesPaymentsRepository.CreateAsync(payment, cancellationToken);
 
-            // 5) Atualizar status da venda
-            var totalPaid = sale.Payments.Sum(p => p.Amount) + request.Amount;
+            var totalPaid = await _salesPaymentsRepository.SumBySaleIdAsync(sale.Id, cancellationToken);
 
+            // Atualiza status com base no total pago
             if (totalPaid <= 0)
                 sale.Status = SaleStatus.Pending;
             else if (totalPaid < sale.TotalNet)
@@ -68,8 +69,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand
                 sale.Status = SaleStatus.Confirmed;
 
             sale.ModifiedOn = DateTime.UtcNow;
-
             await _salesRepository.Update(sale);
+
+
 
             return Unit.Value;
         }
