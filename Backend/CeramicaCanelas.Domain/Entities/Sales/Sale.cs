@@ -59,6 +59,13 @@ namespace CeramicaCanelas.Domain.Entities
             if (Status == SaleStatus.Cancelled)
                 return;
 
+            // ✅ Se for doação, o status é confirmado e não depende de pagamento
+            if (Status == SaleStatus.Donation)
+            {
+                TotalNet = 0; // opcional, garante que o total líquido é zero
+                return;
+            }
+
             var totalPago = GetTotalPaid();
             var saldo = GetRemainingBalance();
 
@@ -69,6 +76,7 @@ namespace CeramicaCanelas.Domain.Entities
             else
                 Status = SaleStatus.Pending;
         }
+
 
 
 
@@ -83,12 +91,18 @@ namespace CeramicaCanelas.Domain.Entities
 
         public void RecalculateTotals()
         {
+            if (Status == SaleStatus.Donation)
+            {
+                TotalGross = Items.Sum(i => i.UnitPrice * i.Quantity);
+                TotalNet = 0; // doação não tem cobrança
+                return;
+            }
+
             TotalGross = Items.Sum(i => i.UnitPrice * i.Quantity);
             TotalNet = Math.Max(0, TotalGross - Discount);
-
             AtualizarStatus();
-
         }
+
 
 
         public void SetItems(IEnumerable<SaleItem> items)
