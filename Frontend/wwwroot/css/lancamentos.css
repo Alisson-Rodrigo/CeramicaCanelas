@@ -1224,3 +1224,734 @@ input[id="typeExpense"]:checked + .type-button:hover::before {
 .btn-action,btn-view{
     background-color: #007bff;
 }
+  .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .file-preview-item {
+            display: flex;
+            align-items: center;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+        .remove-file-btn {
+            margin-left: 10px;
+            cursor: pointer;
+            color: red;
+            font-weight: bold;
+            border: none;
+            background: none;
+        }
+
+        /* Estilos para a modal de imagens com botão de download */
+        .image-proof-item {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .image-proof-item img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .download-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .download-btn:hover {
+            background-color: #0056b3;
+        }
+        /* === PREVIEW DE IMAGENS NO FORMULÁRIO === */
+.image-previews-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    min-height: 80px;
+}
+
+.image-preview-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.image-preview-item:hover {
+    border-color: #e67e22;
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+    transform: translateY(-2px);
+}
+
+.image-preview-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.image-preview-item .file-name {
+    font-size: 0.75rem;
+    color: #666;
+    text-align: center;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 5px;
+}
+
+.remove-file-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.remove-file-btn:hover {
+    background: linear-gradient(45deg, #c0392b, #a93226);
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+}
+
+/* === BOTÃO DE VISUALIZAR COMPROVANTES === */
+.btn-view {
+    padding: 8px 16px;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-view:hover {
+    background: linear-gradient(45deg, #2980b9, #1f618d);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);
+}
+
+.btn-view:disabled {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* === MODAL DE COMPROVANTES === */
+.image-proof-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.image-proof-item:hover {
+    border-color: #e67e22;
+    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.2);
+    transform: translateY(-3px);
+}
+
+.image-proof-item img {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.image-proof-item img:hover {
+    transform: scale(1.05);
+}
+
+.download-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+}
+
+.download-btn:hover {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.5);
+}
+
+/* === ESTILO PARA INPUT DE ARQUIVO === */
+.form-input[type="file"] {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    cursor: pointer;
+}
+
+.form-input[type="file"]::file-selector-button {
+    padding: 8px 16px;
+    background: linear-gradient(45deg, #e67e22, #f39c12);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-right: 12px;
+    transition: all 0.3s ease;
+}
+
+.form-input[type="file"]::file-selector-button:hover {
+    background: linear-gradient(45deg, #d68910, #e67e22);
+    transform: translateY(-1px);
+}
+
+/* === RESPONSIVIDADE PARA PREVIEWS === */
+@media (max-width: 768px) {
+    .image-previews-container {
+        gap: 8px;
+    }
+
+    .image-preview-item img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .image-proof-item img {
+        max-width: 150px;
+        max-height: 150px;
+    }
+}
+/* === PREVIEW DE IMAGENS NO FORMULÁRIO === */
+.preview-item {
+    position: relative;
+    display: inline-block;
+    margin: 8px;
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.preview-item:hover {
+    border-color: #e67e22;
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+    transform: translateY(-2px);
+}
+
+.preview-thumbnail {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+}
+
+.remove-preview-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.remove-preview-btn:hover {
+    background: linear-gradient(45deg, #c0392b, #a93226);
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+}
+
+/* === MODAL DE COMPROVANTES === */
+.proof-item-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px;
+    transition: all 0.3s ease;
+    max-width: 250px;
+}
+
+.proof-item-container:hover {
+    border-color: #e67e22;
+    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.2);
+    transform: translateY(-3px);
+}
+
+.proof-item-container img {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.proof-item-container img:hover {
+    transform: scale(1.05);
+}
+
+.download-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+}
+
+.download-link:hover {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.5);
+}
+
+/* === EDIÇÃO DE COMPROVANTES NA TABELA === */
+.edit-proofs-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+}
+
+.edit-proofs-box label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.edit-input-file {
+    padding: 8px;
+    border: 2px solid #e1e8ed;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.edit-input-file:hover {
+    border-color: #e67e22;
+    box-shadow: 0 0 10px rgba(230, 126, 34, 0.2);
+}
+
+.btn-link {
+    padding: 6px 12px;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+.btn-link:hover {
+    background: linear-gradient(45deg, #2980b9, #1f618d);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.5);
+}
+
+/* === BOTÃO VISUALIZAR NA TABELA === */
+.btn-view {
+    padding: 8px 16px;
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-view:hover {
+    background: linear-gradient(45deg, #2980b9, #1f618d);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);
+}
+
+/* === BOTÃO EDITAR MODAL (Alterar Categoria/Cliente) === */
+.btn-edit-modal {
+    padding: 6px 12px;
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 6px rgba(46, 204, 113, 0.3);
+    white-space: nowrap;
+}
+
+.btn-edit-modal:hover {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.5);
+}
+
+/* === CAIXA DE SELEÇÃO PARA EDIÇÃO === */
+.edit-selection-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border: 2px solid #e1e8ed;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.edit-selection-name {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #555;
+    font-style: italic;
+}
+
+/* === RESPONSIVIDADE === */
+@media (max-width: 768px) {
+    .proof-item-container {
+        max-width: 100%;
+        margin: 5px 0;
+    }
+
+    .proof-item-container img {
+        max-width: 150px;
+        max-height: 150px;
+    }
+
+    .edit-proofs-box {
+        width: 100%;
+    }
+
+    .edit-selection-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-edit-modal {
+        width: 100%;
+    }
+}
+/* === COMPROVANTES EXISTENTES NA EDIÇÃO === */
+.existing-proofs-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    min-height: 60px;
+}
+
+.existing-proof-item {
+    position: relative;
+    display: inline-block;
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.existing-proof-item:hover {
+    border-color: #e67e22;
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+    transform: translateY(-2px);
+}
+
+.existing-proof-thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+    cursor: pointer;
+}
+
+.delete-proof-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.delete-proof-btn:hover:not(:disabled) {
+    background: linear-gradient(45deg, #c0392b, #a93226);
+    transform: scale(1.15);
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.5);
+}
+
+.delete-proof-btn:disabled {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Estado visual de marcado para exclusão */
+.marked-for-deletion {
+    opacity: 0.5;
+    border-color: #e74c3c !important;
+    background: rgba(231, 76, 60, 0.1);
+    position: relative;
+}
+
+.marked-for-deletion::after {
+    content: '✓ Será excluído';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #e74c3c;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.marked-for-deletion .existing-proof-thumbnail {
+    filter: grayscale(100%) brightness(0.7);
+}
+
+.marked-for-deletion .delete-proof-btn {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+}
+
+.marked-for-deletion .delete-proof-btn::before {
+    content: '✓';
+    font-size: 14px;
+}
+
+/* Separador HR na caixa de edição de provas */
+.edit-proofs-box hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #bdc3c7, transparent);
+    margin: 12px 0;
+}
+
+/* === BOTÃO DE DOWNLOAD (agora é button, não link) === */
+.download-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+}
+
+.download-link:hover {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.5);
+}
+
+/* === MELHORIAS NA MODAL DE COMPROVANTES === */
+.proof-item-container a {
+    display: block;
+    text-decoration: none;
+    margin-bottom: 8px;
+}
+
+.proof-item-container img {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    border: 2px solid #e1e8ed;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.proof-item-container img:hover {
+    border-color: #e67e22;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+}
+
+/* === RESPONSIVIDADE PARA COMPROVANTES EXISTENTES === */
+@media (max-width: 768px) {
+    .existing-proofs-container {
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .existing-proof-item {
+        padding: 4px;
+    }
+
+    .existing-proof-thumbnail {
+        width: 60px;
+        height: 60px;
+    }
+
+    .delete-proof-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
+    }
+
+    .marked-for-deletion::after {
+        font-size: 0.65rem;
+        padding: 1px 6px;
+        bottom: -18px;
+    }
+
+    .proof-item-container img {
+        max-width: 150px;
+        max-height: 150px;
+    }
+}
+
+/* === ESTADO DE LOADING PARA BOTÃO DE DOWNLOAD === */
+.download-link.loading {
+    opacity: 0.7;
+    cursor: wait;
+    pointer-events: none;
+}
+
+.download-link.loading::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+    margin-left: 6px;
+}
+
+/* === ANIMAÇÃO DE REMOÇÃO === */
+@keyframes fadeOutScale {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+.existing-proof-item.removing {
+    animation: fadeOutScale 0.3s ease-out forwards;
+}

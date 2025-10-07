@@ -89,94 +89,101 @@ function updateTotals() {
 async function handleSaleSubmit(event) {
     event.preventDefault();
 
-    const itemsRows = document.querySelectorAll('#saleItemsTbody tr:not(#placeholder-row)');
-    if (itemsRows.length === 0) {
-        showErrorModal({ title: "Validação", detail: "A venda deve possuir ao menos um item." });
-        return;
-    }
-
-    const items = Array.from(itemsRows).map(row => ({
-        product: parseInt(row.dataset.productId, 10),
-        quantity: parseFloat(row.dataset.quantity),
-        unitPrice: parseFloat(row.dataset.price)
-    }));
-
-    const payments = [];
-    const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
-    const paymentDate = document.getElementById('paymentDate').value;
-
-    if (amountPaid > 0) {
-        // ✅ VALIDAÇÃO: Garante que a data de pagamento seja fornecida se houver valor pago.
-        if (!paymentDate) {
-            showErrorModal({ title: "Validação", detail: "A data do pagamento é obrigatória ao informar um valor pago." });
-            return;
-        }
-        payments.push({
-            paymentDate: paymentDate,
-            amount: amountPaid,
-            paymentMethod: parseInt(document.getElementById('paymentMethod').value, 10)
-        });
-    }
-
-    // ✅✅✅ ALTERAÇÃO REALIZADA AQUI ✅✅✅
-    // Pega o status diretamente do select, sem cálculo automático.
-    const selectedStatus = parseInt(document.getElementById('saleStatus').value, 10);
-
-    const salePayload = {
-        noteNumber: parseInt(document.getElementById('noteNumber').value, 10),
-        customerName: document.getElementById('customerName').value,
-        customerAddress: document.getElementById('customerAddress').value,
-        city: document.getElementById('city').value,
-        state: document.getElementById('state').value,
-        customerPhone: document.getElementById('customerPhone').value,
-        date: document.getElementById('saleDate').value,
-        discount: 0,
-        saleStatus: selectedStatus,
-        status: selectedStatus,
-        items: items,
-        payments: payments
-    };
-
-    console.log("📤 Enviando payload JSON para Criação:", salePayload);
-
-    try {
-        const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/sales`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(salePayload)
-        });
-
-        if (response.ok) {
-            alert('Venda registrada com sucesso!');
-            document.getElementById('saleForm').reset();
-            initializeSaleForm();
-            populateSelects();
-            document.getElementById('saleItemsTbody').innerHTML = '';
-            checkPlaceholder();
-            updateTotals();
-            fetchAndRenderHistory(1);
-        } else {
-            const errorText = await response.text();
-            console.error("Erro da API:", response.status, errorText);
-            let errorData = { message: `Erro ${response.status}. Verifique o console.` };
-            try {
-                errorData = JSON.parse(errorText);
-            } catch (e) {
-                if (response.status === 415) {
-                    errorData.detail = "Erro 415: Formato de mídia não suportado.";
-                }
+    const submitBtn = event.submitter || document.querySelector('#saleForm button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = "Enviando...";
+        
+        try {
+            const itemsRows = document.querySelectorAll('#saleItemsTbody tr:not(#placeholder-row)');
+            if (itemsRows.length === 0) {
+                showErrorModal({ title: "Validação", detail: "A venda deve possuir ao menos um item." });
+                return;
             }
-            showErrorModal({ title: errorData.title || "Erro ao Salvar", detail: errorData.message || errorText });
+
+            const items = Array.from(itemsRows).map(row => ({
+                product: parseInt(row.dataset.productId, 10),
+                quantity: parseFloat(row.dataset.quantity),
+                unitPrice: parseFloat(row.dataset.price)
+            }));
+
+            const payments = [];
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
+            const paymentDate = document.getElementById('paymentDate').value;
+
+            if (amountPaid > 0) {
+                if (!paymentDate) {
+                    showErrorModal({ title: "Validação", detail: "A data do pagamento é obrigatória ao informar um valor pago." });
+                    return;
+                }
+                payments.push({
+                    paymentDate: paymentDate,
+                    amount: amountPaid,
+                    paymentMethod: parseInt(document.getElementById('paymentMethod').value, 10)
+                });
+            }
+
+            const selectedStatus = parseInt(document.getElementById('saleStatus').value, 10);
+
+            const salePayload = {
+                noteNumber: parseInt(document.getElementById('noteNumber').value, 10),
+                customerName: document.getElementById('customerName').value,
+                customerAddress: document.getElementById('customerAddress').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                date: document.getElementById('saleDate').value,
+                discount: 0,
+                saleStatus: selectedStatus,
+                status: selectedStatus,
+                items,
+                payments
+            };
+
+            console.log("📤 Enviando payload JSON para Criação:", salePayload);
+
+            const accessToken = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/sales`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(salePayload)
+            });
+
+            if (response.ok) {
+                alert('Venda registrada com sucesso!');
+                document.getElementById('saleForm').reset();
+                initializeSaleForm();
+                populateSelects();
+                document.getElementById('saleItemsTbody').innerHTML = '';
+                checkPlaceholder();
+                updateTotals();
+                fetchAndRenderHistory(1);
+            } else {
+                const errorText = await response.text();
+                console.error("Erro da API:", response.status, errorText);
+                let errorData = { message: `Erro ${response.status}. Verifique o console.` };
+                try { errorData = JSON.parse(errorText); } catch (e) {
+                    if (response.status === 415) errorData.detail = "Erro 415: Formato de mídia não suportado.";
+                }
+                showErrorModal({ title: errorData.title || "Erro ao Salvar", detail: errorData.message || errorText });
+            }
+        } catch (error) {
+            console.error("Erro de Conexão:", error);
+            showErrorModal({ title: "Erro de Conexão", detail: error.message });
+        } finally {
+            // 🔹 Reabilita o botão sempre
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Salvar Venda";
+            }
         }
-    } catch (error) {
-        console.error("Erro de Conexão:", error);
-        showErrorModal({ title: "Erro de Conexão", detail: error.message });
     }
 }
+
 
 function addProductToCart() {
     const productSelect = document.getElementById('product-select');
@@ -484,93 +491,89 @@ window.editSale = (saleId) => {
     });
 };
 
-// ✅✅✅ FUNÇÃO DE SALVAR COMPLETAMENTE REFEITA ✅✅✅
 window.saveSaleChanges = async (saleId) => {
     const row = document.getElementById(`row-sale-${saleId}`);
     const itemsRow = document.getElementById(`items-${saleId}`);
     if (!row) return;
 
-    const originalItem = historyItemsCache.find(i => i.id === saleId);
-    if (!originalItem) {
-        showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
-        cancelEditSale(saleId);
-        return;
+    const saveBtn = row.querySelector('.btn-save');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = "Salvando...";
     }
-
-    const statusValue = parseInt(row.querySelector('[name="Status"]').value, 10);
-    const originalStatus = originalItem.status ?? originalItem.saleStatus ?? 0;
-
-    // ✅ VALIDAÇÃO: Impede a alteração de status para "pago" se não houver pagamentos registrados
-    const isAttemptingToPay = (originalStatus === 0) && (statusValue === 1 || statusValue === 2);
-    if (isAttemptingToPay && (!originalItem.payments || originalItem.payments.length === 0)) {
-        showErrorModal({
-            title: "Ação Inválida",
-            detail: "Para registrar um pagamento em uma venda pendente, use a tela 'Vendas Pendentes'. Esta edição serve apenas para corrigir informações da venda, não para processar pagamentos."
-        });
-        return; 
-    }
-    
-    const editedItems = [];
-    itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
-        const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
-        if (originalSaleItem) {
-            editedItems.push({
-                id: originalSaleItem.id,
-                product: originalSaleItem.product,
-                quantity: parseFloat(itemTr.querySelector('[name="quantity"]').value),
-                unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value)
-            });
-        }
-    });
-    
-    let saleDateStr = originalItem.saleDate || originalItem.date;
-    if (typeof saleDateStr === 'string' && saleDateStr.includes('T')) {
-        saleDateStr = saleDateStr.split('T')[0];
-    }
-
-    // Garante que o array de pagamentos seja enviado corretamente, formatando a data
-    const validatedPayments = (originalItem.payments || []).map(payment => {
-        let paymentDateStr = payment.paymentDate || payment.date;
-        if (typeof paymentDateStr === 'string' && paymentDateStr.includes('T')) {
-            paymentDateStr = paymentDateStr.split('T')[0];
-        }
-        return {
-            id: payment.id,
-            paymentDate: paymentDateStr || saleDateStr,
-            amount: payment.amount || 0,
-            paymentMethod: payment.paymentMethod || 0
-        };
-    });
-
-    const updatePayload = {
-        id: saleId,
-        noteNumber: parseInt(row.querySelector('[name="NoteNumber"]').value, 10) || 0,
-        customerName: row.querySelector('[name="CustomerName"]').value || '',
-        customerPhone: row.querySelector('[name="CustomerPhone"]').value || '',
-        city: row.querySelector('[name="City"]').value || '',
-        status: statusValue,
-        state: originalItem.state || '',
-        customerAddress: originalItem.customerAddress || '',
-        discount: originalItem.discount,
-        date: saleDateStr,
-        items: editedItems.map(item => {
-            const productId = (typeof item.product === 'string')
-                ? productEnumNameToIdMap[item.product]
-                : item.product;
-            
-            return {
-                id: item.id,
-                product: productId,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice
-            };
-        }),
-        payments: validatedPayments
-    };
-
-    console.log("📤 Enviando payload JSON para Atualização:", updatePayload);
 
     try {
+        const originalItem = historyItemsCache.find(i => i.id === saleId);
+        if (!originalItem) {
+            showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
+            cancelEditSale(saleId);
+            return;
+        }
+
+        const statusValue = parseInt(row.querySelector('[name="Status"]').value, 10);
+        const originalStatus = originalItem.status ?? originalItem.saleStatus ?? 0;
+
+        const isAttemptingToPay = (originalStatus === 0) && (statusValue === 1 || statusValue === 2);
+        if (isAttemptingToPay && (!originalItem.payments || originalItem.payments.length === 0)) {
+            showErrorModal({
+                title: "Ação Inválida",
+                detail: "Para registrar um pagamento em uma venda pendente, use a tela 'Vendas Pendentes'."
+            });
+            return;
+        }
+
+        const editedItems = [];
+        itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
+            const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
+            if (originalSaleItem) {
+                editedItems.push({
+                    id: originalSaleItem.id,
+                    product: originalSaleItem.product,
+                    quantity: parseFloat(itemTr.querySelector('[name="quantity"]').value),
+                    unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value)
+                });
+            }
+        });
+
+        let saleDateStr = originalItem.saleDate || originalItem.date;
+        if (typeof saleDateStr === 'string' && saleDateStr.includes('T'))
+            saleDateStr = saleDateStr.split('T')[0];
+
+        const validatedPayments = (originalItem.payments || []).map(payment => {
+            let paymentDateStr = payment.paymentDate || payment.date;
+            if (typeof paymentDateStr === 'string' && paymentDateStr.includes('T'))
+                paymentDateStr = paymentDateStr.split('T')[0];
+            return {
+                id: payment.id,
+                paymentDate: paymentDateStr || saleDateStr,
+                amount: payment.amount || 0,
+                paymentMethod: payment.paymentMethod || 0
+            };
+        });
+
+        const updatePayload = {
+            id: saleId,
+            noteNumber: parseInt(row.querySelector('[name="NoteNumber"]').value, 10) || 0,
+            customerName: row.querySelector('[name="CustomerName"]').value || '',
+            customerPhone: row.querySelector('[name="CustomerPhone"]').value || '',
+            city: row.querySelector('[name="City"]').value || '',
+            status: statusValue,
+            state: originalItem.state || '',
+            customerAddress: originalItem.customerAddress || '',
+            discount: originalItem.discount,
+            date: saleDateStr,
+            items: editedItems.map(item => {
+                const productId = (typeof item.product === 'string')
+                    ? productEnumNameToIdMap[item.product]
+                    : item.product;
+                return { id: item.id, product: productId, quantity: item.quantity, unitPrice: item.unitPrice };
+            }),
+            payments: validatedPayments
+        };
+
+        console.log("📤 Enviando payload JSON para Atualização:", updatePayload);
+
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
             method: 'PUT',
@@ -580,6 +583,7 @@ window.saveSaleChanges = async (saleId) => {
             },
             body: JSON.stringify(updatePayload)
         });
+
         if (response.ok) {
             alert('Venda atualizada com sucesso!');
             delete originalRowHTML_Sale[saleId];
@@ -590,7 +594,11 @@ window.saveSaleChanges = async (saleId) => {
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
-        cancelEditSale(saleId);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = "Salvar";
+        }
     }
 };
 
