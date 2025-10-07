@@ -24,6 +24,8 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.Q
 
         public List<string>? ImageProofsUrls { get; set; }
 
+        public List<Guid>? IdImages { get; set; }
+
         public DateOnly? DueDate { get; set; }
         public string OperatorName { get; set; }
 
@@ -41,6 +43,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.Q
             CategoryId = launch.CategoryId;
             CustomerId = launch.CustomerId;
             ImageProofsUrls = launch.ImageProofs?.Select(img => img.FileUrl).ToList();
+            IdImages = launch.ImageProofs?.Select(id => id.Id).ToList();
             PaymentMethod = launch.PaymentMethod;
             Status = launch.Status;
             DueDate = launch.DueDate;

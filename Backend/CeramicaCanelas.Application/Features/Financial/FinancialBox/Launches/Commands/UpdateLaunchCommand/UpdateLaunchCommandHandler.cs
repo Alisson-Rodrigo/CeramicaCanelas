@@ -13,6 +13,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
         private readonly ILaunchRepository _launchRepository;
         private readonly ILaunchCategoryRepository _launchCategoryRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly IProofRepository _proofRepository;
         private readonly IHostEnvironment _env;
 
         private readonly string _publicBaseUrl = "https://localhost:5087/financial/launch/proof";
@@ -22,12 +23,14 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
             ILaunchRepository launchRepository,
             ILaunchCategoryRepository launchCategoryRepository,
             ICustomerRepository customerRepository,
+            IProofRepository proofRepository,
             IHostEnvironment env)
         {
             _logged = logged;
             _launchRepository = launchRepository;
             _launchCategoryRepository = launchCategoryRepository;
             _customerRepository = customerRepository;
+            _proofRepository = proofRepository;
             _env = env;
         }
 
@@ -49,40 +52,68 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
             var uploadPath = Path.Combine(_env.ContentRootPath, "wwwroot", "financial", "launch", "proof");
             Directory.CreateDirectory(uploadPath);
 
-            // 🧾 Se houver novos comprovantes enviados
-            if (request.ImageProofs != null && request.ImageProofs.Any())
+            // ======================================================
+            // 🗑️ REMOVER COMPROVANTES ANTIGOS (via IProofRepository)
+            // ======================================================
+            if (request.ProofsToDelete != null && request.ProofsToDelete.Any())
             {
-                // 🔸 Se quiser substituir completamente os comprovantes antigos:
-                launchToUpdate.ImageProofs?.Clear();
-                launchToUpdate.ImageProofs = new List<ProofImage>();
-
-                foreach (var file in request.ImageProofs)
+                foreach (var proofId in request.ProofsToDelete)
                 {
-                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
-                    var extension = Path.GetExtension(file.FileName);
-                    var uniqueName = $"{Guid.NewGuid()}_{fileNameWithoutExt}{extension}";
-                    var filePath = Path.Combine(uploadPath, uniqueName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    var proof = await _proofRepository.GetByIdAsync(proofId);
+                    if (proof != null)
                     {
-                        await file.CopyToAsync(stream, cancellationToken);
+                        // Apagar arquivo físico
+                        var filePath = Path.Combine(
+                            _env.ContentRootPath,
+                            "wwwroot",
+                            "financial",
+                            "launch",
+                            "proof",
+                            Path.GetFileName(proof.FileUrl)
+                        );
+
+                        if (File.Exists(filePath))
+                            File.Delete(filePath);
+
+                        // Remover do banco
+                        await _proofRepository.Delete(proof);
                     }
-
-                    var fileUrl = $"{_publicBaseUrl}/{uniqueName}";
-
-                    launchToUpdate.ImageProofs.Add(new ProofImage
-                    {
-                        FileUrl = fileUrl,
-                        OriginalFileName = file.FileName,
-                        ContentType = file.ContentType,
-                        FileSize = file.Length,
-                        CreatedOn = DateTime.UtcNow,
-                        ModifiedOn = DateTime.UtcNow
-                    });
                 }
             }
 
+            // ======================================================
+            // 🆕 ADICIONAR NOVOS COMPROVANTES (via IProofRepository)
+            // ======================================================
+            if (request.ImageProofs != null && request.ImageProofs.Any())
+            {
+                foreach (var file in request.ImageProofs)
+                {
+                    var uniqueName = $"{Guid.NewGuid()}_{file.FileName}";
+                    var filePath = Path.Combine(uploadPath, uniqueName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                        await file.CopyToAsync(stream, cancellationToken);
+
+                    var proof = new ProofImage
+                    {
+                        FileUrl = $"{_publicBaseUrl}/{uniqueName}",
+                        OriginalFileName = file.FileName,
+                        ContentType = file.ContentType,
+                        FileSize = file.Length,
+                        LaunchId = launchToUpdate.Id,
+                        CreatedOn = DateTime.UtcNow,
+                        ModifiedOn = DateTime.UtcNow
+                    };
+
+                    await _proofRepository.CreateAsync(proof);
+                }
+            }
+
+            // ======================================================
+            // 💾 SALVAR ALTERAÇÕES NO LANÇAMENTO
+            // ======================================================
             await _launchRepository.Update(launchToUpdate);
+
             return Unit.Value;
         }
 
