@@ -17,6 +17,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
         public PaymentMethod PaymentMethod { get; set; }
         public PaymentStatus Status { get; set; }
         public DateOnly? DueDate { get; set; }
+        public List<Guid>? ProofsToDelete { get; set; }
 
         // 🆕 Comprovantes enviados na atualização
         public List<IFormFile>? ImageProofs { get; set; }
