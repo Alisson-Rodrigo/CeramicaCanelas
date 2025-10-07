@@ -13,23 +13,23 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
         private readonly ILaunchRepository _launchRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly ILaunchCategoryRepository _launchCategoryRepository;
-        private readonly IHostEnvironment _env;
 
-        // 🔹 URL base pública (ideal pegar de appsettings no futuro)
-        private readonly string _publicBaseUrl = "https://localhost:5087/financial/launch/proof";
+        // 🔹 Novo caminho base para a VPS no diretório 'financial/launch/images'
+        private const string PastaBaseVps = "/var/www/ceramicacanelas/financial/launch/images";
+
+        // 🔹 URL pública para os arquivos acessíveis via navegador
+        private const string UrlBase = "https://api.ceramicacanelas.shop/financial/launch/images/";
 
         public CreatedLaunchCommandHandler(
             ILogged logged,
             ILaunchRepository launchRepository,
             ICustomerRepository customerRepository,
-            ILaunchCategoryRepository launchCategoryRepository,
-            IHostEnvironment env)
+            ILaunchCategoryRepository launchCategoryRepository)
         {
             _logged = logged;
             _launchRepository = launchRepository;
             _customerRepository = customerRepository;
             _launchCategoryRepository = launchCategoryRepository;
-            _env = env;
         }
 
         public async Task<Unit> Handle(CreatedLaunchCommand request, CancellationToken cancellationToken)
@@ -42,8 +42,8 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
             var launch = request.AssignToLaunch()
                 ?? throw new BadRequestException("Erro ao criar o lançamento financeiro.");
 
-            // 📁 Caminho dinâmico dentro de wwwroot
-            var uploadPath = Path.Combine(_env.ContentRootPath, "wwwroot", "financial", "launch", "proof");
+            // 📁 Alteração do caminho dinâmico, agora no diretório 'financial/launch/images'
+            var uploadPath = Path.Combine(PastaBaseVps);
             Directory.CreateDirectory(uploadPath); // Garante que existe
 
             // 📸 Upload dos comprovantes
@@ -53,7 +53,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
 
                 foreach (var file in request.ImageProofs)
                 {
-                    // Gera nome único e mantém extensão original
+                    // Gera nome único e mantém a extensão original
                     var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
                     var extension = Path.GetExtension(file.FileName);
                     var uniqueName = $"{Guid.NewGuid()}_{fileNameWithoutExt}{extension}";
@@ -65,8 +65,8 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
                         await file.CopyToAsync(stream, cancellationToken);
                     }
 
-                    // Gera URL pública
-                    var fileUrl = $"{_publicBaseUrl}/{uniqueName}";
+                    // Gera URL pública (agora para a pasta de 'financial/launch/images')
+                    var fileUrl = $"{UrlBase}{uniqueName}";
 
                     // Adiciona o comprovante
                     launch.ImageProofs.Add(new ProofImage

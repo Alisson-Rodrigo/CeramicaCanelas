@@ -14,24 +14,25 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
         private readonly ILaunchCategoryRepository _launchCategoryRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IProofRepository _proofRepository;
-        private readonly IHostEnvironment _env;
 
-        private readonly string _publicBaseUrl = "https://localhost:5087/financial/launch/proof";
+        // 🔹 Caminho base na VPS para comprovantes
+        private const string PastaBaseVps = "/var/www/ceramicacanelas/financial/launch/images";
+
+        // 🔹 URL pública para os arquivos de comprovantes acessíveis via navegador
+        private const string UrlBase = "https://api.ceramicacanelas.shop/financial/launch/images/";
 
         public UpdateLaunchCommandHandler(
             ILogged logged,
             ILaunchRepository launchRepository,
             ILaunchCategoryRepository launchCategoryRepository,
             ICustomerRepository customerRepository,
-            IProofRepository proofRepository,
-            IHostEnvironment env)
+            IProofRepository proofRepository)
         {
             _logged = logged;
             _launchRepository = launchRepository;
             _launchCategoryRepository = launchCategoryRepository;
             _customerRepository = customerRepository;
             _proofRepository = proofRepository;
-            _env = env;
         }
 
         public async Task<Unit> Handle(UpdateLaunchCommand request, CancellationToken cancellationToken)
@@ -48,9 +49,9 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
             request.MapToLaunch(launchToUpdate);
             launchToUpdate.OperatorName = user.UserName!;
 
-            // 📂 Diretório de upload
-            var uploadPath = Path.Combine(_env.ContentRootPath, "wwwroot", "financial", "launch", "proof");
-            Directory.CreateDirectory(uploadPath);
+            // 📂 Caminho de upload na VPS
+            var uploadPath = Path.Combine(PastaBaseVps);
+            Directory.CreateDirectory(uploadPath); // Garante que existe
 
             // ======================================================
             // 🗑️ REMOVER COMPROVANTES ANTIGOS (via IProofRepository)
@@ -63,14 +64,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
                     if (proof != null)
                     {
                         // Apagar arquivo físico
-                        var filePath = Path.Combine(
-                            _env.ContentRootPath,
-                            "wwwroot",
-                            "financial",
-                            "launch",
-                            "proof",
-                            Path.GetFileName(proof.FileUrl)
-                        );
+                        var filePath = Path.Combine(PastaBaseVps, Path.GetFileName(proof.FileUrl));
 
                         if (File.Exists(filePath))
                             File.Delete(filePath);
@@ -96,7 +90,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
 
                     var proof = new ProofImage
                     {
-                        FileUrl = $"{_publicBaseUrl}/{uniqueName}",
+                        FileUrl = $"{UrlBase}{uniqueName}",
                         OriginalFileName = file.FileName,
                         ContentType = file.ContentType,
                         FileSize = file.Length,
