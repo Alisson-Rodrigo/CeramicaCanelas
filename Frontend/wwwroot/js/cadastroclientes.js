@@ -37,6 +37,16 @@ async function handleSaveCustomer(form) {
         showErrorModal({ title: "Validação Falhou", detail: "O campo 'Nome Completo' é obrigatório." });
         return;
     }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+        originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando...";
+        submitBtn.classList.add("loading");
+    }
+
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/financial/customer`, {
@@ -44,18 +54,29 @@ async function handleSaveCustomer(form) {
             headers: { 'Authorization': `Bearer ${accessToken}` },
             body: formData,
         });
+
         if (response.ok) {
             alert('Cliente cadastrado com sucesso!');
             form.reset();
             fetchAndRenderCustomers(1);
         } else {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({
+                title: "Erro ao Salvar",
+                detail: "Ocorreu um erro inesperado."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: "Não foi possível comunicar com o servidor." });
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.classList.remove("loading");
+        }
     }
 }
+
 
 // =======================================================
 // LÓGICA DA TABELA (PAGINAÇÃO E CRUD)
@@ -171,6 +192,16 @@ window.editCustomer = (customer) => {
 window.saveCustomerChanges = async (customerId) => {
     const row = document.getElementById(`row-customer-${customerId}`);
     if (!row) return;
+
+    const saveBtn = row.querySelector('.btn-save');
+    let originalText = '';
+    if (saveBtn) {
+        originalText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Salvando...";
+        saveBtn.classList.add("loading");
+    }
+
     const formData = new FormData();
     formData.append('Id', customerId);
     formData.append('Name', row.querySelector('[name="Name"]').value);
@@ -185,16 +216,26 @@ window.saveCustomerChanges = async (customerId) => {
             headers: { 'Authorization': `Bearer ${accessToken}` },
             body: formData
         });
+
         if (response.ok) {
             alert('Cliente atualizado com sucesso!');
             fetchAndRenderCustomers(currentPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
+            const errorData = await response.json().catch(() => ({
+                title: "Erro ao Salvar",
+                detail: "Ocorreu um erro inesperado."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
         cancelEditCustomer(customerId);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+            saveBtn.classList.remove("loading");
+        }
     }
 };
 

@@ -6,8 +6,8 @@
 // Mude esta versão sempre que atualizar o sistema (ex: '1.0.1')
 const APP_VERSION = '1.0.0';
 
-// const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
-const API_BASE_URL = 'http://localhost:5087/api';
+const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
+// const API_BASE_URL = 'http://localhost:5087/api';
 const originalRowHTML = {};
 
 // Cache para a tabela de histórico em páginas complexas
@@ -38,7 +38,7 @@ let currentSupplierModalPage = 1;
 let currentCategoryModalPage = 1;
 let currentCustomerModalPage = 1;
 
-
+let proofsToDeleteForEdit = []; // ✅ Armazena IDs dos comprovantes a serem deletados na edição
 // Mapas de Enums
 const positionMap = {
     0: 'Enfornador', 1: 'Desenfornador', 2: 'Soldador', 3: 'Marombeiro',
@@ -74,6 +74,7 @@ const productEnumNameToIdMap = {
     "RoofTile2": 12, "Slabs": 13, "GrillBricks": 14, "Caldeado6": 15, "Caldeado8": 16, "Caldeado9": 17
 };
 
+let currentEditingLaunchId = null; // Rastreia qual item está sendo editado via modal
 const statusMap = { 0: 'Pendente', 1: 'Pago' };
 const productTypeMap = {
     // 🔹 Tijolos
@@ -120,7 +121,8 @@ const saleStatusMap = {
     0: 'Pendente', 
     1: 'Pago Parcialmente', 
     2: 'Confirmada',
-    3: 'Cancelada' 
+    3: 'Cancelada' ,
+    4: 'Doação'
 };
 // =======================================================
 // FUNÇÃO PRINCIPAL DE CARREGAMENTO DE PÁGINAS (COM CACHE BUSTING)

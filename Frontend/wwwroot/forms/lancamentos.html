@@ -1,4 +1,4 @@
-<div class="container">
+    <div class="container">
     <h2 class="form-title">Novo Lançamento Financeiro</h2>
     <div class="form-container">
         <div class="form-group" id="type-selection-group">
@@ -11,7 +11,7 @@
             </div>
         </div>
 
-        <form id="launchForm" style="display: none;">
+        <form id="launchForm" style="display: none;" autocomplete="off">
             <div class="form-group">
                 <label class="form-label" for="description">Descrição</label>
                 <textarea id="description" name="Description" class="form-input" rows="3" required></textarea>
@@ -28,7 +28,7 @@
             </div>
 
             <div class="form-group" id="group-categoryId" style="display: none;">
-                <label class="form-label">Categoria (Opcional)</label>
+                <label class="form-label">Categoria</label>
                 <div class="selection-box">
                     <span id="selectedCategoryName">Nenhuma categoria selecionada</span>
                     <button type="button" id="openCategoryModalBtn" class="search-btn">Buscar Categoria...</button>
@@ -55,10 +55,18 @@
                     <select id="status" name="Status" class="form-input" required></select>
                 </div>
             </div>
+
             <div class="form-group" id="group-dueDate" style="display: none;">
                 <label class="form-label" for="dueDate">Data de Vencimento (Opcional)</label>
                 <input type="date" id="dueDate" name="DueDate" class="form-input">
             </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="imageProofs">Comprovantes (Opcional)</label>
+                <input type="file" id="imageProofs" class="form-input" accept="image/*">
+                <div id="image-previews-container" class="image-previews-container"></div>
+            </div>
+
             <button type="submit" class="submit-btn">Salvar Lançamento</button>
         </form>
     </div>
@@ -100,11 +108,14 @@
                     <th>Tipo</th>
                     <th>Descrição</th>
                     <th>Valor</th>
-                    <th>Data</th>
+                    <th>Data Lanç.</th>
                     <th>Categoria</th>
                     <th>Cliente</th>
+                    <th>Método Pag.</th>
                     <th>Status</th>
                     <th>Operador</th>
+                    <th>Comprovantes</th>
+                    <th>Data Venc.</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -126,6 +137,7 @@
         <div id="modalCustomerPaginationControls" class="pagination-controls"></div>
     </div>
 </div>
+
 <div id="categorySearchModal" class="modal">
     <div class="modal-content">
         <span class="modal-close-btn">&times;</span>
@@ -141,5 +153,16 @@
         </div>
         <div id="modalCategoryResultsContainer" class="table-container"></div>
         <div id="modalCategoryPaginationControls" class="pagination-controls"></div>
+    </div>
+</div>
+
+<div id="imageProofModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Comprovantes do Lançamento</h3>
+            <span class="modal-close-btn" id="closeImageProofModalBtn">&times;</span>
+        </div>
+        <div id="imageProofContainer" class="image-proof-container">
+            </div>
     </div>
 </div>

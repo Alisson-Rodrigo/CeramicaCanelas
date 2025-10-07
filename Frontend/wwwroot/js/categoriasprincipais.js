@@ -39,6 +39,15 @@ async function handleCategoryGroupSubmit(event) {
     const form = event.target;
     const formData = new FormData(form);
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+        originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando...";
+        submitBtn.classList.add("loading");
+    }
+
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/financial/launch-category-groups`, {
@@ -52,13 +61,23 @@ async function handleCategoryGroupSubmit(event) {
             form.reset();
             fetchAndRenderHistory(1);
         } else {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({
+                title: "Erro ao Salvar",
+                detail: "Ocorreu um erro inesperado."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.classList.remove("loading");
+        }
     }
 }
+
 
 // =======================================================
 // LÓGICA DA TABELA DE HISTÓRICO
@@ -228,10 +247,20 @@ window.editCategoryGroup = (item) => {
     `;
 };
 
+
 window.saveCategoryGroupChanges = async (groupId) => {
     const row = document.getElementById(`row-group-${groupId}`);
     if (!row) return;
-    
+
+    const saveBtn = row.querySelector('.btn-save');
+    let originalText = '';
+    if (saveBtn) {
+        originalText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Salvando...";
+        saveBtn.classList.add("loading");
+    }
+
     const formData = new FormData();
     formData.append('Id', groupId);
     formData.append('Name', row.querySelector('[name="name"]').value);
@@ -243,17 +272,27 @@ window.saveCategoryGroupChanges = async (groupId) => {
             headers: { 'Authorization': `Bearer ${accessToken}` },
             body: formData
         });
+
         if (response.ok) {
             alert('Grupo de categoria atualizado com sucesso!');
             delete originalRowHTML_CategoryGroup[groupId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
+            const errorData = await response.json().catch(() => ({
+                title: "Erro ao Salvar",
+                detail: "Não foi possível processar a resposta do servidor."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
         cancelEditCategoryGroup(groupId);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+            saveBtn.classList.remove("loading");
+        }
     }
 };
 

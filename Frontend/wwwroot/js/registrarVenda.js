@@ -1,5 +1,7 @@
 console.log('Script js/venda.js DEFINIDO.');
 
+
+
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -23,7 +25,9 @@ function initializeSaleForm() {
 
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('saleDate').value = today;
-    document.getElementById('paymentDate').value = today;
+    // Não preenche a data de pagamento por padrão para forçar o usuário a escolher
+    document.getElementById('paymentDate').value = "";
+
 
     saleForm.addEventListener('submit', handleSaleSubmit);
     if (amountPaidInput) amountPaidInput.addEventListener('input', updateTotals);
@@ -85,85 +89,101 @@ function updateTotals() {
 async function handleSaleSubmit(event) {
     event.preventDefault();
 
-    const itemsRows = document.querySelectorAll('#saleItemsTbody tr:not(#placeholder-row)');
-    if (itemsRows.length === 0) {
-        showErrorModal({ title: "Validação", detail: "A venda deve possuir ao menos um item." });
-        return;
-    }
-
-    const items = Array.from(itemsRows).map(row => ({
-        product: parseInt(row.dataset.productId, 10),
-        quantity: parseFloat(row.dataset.quantity),
-        unitPrice: parseFloat(row.dataset.price)
-    }));
-
-    const payments = [];
-    const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
-    if (amountPaid > 0) {
-        payments.push({
-            paymentDate: document.getElementById('paymentDate').value,
-            amount: amountPaid,
-            paymentMethod: parseInt(document.getElementById('paymentMethod').value, 10)
-        });
-    }
-
-    const selectedStatus = parseInt(document.getElementById('saleStatus').value, 10);
-
-    const salePayload = {
-        noteNumber: parseInt(document.getElementById('noteNumber').value, 10),
-        customerName: document.getElementById('customerName').value,
-        customerAddress: document.getElementById('customerAddress').value,
-        city: document.getElementById('city').value,
-        state: document.getElementById('state').value,
-        customerPhone: document.getElementById('customerPhone').value,
-        date: document.getElementById('saleDate').value,
-        discount: 0,
-        saleStatus: selectedStatus,
-        status: selectedStatus,
-        items: items,
-        payments: payments
-    };
-
-    console.log("📤 Enviando payload JSON para Criação:", salePayload);
-
-    try {
-        const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/sales`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(salePayload)
-        });
-
-        if (response.ok) {
-            alert('Venda registrada com sucesso!');
-            document.getElementById('saleForm').reset();
-            initializeSaleForm();
-            populateSelects();
-            document.getElementById('saleItemsTbody').innerHTML = '';
-            checkPlaceholder();
-            updateTotals();
-            fetchAndRenderHistory(1);
-        } else {
-            const errorText = await response.text();
-            console.error("Erro da API:", response.status, errorText);
-            let errorData = { message: `Erro ${response.status}. Verifique o console.` };
-            try {
-                errorData = JSON.parse(errorText);
-            } catch (e) {
-                if (response.status === 415) {
-                    errorData.detail = "Erro 415: Formato de mídia não suportado.";
-                }
+    const submitBtn = event.submitter || document.querySelector('#saleForm button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = "Enviando...";
+        
+        try {
+            const itemsRows = document.querySelectorAll('#saleItemsTbody tr:not(#placeholder-row)');
+            if (itemsRows.length === 0) {
+                showErrorModal({ title: "Validação", detail: "A venda deve possuir ao menos um item." });
+                return;
             }
-            showErrorModal({ title: errorData.title || "Erro ao Salvar", detail: errorData.detail || errorData.message || errorText });
+
+            const items = Array.from(itemsRows).map(row => ({
+                product: parseInt(row.dataset.productId, 10),
+                quantity: parseFloat(row.dataset.quantity),
+                unitPrice: parseFloat(row.dataset.price)
+            }));
+
+            const payments = [];
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
+            const paymentDate = document.getElementById('paymentDate').value;
+
+            if (amountPaid > 0) {
+                if (!paymentDate) {
+                    showErrorModal({ title: "Validação", detail: "A data do pagamento é obrigatória ao informar um valor pago." });
+                    return;
+                }
+                payments.push({
+                    paymentDate: paymentDate,
+                    amount: amountPaid,
+                    paymentMethod: parseInt(document.getElementById('paymentMethod').value, 10)
+                });
+            }
+
+            const selectedStatus = parseInt(document.getElementById('saleStatus').value, 10);
+
+            const salePayload = {
+                noteNumber: parseInt(document.getElementById('noteNumber').value, 10),
+                customerName: document.getElementById('customerName').value,
+                customerAddress: document.getElementById('customerAddress').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                date: document.getElementById('saleDate').value,
+                discount: 0,
+                saleStatus: selectedStatus,
+                status: selectedStatus,
+                items,
+                payments
+            };
+
+            console.log("📤 Enviando payload JSON para Criação:", salePayload);
+
+            const accessToken = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/sales`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(salePayload)
+            });
+
+            if (response.ok) {
+                alert('Venda registrada com sucesso!');
+                document.getElementById('saleForm').reset();
+                initializeSaleForm();
+                populateSelects();
+                document.getElementById('saleItemsTbody').innerHTML = '';
+                checkPlaceholder();
+                updateTotals();
+                fetchAndRenderHistory(1);
+            } else {
+                const errorText = await response.text();
+                console.error("Erro da API:", response.status, errorText);
+                let errorData = { message: `Erro ${response.status}. Verifique o console.` };
+                try { errorData = JSON.parse(errorText); } catch (e) {
+                    if (response.status === 415) errorData.detail = "Erro 415: Formato de mídia não suportado.";
+                }
+                showErrorModal({ title: errorData.title || "Erro ao Salvar", detail: errorData.message || errorText });
+            }
+        } catch (error) {
+            console.error("Erro de Conexão:", error);
+            showErrorModal({ title: "Erro de Conexão", detail: error.message });
+        } finally {
+            // 🔹 Reabilita o botão sempre
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Salvar Venda";
+            }
         }
-    } catch (error) {
-        console.error("Erro de Conexão:", error);
-        showErrorModal({ title: "Erro de Conexão", detail: error.message });
     }
 }
+
 
 function addProductToCart() {
     const productSelect = document.getElementById('product-select');
@@ -273,6 +293,7 @@ async function fetchAndRenderHistory(page = 1) {
 
         console.log("📥 Dados recebidos da API de Histórico:", paginatedData);
 
+        // ✅✅✅ ORDENAÇÃO NO FRONTEND ✅✅✅
         if (paginatedData.items && paginatedData.items.length > 0) {
             paginatedData.items.sort((a, b) => a.noteNumber - b.noteNumber);
         }
@@ -297,22 +318,18 @@ function renderHistoryTable(items) {
         const date = new Date(dateStr);
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
 
-        const totalValue = item.totalNet || 0;
-        const formattedTotal = totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        // ✅ Usa o 'totalNet' vindo da API para a coluna Total.
+        const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         
-        // ✅✅✅ NOVA LÓGICA PARA CALCULAR O SALDO DEVEDOR ✅✅✅
-        const totalPaid = (item.payments && item.payments.length > 0)
-            ? item.payments.reduce((sum, payment) => sum + payment.amount, 0)
-            : 0;
-
-        const remainingBalance = totalValue - totalPaid;
-        const formattedBalance = remainingBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        // ✅✅✅ Usa o 'remainingBalance' vindo da API para a nova coluna Saldo Devedor.
+        const formattedBalance = (item.remainingBalance || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         const statusText = saleStatusMap[item.status ?? item.saleStatus] || 'Desconhecido';
 
         const saleRow = document.createElement('tr');
         saleRow.className = 'sale-row';
         saleRow.id = `row-sale-${item.id}`;
+        // ✅ Linha da tabela atualizada com a nova coluna
         saleRow.innerHTML = `
             <td><button class="expand-btn">+</button></td>
             <td data-field="noteNumber">${item.noteNumber}</td>
@@ -322,7 +339,8 @@ function renderHistoryTable(items) {
             <td data-field="saleDate">${formattedDate}</td>
             <td data-field="itemsCount">${item.itemsCount || 0}</td>
             <td data-field="totalNet">${formattedTotal}</td>
-            <td data-field="remainingBalance">${formattedBalance}</td> <td data-field="status">${statusText}</td>
+            <td data-field="remainingBalance">${formattedBalance}</td>
+            <td data-field="status">${statusText}</td>
             <td class="actions-cell" data-field="actions">
                 <button class="btn-action btn-edit">Editar</button>
                 <button class="btn-action btn-delete">Excluir</button>
@@ -339,15 +357,20 @@ function renderHistoryTable(items) {
         itemsRow.id = `items-${item.id}`;
         itemsRow.style.display = 'none';
 
+        // ✅ Colspan da linha de itens aninhados atualizado para 11
         let itemsHtml = `<td colspan="11" class="items-container"><table class="nested-table">
             <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
             <tbody>`;
         if (item.items && item.items.length > 0) {
             item.items.forEach(saleItem => {
                 let productName = 'Produto desconhecido';
-                if (typeof saleItem.product === 'string' && typeof productNameMap !== 'undefined') {
-                    productName = productNameMap[saleItem.product] || saleItem.product;
-                } else if (typeof saleItem.product === 'number') {
+                // A API retorna o nome do enum como string (ex: "Bands6")
+                if (typeof saleItem.product === 'string' && typeof productEnumNameToIdMap !== 'undefined') {
+                    const productId = productEnumNameToIdMap[saleItem.product];
+                    productName = productTypeMap[productId] || saleItem.product;
+                } 
+                // Fallback para caso retorne número
+                else if (typeof saleItem.product === 'number') {
                     productName = productTypeMap[saleItem.product] || 'Produto desconhecido';
                 }
 
@@ -468,93 +491,114 @@ window.editSale = (saleId) => {
     });
 };
 
-
 window.saveSaleChanges = async (saleId) => {
     const row = document.getElementById(`row-sale-${saleId}`);
     const itemsRow = document.getElementById(`items-${saleId}`);
     if (!row) return;
 
-    const originalItem = historyItemsCache.find(i => i.id === saleId);
-    if (!originalItem) {
-        showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
-        cancelEditSale(saleId);
-        return;
-    }
-
-    const editedItems = [];
-    itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
-        const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
-        if (originalSaleItem) {
-            editedItems.push({
-                id: originalSaleItem.id,
-                product: originalSaleItem.product,
-                quantity: parseFloat(itemTr.querySelector('[name="quantity"]').value),
-                unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value)
-            });
-        }
-    });
-
-    const formData = new FormData();
-    formData.append('Id', saleId);
-    formData.append('NoteNumber', row.querySelector('[name="NoteNumber"]').value || '0');
-    formData.append('CustomerName', row.querySelector('[name="CustomerName"]').value || '');
-    formData.append('CustomerPhone', row.querySelector('[name="CustomerPhone"]').value || '');
-    formData.append('City', row.querySelector('[name="City"]').value || '');
-
-    const statusValue = row.querySelector('[name="Status"]').value;
-    formData.append('Status', statusValue);
-
-    formData.append('State', originalItem.state || '');
-    formData.append('CustomerAddress', originalItem.customerAddress || '');
-    formData.append('Discount', originalItem.discount.toString());
-
-    let saleDateStr = originalItem.saleDate || originalItem.date;
-    if (typeof saleDateStr === 'string' && saleDateStr.includes('T')) {
-        saleDateStr = saleDateStr.split('T')[0];
-    }
-    formData.append('Date', saleDateStr);
-
-    editedItems.forEach((item, index) => {
-        let productId;
-        if (typeof item.product === 'number') {
-            productId = item.product;
-        } else if (typeof productEnumNameToIdMap !== 'undefined') {
-            productId = productEnumNameToIdMap[item.product];
-        }
-
-        formData.append(`Items[${index}].Id`, item.id);
-        if (productId !== undefined) {
-            formData.append(`Items[${index}].Product`, productId.toString());
-        }
-        formData.append(`Items[${index}].Quantity`, item.quantity.toString());
-        formData.append(`Items[${index}].UnitPrice`, item.unitPrice.toString());
-    });
-
-    console.log("📤 Enviando FormData para Atualização:");
-    for (let pair of formData.entries()) {
-        console.log(`   ${pair[0]}: ${pair[1]}`);
+    const saveBtn = row.querySelector('.btn-save');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = "Salvando...";
     }
 
     try {
+        const originalItem = historyItemsCache.find(i => i.id === saleId);
+        if (!originalItem) {
+            showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
+            cancelEditSale(saleId);
+            return;
+        }
+
+        const statusValue = parseInt(row.querySelector('[name="Status"]').value, 10);
+        const originalStatus = originalItem.status ?? originalItem.saleStatus ?? 0;
+
+        const isAttemptingToPay = (originalStatus === 0) && (statusValue === 1 || statusValue === 2);
+        if (isAttemptingToPay && (!originalItem.payments || originalItem.payments.length === 0)) {
+            showErrorModal({
+                title: "Ação Inválida",
+                detail: "Para registrar um pagamento em uma venda pendente, use a tela 'Vendas Pendentes'."
+            });
+            return;
+        }
+
+        const editedItems = [];
+        itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
+            const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
+            if (originalSaleItem) {
+                editedItems.push({
+                    id: originalSaleItem.id,
+                    product: originalSaleItem.product,
+                    quantity: parseFloat(itemTr.querySelector('[name="quantity"]').value),
+                    unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value)
+                });
+            }
+        });
+
+        let saleDateStr = originalItem.saleDate || originalItem.date;
+        if (typeof saleDateStr === 'string' && saleDateStr.includes('T'))
+            saleDateStr = saleDateStr.split('T')[0];
+
+        const validatedPayments = (originalItem.payments || []).map(payment => {
+            let paymentDateStr = payment.paymentDate || payment.date;
+            if (typeof paymentDateStr === 'string' && paymentDateStr.includes('T'))
+                paymentDateStr = paymentDateStr.split('T')[0];
+            return {
+                id: payment.id,
+                paymentDate: paymentDateStr || saleDateStr,
+                amount: payment.amount || 0,
+                paymentMethod: payment.paymentMethod || 0
+            };
+        });
+
+        const updatePayload = {
+            id: saleId,
+            noteNumber: parseInt(row.querySelector('[name="NoteNumber"]').value, 10) || 0,
+            customerName: row.querySelector('[name="CustomerName"]').value || '',
+            customerPhone: row.querySelector('[name="CustomerPhone"]').value || '',
+            city: row.querySelector('[name="City"]').value || '',
+            status: statusValue,
+            state: originalItem.state || '',
+            customerAddress: originalItem.customerAddress || '',
+            discount: originalItem.discount,
+            date: saleDateStr,
+            items: editedItems.map(item => {
+                const productId = (typeof item.product === 'string')
+                    ? productEnumNameToIdMap[item.product]
+                    : item.product;
+                return { id: item.id, product: productId, quantity: item.quantity, unitPrice: item.unitPrice };
+            }),
+            payments: validatedPayments
+        };
+
+        console.log("📤 Enviando payload JSON para Atualização:", updatePayload);
+
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${accessToken}`
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
             },
-            body: formData
+            body: JSON.stringify(updatePayload)
         });
+
         if (response.ok) {
             alert('Venda atualizada com sucesso!');
             delete originalRowHTML_Sale[saleId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
+            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar", detail: "Ocorreu um erro inesperado." }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
-        cancelEditSale(saleId);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = "Salvar";
+        }
     }
 };
 
