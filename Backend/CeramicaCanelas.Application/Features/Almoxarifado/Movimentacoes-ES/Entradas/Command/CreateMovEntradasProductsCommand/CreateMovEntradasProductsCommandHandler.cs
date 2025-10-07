@@ -52,7 +52,6 @@ namespace CeramicaCanelas.Application.Features.Movimentacoes_ES.Entradas.Command
             movimentacaoES.NameProduct = product.Name;
             movimentacaoES.NameSupplier = supplier.Name;
             movimentacaoES.NameOperator = user.Name;
-            movimentacaoES.NameCategory = product.Category!.Name;
             movimentacaoES.UserId = user.Id;
             await _movimentacaoESRepository.CreateAsync(movimentacaoES, cancellationToken);
 
