@@ -1,5 +1,6 @@
 console.log('Script js/lancamento.js DEFINIDO.');
 
+// =======================================================
 
 
 // =======================================================
@@ -16,12 +17,54 @@ function initDynamicForm() {
 }
 
 // =======================================================
-// LÓGICA DO FORMULÁRIO PRINCIPAL
+// HELPER DE IMAGEM
+// =======================================================
+function getAuthenticatedImageUrl(imageUrl) {
+    const urlObj = new URL(imageUrl);
+    if (urlObj.hostname === 'localhost') {
+        urlObj.protocol = 'http';
+    }
+    return urlObj.toString();
+}
+
+async function downloadImage(imageUrl, filename) {
+    try {
+        const urlObj = new URL(imageUrl);
+        if (urlObj.hostname === 'localhost') {
+            urlObj.protocol = 'http';
+        }
+        const correctedUrl = urlObj.toString();
+        
+        // Cria um link temporário e força o download
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = correctedUrl;
+        a.download = filename;
+        a.target = '_blank';
+        
+        document.body.appendChild(a);
+        a.click();
+        
+        // Remove o link após um pequeno delay
+        setTimeout(() => {
+            document.body.removeChild(a);
+        }, 100);
+
+    } catch (error) {
+        console.error('Erro ao baixar a imagem:', error);
+        alert('Ocorreu um erro ao tentar baixar a imagem. Verifique o console para mais detalhes.');
+    }
+}
+
+
+// =======================================================
+// LÓGICA DO FORMULÁRIO PRINCIPAL (NOVO LANÇAMENTO)
 // =======================================================
 function initializeLaunchForm() {
     const typeSelection = document.getElementById('type-selection-group');
     const launchForm = document.getElementById('launchForm');
     const statusSelect = document.getElementById('status');
+    const imageProofsInput = document.getElementById('imageProofs');
 
     populateEnumSelects();
 
@@ -45,10 +88,55 @@ function initializeLaunchForm() {
             }
         });
     }
+    
+    if (imageProofsInput) {
+        imageProofsInput.addEventListener('change', handleFileSelection);
+    }
 
     if (launchForm) {
         launchForm.addEventListener('submit', handleLaunchSubmit);
     }
+}
+
+function handleFileSelection(event) {
+    const files = event.target.files;
+    if (files.length > 0) {
+        for(const file of files) {
+           launchFiles.push(file);
+        }
+    }
+    renderFilePreviews();
+    event.target.value = '';
+}
+
+function renderFilePreviews() {
+    const container = document.getElementById('image-previews-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    launchFiles.forEach((file, index) => {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'preview-item';
+        
+        const img = document.createElement('img');
+        img.className = 'preview-thumbnail';
+        img.src = URL.createObjectURL(file);
+        img.onload = () => URL.revokeObjectURL(img.src);
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-preview-btn';
+        removeBtn.textContent = 'X';
+        removeBtn.type = 'button';
+        removeBtn.onclick = () => {
+            launchFiles.splice(index, 1);
+            renderFilePreviews();
+        };
+        
+        previewItem.appendChild(img);
+        previewItem.appendChild(removeBtn);
+        container.appendChild(previewItem);
+    });
 }
 
 function updateFormVisibility(type) {
@@ -102,15 +190,37 @@ async function handleLaunchSubmit(event) {
         return;
     }
 
+    // 🔹 Pega o botão que enviou o form
+    const submitBtn = event.submitter || form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+        originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando...";
+        submitBtn.classList.add("loading");
+    }
+
     const formData = new FormData(form);
     formData.set('Type', selectedType.value);
+    
+    formData.delete('ImageProofs');
+    if (launchFiles.length > 0) {
+        launchFiles.forEach(file => {
+            formData.append('ImageProofs', file);
+        });
+    }
 
     if (selectedType.value === '1') {
         if (!formData.get('CustomerId')) formData.delete('CustomerId');
         formData.delete('CategoryId');
     } else if (selectedType.value === '2') {
         if (!formData.get('CategoryId')) {
-            showErrorModal({ title: "Validação Falhou", detail: "A Categoria é obrigatória para lançamentos de Saída." });
+            showErrorModal({ title: "Validação Falhou", detail: "A Categoria é obrigatória para Saída." });
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.classList.remove("loading");
+            }
             return;
         }
         formData.delete('CustomerId');
@@ -126,25 +236,35 @@ async function handleLaunchSubmit(event) {
 
         if (response.ok) {
             alert('Lançamento salvo com sucesso!');
-            form.reset();
-            populateEnumSelects();
-            resetClientSelection();
-            resetCategorySelection();
-            selectedType.checked = false;
+            resetFormCompletely();
+            const typeRadio = document.querySelector('input[name="Type"]:checked');
+            if (typeRadio) typeRadio.checked = false;
             form.style.display = 'none';
             fetchAndRenderHistory(1);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro desconhecido", detail: "A resposta da API não pôde ser lida." }));
+            const errorData = await response.json().catch(() => ({
+                title: "Erro desconhecido",
+                detail: "A resposta da API não pôde ser lida."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
+    } finally {
+        // 🔹 Reabilita o botão mesmo em caso de erro
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.classList.remove("loading");
+        }
     }
 }
 
+
 // =======================================================
-// LÓGICA DAS MODAIS
+// LÓGICA DAS MODAIS (CATEGORIA, CLIENTE, IMAGENS)
 // =======================================================
+
 function initializeImageProofModal() {
     const modal = document.getElementById('imageProofModal');
     const closeBtn = document.getElementById('closeImageProofModalBtn');
@@ -156,37 +276,111 @@ function initializeImageProofModal() {
     }
 }
 
-window.openImageProofModal = (imageUrls) => {
+window.openImageManagerModal = (imageUrls, imageIds, launchId) => {
+    currentEditingLaunchId = launchId;
+    openImageProofModal(imageUrls, imageIds, true);
+};
+
+window.openImageProofModal = (imageUrls, imageIds = null, isEditMode = false) => {
     const modal = document.getElementById('imageProofModal');
     const container = document.getElementById('imageProofContainer');
-    if (!modal || !container) {
-        console.error("Modal de imagem ou container não encontrado.");
-        return;
+    const modalTitle = modal.querySelector('h3');
+    
+    if (!modal || !container || !modalTitle) return;
+
+    if (isEditMode) {
+        modalTitle.textContent = 'Gerenciar Comprovantes';
+        modal.classList.add('edit-mode');
+    } else {
+        modalTitle.textContent = 'Comprovantes do Lançamento';
+        modal.classList.remove('edit-mode');
     }
 
-    container.innerHTML = '';
-    if (imageUrls && imageUrls.length > 0) {
-        imageUrls.forEach(originalUrl => {
-            const correctedUrl = originalUrl.replace("https://", "http://");
-            const imgLink = document.createElement('a');
-            imgLink.href = correctedUrl;
-            imgLink.target = '_blank';
-            const img = document.createElement('img');
-            img.src = correctedUrl;
-            img.alt = 'Comprovante';
-            img.onerror = function() {
-                console.error(`Falha ao carregar a imagem: ${correctedUrl}`);
-                this.alt = 'Falha ao carregar imagem';
-                this.style.border = '2px solid red';
-            };
-            imgLink.appendChild(img);
-            container.appendChild(imgLink);
-        });
-    } else {
+    container.innerHTML = '<p>Carregando imagens...</p>';
+    if (!imageUrls || imageUrls.length === 0) {
         container.innerHTML = '<p>Nenhum comprovante disponível.</p>';
+        modal.style.display = 'block';
+        return;
     }
+    
+    container.innerHTML = '';
+    
+    imageUrls.forEach((originalUrl, index) => {
+        const urlObj = new URL(originalUrl);
+        if (urlObj.hostname === 'localhost') {
+            urlObj.protocol = 'http';
+        }
+        const correctedUrl = urlObj.toString();
+
+        // Usa o ID do array idImages se disponível, senão extrai da URL
+        let proofId;
+        if (imageIds && imageIds[index]) {
+            proofId = imageIds[index];
+        } else {
+            const fullFilename = originalUrl.substring(originalUrl.lastIndexOf('/') + 1);
+            proofId = fullFilename.split('_')[0];
+        }
+        
+        const elementId = `modal-proof-item-${proofId}`;
+
+        const itemContainer = document.createElement('div');
+        itemContainer.className = 'proof-item-container';
+        itemContainer.id = elementId;
+        
+        let actionButtonHTML = '';
+        if (isEditMode) {
+            const isMarked = proofsToDeleteForEdit.includes(proofId);
+            if (isMarked) {
+                itemContainer.classList.add('marked-for-deletion');
+            }
+            actionButtonHTML = `<button type="button" class="btn-action btn-delete-proof ${isMarked ? 'btn-undo' : ''}" onclick="toggleProofForDeletion('${proofId}', '${elementId}')">${isMarked ? 'Desfazer' : 'Remover'}</button>`;
+        } else {
+            const filename = originalUrl.substring(originalUrl.lastIndexOf('/') + 1);
+            actionButtonHTML = `<button type="button" class="btn-action btn-download" onclick="downloadImage('${originalUrl}', '${filename}')">Baixar</button>`;
+        }
+
+        itemContainer.innerHTML = `
+            <a href="${correctedUrl}" target="_blank">
+                <img src="${correctedUrl}" alt="Comprovante" title="Clique para ampliar">
+            </a>
+            ${actionButtonHTML}
+        `;
+        container.appendChild(itemContainer);
+    });
+
     modal.style.display = 'block';
 };
+
+window.toggleProofForDeletion = (proofId, elementId) => {
+    const proofItem = document.getElementById(elementId);
+    if (!proofItem) return;
+    
+    const deleteBtn = proofItem.querySelector('.btn-delete-proof');
+    const index = proofsToDeleteForEdit.indexOf(proofId);
+
+    if (index > -1) {
+        proofsToDeleteForEdit.splice(index, 1);
+        proofItem.classList.remove('marked-for-deletion');
+        deleteBtn.textContent = 'Remover';
+        deleteBtn.classList.remove('btn-undo');
+    } else {
+        proofsToDeleteForEdit.push(proofId);
+        proofItem.classList.add('marked-for-deletion');
+        deleteBtn.textContent = 'Desfazer';
+        deleteBtn.classList.add('btn-undo');
+    }
+    updateDeleteCountDisplay();
+};
+
+function updateDeleteCountDisplay() {
+    if (currentEditingLaunchId) {
+        const display = document.getElementById(`delete-count-${currentEditingLaunchId}`);
+        if (display) {
+            const count = proofsToDeleteForEdit.length;
+            display.textContent = count > 0 ? `${count} imagem(s) para excluir` : '';
+        }
+    }
+}
 
 function initializeLaunchCategoryModal() {
     const modal = document.getElementById('categorySearchModal');
@@ -234,8 +428,6 @@ function initializeLaunchCategoryModal() {
                 closeModal();
             }
         });
-    } else {
-        console.error("Elemento '#modalCategoryResultsContainer' não foi encontrado.");
     }
 }
 
@@ -274,8 +466,8 @@ function initializeCustomerModal() {
                     if (row) {
                         const customerCell = row.querySelector('[data-field="customer"]');
                         if (customerCell) {
-                           customerCell.querySelector('.edit-selection-name').textContent = customerName;
-                           customerCell.dataset.newCustomerId = customerId;
+                            customerCell.querySelector('.edit-selection-name').textContent = customerName;
+                            customerCell.dataset.newCustomerId = customerId;
                         }
                     }
                 } else {
@@ -285,8 +477,6 @@ function initializeCustomerModal() {
                 closeModal();
             }
         });
-    } else {
-         console.error("Elemento '#modalCustomerResultsContainer' não foi encontrado.");
     }
 }
 
@@ -482,7 +672,8 @@ function renderHistoryTable(items, tableBody) {
         let proofsHtml = 'N/A';
         if (item.imageProofsUrls && item.imageProofsUrls.length > 0) {
             const imageUrlsJson = JSON.stringify(item.imageProofsUrls);
-            proofsHtml = `<button class="btn-action btn-view" onclick='openImageProofModal(${imageUrlsJson})'>Visualizar</button>`;
+            const imageIdsJson = JSON.stringify(item.idImages || []);
+            proofsHtml = `<button class="btn-action btn-view" onclick='openImageProofModal(${imageUrlsJson}, ${imageIdsJson})'>Visualizar</button>`;
         }
         
         const rowHTML = `
@@ -538,51 +729,55 @@ window.openCustomerModalForEdit = (launchId) => {
 window.editLaunch = (item) => {
     const row = document.getElementById(`row-launch-${item.id}`);
     if (!row || originalRowHTML_Launch[item.id]) return;
-    
+
+    proofsToDeleteForEdit = []; 
     originalRowHTML_Launch[item.id] = row.innerHTML;
 
     row.querySelector('[data-field="description"]').innerHTML = `<textarea name="Description" class="edit-input">${item.description}</textarea>`;
     row.querySelector('[data-field="amount"]').innerHTML = `<input type="number" name="Amount" class="edit-input" value="${item.amount}" step="0.01">`;
     const isoDate = new Date(item.launchDate).toISOString().split('T')[0];
     row.querySelector('[data-field="launchDate"]').innerHTML = `<input type="date" name="LaunchDate" class="edit-input" value="${isoDate}">`;
-
     let paymentOptions = '';
     for (const [key, value] of Object.entries(paymentMethodMap)) {
         paymentOptions += `<option value="${key}" ${key == item.paymentMethod ? 'selected' : ''}>${value}</option>`;
     }
     row.querySelector('[data-field="paymentMethod"]').innerHTML = `<select name="PaymentMethod" class="edit-input">${paymentOptions}</select>`;
-
     let statusOptions = '';
     for (const [key, value] of Object.entries(statusMap)) {
         statusOptions += `<option value="${key}" ${key == item.status ? 'selected' : ''}>${value}</option>`;
     }
     row.querySelector('[data-field="status"]').innerHTML = `<select name="Status" class="edit-input">${statusOptions}</select>`;
-
     const originalDueDate = item.dueDate ? new Date(item.dueDate).toISOString().split('T')[0] : '';
     row.querySelector('[data-field="dueDate"]').innerHTML = `<input type="date" name="DueDate" class="edit-input" value="${originalDueDate}">`;
-
     const categoryCell = row.querySelector('[data-field="category"]');
     const customerCell = row.querySelector('[data-field="customer"]');
-    if(categoryCell) categoryCell.dataset.newCategoryId = item.categoryId || '';
-    if(customerCell) customerCell.dataset.newCustomerId = item.customerId || '';
-
+    if (categoryCell) categoryCell.dataset.newCategoryId = item.categoryId || '';
+    if (customerCell) customerCell.dataset.newCustomerId = item.customerId || '';
     if (item.type === 2 && categoryCell) {
-        categoryCell.innerHTML = `
-            <div class="edit-selection-box">
-                <span class="edit-selection-name">${item.categoryName || 'N/A'}</span>
-                <button type="button" class="btn-action btn-edit-modal" onclick="openCategoryModalForEdit('${item.id}')">Alterar</button>
-            </div>`;
+        categoryCell.innerHTML = `<div class="edit-selection-box"><span class="edit-selection-name">${item.categoryName || 'N/A'}</span><button type="button" class="btn-action btn-edit-modal" onclick="openCategoryModalForEdit('${item.id}')">Alterar</button></div>`;
     }
     if (item.type === 1 && customerCell) {
-        customerCell.innerHTML = `
-            <div class="edit-selection-box">
-                <span class="edit-selection-name">${item.customerName || 'N/A'}</span>
-                <button type="button" class="btn-action btn-edit-modal" onclick="openCustomerModalForEdit('${item.id}')">Alterar</button>
-            </div>`;
+        customerCell.innerHTML = `<div class="edit-selection-box"><span class="edit-selection-name">${item.customerName || 'N/A'}</span><button type="button" class="btn-action btn-edit-modal" onclick="openCustomerModalForEdit('${item.id}')">Alterar</button></div>`;
     }
 
     const proofsCell = row.querySelector('[data-field="proofs"]');
-    if(proofsCell) proofsCell.innerHTML = '<span>(Não editável)</span>';
+    if (proofsCell) {
+        const imageUrlsJson = JSON.stringify(item.imageProofsUrls || []);
+        const imageIdsJson = JSON.stringify(item.idImages || []);
+        proofsCell.innerHTML = `
+            <div class="edit-proofs-box">
+                <button type="button" class="btn-action" onclick='openImageManagerModal(${imageUrlsJson}, ${imageIdsJson}, "${item.id}")'>
+                    Gerenciar Imagens
+                </button>
+                <span id="delete-count-${item.id}" class="delete-count-display"></span>
+                <hr style="margin: 5px 0;">
+                <label>Adicionar novos:</label>
+                <input type="file" name="ImageProofs" class="edit-input-file" multiple accept="image/*">
+            </div>
+        `;
+    }
+    
+    updateDeleteCountDisplay();
 
     row.querySelector('[data-field="actions"]').innerHTML = `
         <button class="btn-action btn-save" onclick="saveLaunchChanges('${item.id}')">Salvar</button>
@@ -594,9 +789,23 @@ window.saveLaunchChanges = async (launchId) => {
     const row = document.getElementById(`row-launch-${launchId}`);
     if (!row) return;
 
+    const saveBtn = row.querySelector('.btn-save');
+    let originalText = '';
+    if (saveBtn) {
+        originalText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Salvando...";
+        saveBtn.classList.add("loading");
+    }
+
     const originalItem = historyItemsCache.find(i => i.id === launchId);
     if (!originalItem) {
         showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+            saveBtn.classList.remove("loading");
+        }
         return;
     }
 
@@ -608,23 +817,34 @@ window.saveLaunchChanges = async (launchId) => {
     formData.append('Status', row.querySelector('[name="Status"]').value);
     formData.append('PaymentMethod', row.querySelector('[name="PaymentMethod"]').value);
     formData.append('Type', originalItem.type);
-
     const dueDateValue = row.querySelector('[name="DueDate"]').value;
-    if (dueDateValue) {
-        formData.append('DueDate', dueDateValue);
+    if (dueDateValue) formData.append('DueDate', dueDateValue);
+
+    if (proofsToDeleteForEdit.length > 0) {
+        proofsToDeleteForEdit.forEach(proofId => {
+            formData.append('ProofsToDelete', proofId);
+        });
+    }
+
+    const newImageFiles = row.querySelector('[name="ImageProofs"]')?.files;
+    if (newImageFiles && newImageFiles.length > 0) {
+        for (let i = 0; i < newImageFiles.length; i++) {
+            formData.append('ImageProofs', newImageFiles[i]);
+        }
     }
 
     if (originalItem.type === 2) {
         const categoryCell = row.querySelector('[data-field="category"]');
-        if (categoryCell && categoryCell.dataset.newCategoryId) {
-            formData.append('CategoryId', categoryCell.dataset.newCategoryId);
-        }
+        const newCategoryId = categoryCell?.dataset.newCategoryId;
+        if (newCategoryId) formData.append('CategoryId', newCategoryId);
+        else if (originalItem.categoryId) formData.append('CategoryId', originalItem.categoryId);
     }
+
     if (originalItem.type === 1) {
         const customerCell = row.querySelector('[data-field="customer"]');
-        if (customerCell && customerCell.dataset.newCustomerId) {
-            formData.append('CustomerId', customerCell.dataset.newCustomerId);
-        }
+        const newCustomerId = customerCell?.dataset.newCustomerId;
+        if (newCustomerId) formData.append('CustomerId', newCustomerId);
+        else if (originalItem.customerId) formData.append('CustomerId', originalItem.customerId);
     }
 
     try {
@@ -634,19 +854,32 @@ window.saveLaunchChanges = async (launchId) => {
             headers: { 'Authorization': `Bearer ${accessToken}` },
             body: formData
         });
+
         if (response.ok) {
             alert('Lançamento atualizado com sucesso!');
             delete originalRowHTML_Launch[launchId];
+            proofsToDeleteForEdit = [];
+            currentEditingLaunchId = null;
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
+            const errorData = await response.json().catch(() => ({
+                title: "Erro ao Salvar",
+                detail: "Ocorreu um erro inesperado."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
         cancelLaunchEdit(launchId);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+            saveBtn.classList.remove("loading");
+        }
     }
 };
+
 
 window.deleteLaunch = async (launchId) => {
     if (!confirm('Tem certeza que deseja excluir este lançamento?')) return;
@@ -674,7 +907,10 @@ window.cancelLaunchEdit = (launchId) => {
         row.innerHTML = originalRowHTML_Launch[launchId];
         delete originalRowHTML_Launch[launchId];
     }
+    proofsToDeleteForEdit = []; 
+    currentEditingLaunchId = null;
 };
+
 
 // =======================================================
 // FUNÇÕES AUXILIARES DE LIMPEZA
@@ -683,8 +919,8 @@ function resetFormCompletely() {
     const form = document.getElementById('launchForm');
     if(form) form.reset();
     
-    const imageProofsInput = document.getElementById('imageProofs');
-    if(imageProofsInput) imageProofsInput.value = '';
+    launchFiles = [];
+    renderFilePreviews();
     
     const launchDateInput = document.getElementById('launchDate');
     if(launchDateInput) launchDateInput.value = new Date().toISOString().split('T')[0];

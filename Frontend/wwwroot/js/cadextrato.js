@@ -33,6 +33,15 @@ async function handleExtractSubmit(event) {
     const form = event.target;
     const formData = new FormData(form);
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+        originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando...";
+        submitBtn.classList.add("loading");
+    }
+
     try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/extracts`, {
@@ -47,11 +56,20 @@ async function handleExtractSubmit(event) {
             document.getElementById('extractDate').value = new Date().toISOString().split('T')[0];
             fetchAndRenderHistory(1);
         } else {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({
+                title: "Erro ao Salvar",
+                detail: "Ocorreu um erro inesperado."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.classList.remove("loading");
+        }
     }
 }
 
@@ -192,6 +210,15 @@ window.saveExtractChanges = async (extractId) => {
     const row = document.getElementById(`row-extract-${extractId}`);
     if (!row) return;
 
+    const saveBtn = row.querySelector('.btn-save');
+    let originalText = '';
+    if (saveBtn) {
+        originalText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Salvando...";
+        saveBtn.classList.add("loading");
+    }
+
     const formData = new FormData();
     formData.append('Id', extractId);
     formData.append('Date', row.querySelector('[name="date"]').value);
@@ -212,14 +239,24 @@ window.saveExtractChanges = async (extractId) => {
             delete originalRowHTML_Extract[extractId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar", message: "Não foi possível ler a resposta do servidor." }));
+            const errorData = await response.json().catch(() => ({
+                title: "Erro ao Salvar",
+                detail: "Não foi possível ler a resposta do servidor."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
         cancelEditExtract(extractId);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+            saveBtn.classList.remove("loading");
+        }
     }
 };
+
 
 window.cancelEditExtract = (extractId) => {
     const row = document.getElementById(`row-extract-${extractId}`);

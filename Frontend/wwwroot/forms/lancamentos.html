@@ -1,4 +1,4 @@
-<div class="container">
+    <div class="container">
     <h2 class="form-title">Novo Lançamento Financeiro</h2>
     <div class="form-container">
         <div class="form-group" id="type-selection-group">
@@ -11,7 +11,7 @@
             </div>
         </div>
 
-        <form id="launchForm" style="display: none;">
+        <form id="launchForm" style="display: none;" autocomplete="off">
             <div class="form-group">
                 <label class="form-label" for="description">Descrição</label>
                 <textarea id="description" name="Description" class="form-input" rows="3" required></textarea>
@@ -37,7 +37,7 @@
             </div>
 
             <div class="form-group" id="group-customerId" style="display: none;">
-                <label class="form-label">Cliente</label>
+                <label class="form-label">Cliente (Opcional)</label>
                 <div class="selection-box">
                     <span id="selectedCustomerName">Nenhum cliente selecionado</span>
                     <button type="button" id="openCustomerModalBtn" class="search-btn">Buscar Cliente...</button>
@@ -55,14 +55,16 @@
                     <select id="status" name="Status" class="form-input" required></select>
                 </div>
             </div>
+
             <div class="form-group" id="group-dueDate" style="display: none;">
                 <label class="form-label" for="dueDate">Data de Vencimento (Opcional)</label>
                 <input type="date" id="dueDate" name="DueDate" class="form-input">
             </div>
             
             <div class="form-group">
-                <label class="form-label" for="imageProofs">Comprovantes (Opcional, selecione múltiplos segurando Ctrl)</label>
-                <input type="file" id="imageProofs" name="ImageProofs" class="form-input" multiple accept="image/*">
+                <label class="form-label" for="imageProofs">Comprovantes (Opcional)</label>
+                <input type="file" id="imageProofs" class="form-input" accept="image/*">
+                <div id="image-previews-container" class="image-previews-container"></div>
             </div>
 
             <button type="submit" class="submit-btn">Salvar Lançamento</button>
@@ -106,7 +108,7 @@
                     <th>Tipo</th>
                     <th>Descrição</th>
                     <th>Valor</th>
-                    <th>Data</th>
+                    <th>Data Lanç.</th>
                     <th>Categoria</th>
                     <th>Cliente</th>
                     <th>Método Pag.</th>
@@ -128,13 +130,8 @@
         <span class="modal-close-btn">&times;</span>
         <h3>Selecione um Cliente</h3>
         <div class="filter-bar modal-filter-bar">
-            <div class="filter-group large">
-                <label for="modalCustomerSearchInput">Buscar por Nome/Documento:</label>
-                <input type="text" id="modalCustomerSearchInput" class="form-input">
-            </div>
-            <div class="filter-group-buttons">
-                <button type="button" id="modalCustomerFilterBtn" class="search-btn">Buscar</button>
-            </div>
+            <div class="filter-group large"><label for="modalCustomerSearchInput">Buscar por Nome/Documento:</label><input type="text" id="modalCustomerSearchInput" class="form-input"></div>
+            <div class="filter-group-buttons"><button type="button" id="modalCustomerFilterBtn" class="search-btn">Buscar</button></div>
         </div>
         <div id="modalCustomerResultsContainer" class="table-container"></div>
         <div id="modalCustomerPaginationControls" class="pagination-controls"></div>

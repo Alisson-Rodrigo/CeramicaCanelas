@@ -38,7 +38,7 @@ let currentSupplierModalPage = 1;
 let currentCategoryModalPage = 1;
 let currentCustomerModalPage = 1;
 
-
+let proofsToDeleteForEdit = []; // ✅ Armazena IDs dos comprovantes a serem deletados na edição
 // Mapas de Enums
 const positionMap = {
     0: 'Enfornador', 1: 'Desenfornador', 2: 'Soldador', 3: 'Marombeiro',
