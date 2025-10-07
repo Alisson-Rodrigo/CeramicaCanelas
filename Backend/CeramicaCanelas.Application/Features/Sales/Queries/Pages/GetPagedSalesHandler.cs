@@ -65,7 +65,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetPagedSalesQuerie
             var total = await q.CountAsync(ct);
 
             var items = await q
-                .OrderByDescending(s => s.NoteNumber)
+                .OrderBy(s => s.NoteNumber)
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .Select(s => new SaleResult(s))
