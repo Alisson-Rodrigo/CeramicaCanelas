@@ -49,33 +49,55 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
             var uploadPath = Path.Combine(_env.ContentRootPath, "wwwroot", "financial", "launch", "proof");
             Directory.CreateDirectory(uploadPath);
 
-            // 🧾 Se houver novos comprovantes enviados
+            // 🗑️ Remover comprovantes antigos (se solicitado)
+            if (request.ProofsToDelete != null && request.ProofsToDelete.Any())
+            {
+                var proofsToDelete = launchToUpdate.ImageProofs?
+                    .Where(p => request.ProofsToDelete.Contains(p.Id))
+                    .ToList();
+
+                if (proofsToDelete != null && proofsToDelete.Any())
+                {
+                    foreach (var proof in proofsToDelete)
+                    {
+                        // Apagar arquivo físico (opcional, mas recomendável)
+                        var filePath = Path.Combine(
+                            _env.ContentRootPath,
+                            "wwwroot",
+                            "financial",
+                            "launch",
+                            "proof",
+                            Path.GetFileName(proof.FileUrl)
+                        );
+
+                        if (File.Exists(filePath))
+                            File.Delete(filePath);
+
+                        // Remover da lista rastreada
+                        launchToUpdate.ImageProofs!.Remove(proof);
+                    }
+                }
+            }
+
+
             if (request.ImageProofs != null && request.ImageProofs.Any())
             {
-                // 🔸 Se quiser substituir completamente os comprovantes antigos:
-                launchToUpdate.ImageProofs?.Clear();
-                launchToUpdate.ImageProofs = new List<ProofImage>();
-
                 foreach (var file in request.ImageProofs)
                 {
-                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
-                    var extension = Path.GetExtension(file.FileName);
-                    var uniqueName = $"{Guid.NewGuid()}_{fileNameWithoutExt}{extension}";
+                    var uniqueName = $"{Guid.NewGuid()}_{file.FileName}";
                     var filePath = Path.Combine(uploadPath, uniqueName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
                         await file.CopyToAsync(stream, cancellationToken);
-                    }
 
-                    var fileUrl = $"{_publicBaseUrl}/{uniqueName}";
-
+                    launchToUpdate.ImageProofs ??= new List<ProofImage>();
                     launchToUpdate.ImageProofs.Add(new ProofImage
                     {
-                        FileUrl = fileUrl,
+                        FileUrl = $"{_publicBaseUrl}/{uniqueName}",
                         OriginalFileName = file.FileName,
                         ContentType = file.ContentType,
                         FileSize = file.Length,
+                        LaunchId = launchToUpdate.Id,
                         CreatedOn = DateTime.UtcNow,
                         ModifiedOn = DateTime.UtcNow
                     });
