@@ -46,6 +46,7 @@ public static class InfrastructureDependecyInjector {
         services.AddScoped<ILaunchCategoryGroupRepository, LaunchCategoryGroupRepository>();
         services.AddScoped<ISalesPaymentsRepository, SalesPaymentsRepository>();
         services.AddScoped<ISalesItemsRepository, SalesItemsRepository>();
+        services.AddScoped<IProofRepository, ProofRepository>();
 
 
 
