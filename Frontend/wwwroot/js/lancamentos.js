@@ -190,6 +190,16 @@ async function handleLaunchSubmit(event) {
         return;
     }
 
+    // 🔹 Pega o botão que enviou o form
+    const submitBtn = event.submitter || form.querySelector('button[type="submit"]');
+    let originalText = '';
+    if (submitBtn) {
+        originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando...";
+        submitBtn.classList.add("loading");
+    }
+
     const formData = new FormData(form);
     formData.set('Type', selectedType.value);
     
@@ -206,6 +216,11 @@ async function handleLaunchSubmit(event) {
     } else if (selectedType.value === '2') {
         if (!formData.get('CategoryId')) {
             showErrorModal({ title: "Validação Falhou", detail: "A Categoria é obrigatória para Saída." });
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.classList.remove("loading");
+            }
             return;
         }
         formData.delete('CustomerId');
@@ -227,13 +242,24 @@ async function handleLaunchSubmit(event) {
             form.style.display = 'none';
             fetchAndRenderHistory(1);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro desconhecido", detail: "A resposta da API não pôde ser lida." }));
+            const errorData = await response.json().catch(() => ({
+                title: "Erro desconhecido",
+                detail: "A resposta da API não pôde ser lida."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
+    } finally {
+        // 🔹 Reabilita o botão mesmo em caso de erro
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.classList.remove("loading");
+        }
     }
 }
+
 
 // =======================================================
 // LÓGICA DAS MODAIS (CATEGORIA, CLIENTE, IMAGENS)
@@ -763,9 +789,23 @@ window.saveLaunchChanges = async (launchId) => {
     const row = document.getElementById(`row-launch-${launchId}`);
     if (!row) return;
 
+    const saveBtn = row.querySelector('.btn-save');
+    let originalText = '';
+    if (saveBtn) {
+        originalText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Salvando...";
+        saveBtn.classList.add("loading");
+    }
+
     const originalItem = historyItemsCache.find(i => i.id === launchId);
     if (!originalItem) {
         showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+            saveBtn.classList.remove("loading");
+        }
         return;
     }
 
@@ -778,7 +818,7 @@ window.saveLaunchChanges = async (launchId) => {
     formData.append('PaymentMethod', row.querySelector('[name="PaymentMethod"]').value);
     formData.append('Type', originalItem.type);
     const dueDateValue = row.querySelector('[name="DueDate"]').value;
-    if (dueDateValue) { formData.append('DueDate', dueDateValue); }
+    if (dueDateValue) formData.append('DueDate', dueDateValue);
 
     if (proofsToDeleteForEdit.length > 0) {
         proofsToDeleteForEdit.forEach(proofId => {
@@ -788,7 +828,7 @@ window.saveLaunchChanges = async (launchId) => {
 
     const newImageFiles = row.querySelector('[name="ImageProofs"]')?.files;
     if (newImageFiles && newImageFiles.length > 0) {
-        for(let i = 0; i < newImageFiles.length; i++) {
+        for (let i = 0; i < newImageFiles.length; i++) {
             formData.append('ImageProofs', newImageFiles[i]);
         }
     }
@@ -796,14 +836,15 @@ window.saveLaunchChanges = async (launchId) => {
     if (originalItem.type === 2) {
         const categoryCell = row.querySelector('[data-field="category"]');
         const newCategoryId = categoryCell?.dataset.newCategoryId;
-        if (newCategoryId) { formData.append('CategoryId', newCategoryId); } 
-        else if (originalItem.categoryId) { formData.append('CategoryId', originalItem.categoryId); }
+        if (newCategoryId) formData.append('CategoryId', newCategoryId);
+        else if (originalItem.categoryId) formData.append('CategoryId', originalItem.categoryId);
     }
+
     if (originalItem.type === 1) {
         const customerCell = row.querySelector('[data-field="customer"]');
         const newCustomerId = customerCell?.dataset.newCustomerId;
-        if (newCustomerId) { formData.append('CustomerId', newCustomerId); }
-        else if (originalItem.customerId) { formData.append('CustomerId', originalItem.customerId); }
+        if (newCustomerId) formData.append('CustomerId', newCustomerId);
+        else if (originalItem.customerId) formData.append('CustomerId', originalItem.customerId);
     }
 
     try {
@@ -813,6 +854,7 @@ window.saveLaunchChanges = async (launchId) => {
             headers: { 'Authorization': `Bearer ${accessToken}` },
             body: formData
         });
+
         if (response.ok) {
             alert('Lançamento atualizado com sucesso!');
             delete originalRowHTML_Launch[launchId];
@@ -820,14 +862,24 @@ window.saveLaunchChanges = async (launchId) => {
             currentEditingLaunchId = null;
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar" }));
+            const errorData = await response.json().catch(() => ({
+                title: "Erro ao Salvar",
+                detail: "Ocorreu um erro inesperado."
+            }));
             showErrorModal(errorData);
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
         cancelLaunchEdit(launchId);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+            saveBtn.classList.remove("loading");
+        }
     }
 };
+
 
 window.deleteLaunch = async (launchId) => {
     if (!confirm('Tem certeza que deseja excluir este lançamento?')) return;
