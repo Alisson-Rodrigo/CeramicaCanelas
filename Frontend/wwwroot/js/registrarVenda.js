@@ -293,11 +293,6 @@ async function fetchAndRenderHistory(page = 1) {
 
         console.log("📥 Dados recebidos da API de Histórico:", paginatedData);
 
-        // ✅✅✅ ORDENAÇÃO NO FRONTEND ✅✅✅
-        if (paginatedData.items && paginatedData.items.length > 0) {
-            paginatedData.items.sort((a, b) => a.noteNumber - b.noteNumber);
-        }
-
         historyItemsCache = paginatedData.items;
         renderHistoryTable(paginatedData.items);
         renderHistoryPagination(paginatedData);
