@@ -13,6 +13,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
         private readonly ILaunchRepository _launchRepository;
         private readonly ILaunchCategoryRepository _launchCategoryRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly IProofRepository _proofRepository;
         private readonly IHostEnvironment _env;
 
         private readonly string _publicBaseUrl = "https://localhost:5087/financial/launch/proof";
@@ -22,12 +23,14 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
             ILaunchRepository launchRepository,
             ILaunchCategoryRepository launchCategoryRepository,
             ICustomerRepository customerRepository,
+            IProofRepository proofRepository,
             IHostEnvironment env)
         {
             _logged = logged;
             _launchRepository = launchRepository;
             _launchCategoryRepository = launchCategoryRepository;
             _customerRepository = customerRepository;
+            _proofRepository = proofRepository;
             _env = env;
         }
 
@@ -49,18 +52,17 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
             var uploadPath = Path.Combine(_env.ContentRootPath, "wwwroot", "financial", "launch", "proof");
             Directory.CreateDirectory(uploadPath);
 
-            // 🗑️ Remover comprovantes antigos (se solicitado)
+            // ======================================================
+            // 🗑️ REMOVER COMPROVANTES ANTIGOS (via IProofRepository)
+            // ======================================================
             if (request.ProofsToDelete != null && request.ProofsToDelete.Any())
             {
-                var proofsToDelete = launchToUpdate.ImageProofs?
-                    .Where(p => request.ProofsToDelete.Contains(p.Id))
-                    .ToList();
-
-                if (proofsToDelete != null && proofsToDelete.Any())
+                foreach (var proofId in request.ProofsToDelete)
                 {
-                    foreach (var proof in proofsToDelete)
+                    var proof = await _proofRepository.GetByIdAsync(proofId);
+                    if (proof != null)
                     {
-                        // Apagar arquivo físico (opcional, mas recomendável)
+                        // Apagar arquivo físico
                         var filePath = Path.Combine(
                             _env.ContentRootPath,
                             "wwwroot",
@@ -73,13 +75,15 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
                         if (File.Exists(filePath))
                             File.Delete(filePath);
 
-                        // Remover da lista rastreada
-                        launchToUpdate.ImageProofs!.Remove(proof);
+                        // Remover do banco
+                        await _proofRepository.Delete(proof);
                     }
                 }
             }
 
-
+            // ======================================================
+            // 🆕 ADICIONAR NOVOS COMPROVANTES (via IProofRepository)
+            // ======================================================
             if (request.ImageProofs != null && request.ImageProofs.Any())
             {
                 foreach (var file in request.ImageProofs)
@@ -90,8 +94,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
                     using (var stream = new FileStream(filePath, FileMode.Create))
                         await file.CopyToAsync(stream, cancellationToken);
 
-                    launchToUpdate.ImageProofs ??= new List<ProofImage>();
-                    launchToUpdate.ImageProofs.Add(new ProofImage
+                    var proof = new ProofImage
                     {
                         FileUrl = $"{_publicBaseUrl}/{uniqueName}",
                         OriginalFileName = file.FileName,
@@ -100,11 +103,17 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.C
                         LaunchId = launchToUpdate.Id,
                         CreatedOn = DateTime.UtcNow,
                         ModifiedOn = DateTime.UtcNow
-                    });
+                    };
+
+                    await _proofRepository.CreateAsync(proof);
                 }
             }
 
+            // ======================================================
+            // 💾 SALVAR ALTERAÇÕES NO LANÇAMENTO
+            // ======================================================
             await _launchRepository.Update(launchToUpdate);
+
             return Unit.Value;
         }
 
