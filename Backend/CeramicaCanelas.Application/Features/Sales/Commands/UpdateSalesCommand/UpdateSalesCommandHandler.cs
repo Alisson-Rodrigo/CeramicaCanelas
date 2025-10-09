@@ -77,6 +77,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
                     item.UnitPrice = dto.UnitPrice;
                     item.Quantity = dto.Quantity;
                     item.ModifiedOn = DateTime.UtcNow;
+                    item.Break = dto.Break;
                     await _saleItemsRepository.Update(item);
                 }
                 else
