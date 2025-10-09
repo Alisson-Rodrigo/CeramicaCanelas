@@ -82,6 +82,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 {
                     Product = g.Key,
                     Milheiros = g.Sum(z => z.Milheiros),
+                    Breaks = g.Count(),
                     Revenue = g.Sum(z => z.NetRevenueRounded)
                 })
                 .OrderByDescending(r => r.Revenue)
