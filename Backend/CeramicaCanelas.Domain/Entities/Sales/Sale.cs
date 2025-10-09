@@ -38,7 +38,7 @@ namespace CeramicaCanelas.Domain.Entities
         public ICollection<SalePayment> Payments { get; set; } = new List<SalePayment>();
 
         // --- Regras de Pagamento ---
-        public decimal GetTotalPaid() => Payments.Sum(p => p.Amount);
+        public decimal GetTotalPaid() => Payments.Sum(p => p.Amount ?? 0);
         public decimal GetRemainingBalance() => TotalNet - GetTotalPaid();
 
         public void AddPayment(SalePayment payment)
