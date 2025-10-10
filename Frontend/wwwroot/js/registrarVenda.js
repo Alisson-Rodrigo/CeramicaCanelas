@@ -1,5 +1,7 @@
 console.log('Script js/venda.js DEFINIDO.');
 
+
+
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -262,7 +264,7 @@ async function fetchAndRenderHistory(page = 1) {
     Object.keys(originalRowHTML_Sale).forEach(key => delete originalRowHTML_Sale[key]);
 
     const tableBody = document.getElementById('sales-history-body');
-    const colspan = 13;
+    const colspan = 14;
     if (!tableBody) return;
     tableBody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center;">Buscando vendas...</td></tr>`;
     try {
@@ -290,13 +292,10 @@ async function fetchAndRenderHistory(page = 1) {
     }
 }
 
-// =======================================================
-// ✅✅✅ FUNÇÃO ALTERADA ✅✅✅
-// =======================================================
 function renderHistoryTable(items) {
     const tableBody = document.getElementById('sales-history-body');
     tableBody.innerHTML = '';
-    const colspan = 13;
+    const colspan = 14;
     if (!items || items.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center;">Nenhuma venda encontrada.</td></tr>`;
         return;
@@ -324,6 +323,7 @@ function renderHistoryTable(items) {
             <td data-field="customerName">${item.customerName}</td>
             <td data-field="customerPhone">${item.customerPhone || 'N/A'}</td>
             <td data-field="city">${item.city || 'N/A'}</td>
+            <td data-field="state">${item.state || 'N/A'}</td>
             <td data-field="saleDate">${formattedDate}</td>
             <td data-field="itemsCount">${item.itemsCount || 0}</td>
             <td data-field="totalBreak">${formattedTotalBreak}</td>
@@ -347,22 +347,14 @@ function renderHistoryTable(items) {
         itemsRow.id = `items-${item.id}`;
         itemsRow.style.display = 'none';
 
-        // Início da construção do HTML para a linha expansível (itens + pagamentos)
         let itemsHtml = `<td colspan="${colspan}" class="items-container">`;
         
-        // Tabela de Itens
-        itemsHtml += `<h4>Itens da Venda</h4><table class="nested-table">
+        itemsHtml += `<h4>Itens da Venda</h4><table class="nested-table items-table">
             <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Unit.</th><th>Quebra (Qtd)</th><th>Subtotal</th></tr></thead>
             <tbody>`;
         if (item.items && item.items.length > 0) {
             item.items.forEach(saleItem => {
-                let productName = 'Produto desconhecido';
-                if (typeof saleItem.product === 'string' && typeof productEnumNameToIdMap !== 'undefined') {
-                    const productId = productEnumNameToIdMap[saleItem.product];
-                    productName = productTypeMap[productId] || saleItem.product;
-                } else if (typeof saleItem.product === 'number') {
-                    productName = productTypeMap[saleItem.product] || 'Produto desconhecido';
-                }
+                const productName = productNameMap[saleItem.product] || 'Produto desconhecido';
                 const formattedBreak = (saleItem.break || 0).toFixed(2);
                 const subtotal = (saleItem.quantity * saleItem.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 itemsHtml += `
@@ -380,8 +372,7 @@ function renderHistoryTable(items) {
         }
         itemsHtml += '</tbody></table>';
 
-        // NOVO: Tabela de Pagamentos
-        itemsHtml += `<h4 style="margin-top: 15px;">Pagamentos</h4><table class="nested-table">
+        itemsHtml += `<h4 style="margin-top: 15px;">Pagamentos</h4><table class="nested-table payments-table">
             <thead><tr><th>Data Pag.</th><th>Valor Pago</th><th>Método</th></tr></thead>
             <tbody>`;
         
@@ -390,10 +381,9 @@ function renderHistoryTable(items) {
                 const paymentDateStr = payment.paymentDate || payment.date;
                 const pDate = new Date(paymentDateStr);
                 const formattedPaymentDate = new Date(pDate.getTime() + pDate.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
-                
                 const formattedAmount = (payment.amount || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 const paymentMethodText = paymentMethodMap[payment.paymentMethod] || 'Desconhecido';
-
+                // ✅ CORREÇÃO: Removido o 'data-payment-id' que não existe
                 itemsHtml += `
                     <tr>
                         <td>${formattedPaymentDate}</td>
@@ -407,7 +397,7 @@ function renderHistoryTable(items) {
         }
         itemsHtml += '</tbody></table>';
 
-        itemsHtml += '</td>'; // Fecha o <td> principal
+        itemsHtml += '</td>';
         itemsRow.innerHTML = itemsHtml;
         tableBody.appendChild(itemsRow);
     });
@@ -440,6 +430,47 @@ function renderHistoryPagination(paginationData) {
 // =======================================================
 // EDIÇÃO E AÇÕES DA TABELA
 // =======================================================
+
+function escapeAttr(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/"/g, '&quot;');
+}
+
+function updateEditedSaleTotals(saleId) {
+    const row = document.getElementById(`row-sale-${saleId}`);
+    const itemsRow = document.getElementById(`items-${saleId}`);
+    if (!row || !itemsRow) return;
+
+    let subtotal = 0;
+    let totalBreak = 0;
+
+    const itemInputs = itemsRow.querySelectorAll('.items-table tbody tr');
+    itemInputs.forEach(itemTr => {
+        const quantity = parseFloat(itemTr.querySelector('[name="quantity"]').value) || 0;
+        const unitPrice = parseFloat(itemTr.querySelector('[name="unitPrice"]').value) || 0;
+        const breakQty = parseFloat(itemTr.querySelector('[name="break"]').value) || 0;
+        subtotal += quantity * unitPrice;
+        totalBreak += breakQty;
+    });
+
+    const discountInput = row.querySelector('[name="Discount"]');
+    const discount = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
+
+    const totalNet = subtotal - discount;
+
+    let amountPaid = 0;
+    const paymentInputs = itemsRow.querySelectorAll('.payments-table tbody tr');
+    paymentInputs.forEach(paymentTr => {
+        amountPaid += parseFloat(paymentTr.querySelector('[name="amount"]').value) || 0;
+    });
+    const remainingBalance = totalNet - amountPaid;
+
+    row.querySelector('[data-field="totalBreak"]').textContent = totalBreak.toFixed(2);
+    row.querySelector('[data-field="totalNet"]').textContent = totalNet.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    row.querySelector('[data-field="remainingBalance"]').textContent = remainingBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+
 window.toggleItems = (button, saleId) => {
     const itemsRow = document.getElementById(`items-${saleId}`);
     if (itemsRow.style.display === 'none') {
@@ -475,17 +506,25 @@ window.editSale = (saleId) => {
     const item = historyItemsCache.find(i => i.id === saleId);
     if (!item) return;
 
-    const row = document.getElementById(`row-sale-${item.id}`);
+    const row = document.getElementById(`row-sale-${saleId}`);
     const itemsRow = document.getElementById(`items-${item.id}`);
     if (!row || originalRowHTML_Sale[item.id]) return;
 
+    if (itemsRow.style.display === 'none') {
+        toggleItems(row.querySelector('.expand-btn'), saleId);
+    }
+
     originalRowHTML_Sale[item.id] = { main: row.innerHTML, items: itemsRow.innerHTML };
 
-    row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="NoteNumber" class="form-input" value="${item.noteNumber}">`;
-    row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="CustomerName" class="form-input" value="${item.customerName}">`;
-    row.querySelector('[data-field="customerPhone"]').innerHTML = `<input type="text" name="CustomerPhone" class="form-input" value="${item.customerPhone || ''}">`;
-    row.querySelector('[data-field="city"]').innerHTML = `<input type="text" name="City" class="form-input" value="${item.city || ''}">`;
-    row.querySelector('[data-field="discount"]').innerHTML = `<input type="number" step="0.01" name="Discount" class="form-input" value="${item.discount || 0}">`;
+    // --- Edição da Linha Principal ---
+    const saleDateStr = (item.saleDate || item.date).split('T')[0];
+    row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="NoteNumber" class="form-input" value="${escapeAttr(item.noteNumber)}">`;
+    row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="CustomerName" class="form-input" value="${escapeAttr(item.customerName)}">`;
+    row.querySelector('[data-field="customerPhone"]').innerHTML = `<input type="text" name="CustomerPhone" class="form-input" value="${escapeAttr(item.customerPhone)}">`;
+    row.querySelector('[data-field="city"]').innerHTML = `<input type="text" name="City" class="form-input" value="${escapeAttr(item.city)}">`;
+    row.querySelector('[data-field="state"]').innerHTML = `<input type="text" name="State" class="form-input" value="${escapeAttr(item.state)}">`;
+    row.querySelector('[data-field="saleDate"]').innerHTML = `<input type="date" name="Date" class="form-input" value="${escapeAttr(saleDateStr)}">`;
+    row.querySelector('[data-field="discount"]').innerHTML = `<input type="number" step="0.01" name="Discount" class="form-input" value="${escapeAttr(item.discount)}">`;
     
     const currentStatus = item.status ?? item.saleStatus ?? 0;
     let statusOptions = '';
@@ -502,17 +541,56 @@ window.editSale = (saleId) => {
 
     row.querySelector('.btn-save').addEventListener('click', () => saveSaleChanges(item.id));
     row.querySelector('.btn-cancel').addEventListener('click', () => cancelEditSale(item.id));
+    
+    // --- Edição de Itens e Pagamentos ---
+    const itemsContainer = itemsRow.querySelector('.items-container');
 
-    const itemsTableBody = itemsRow.querySelector('tbody');
-    itemsTableBody.querySelectorAll('tr').forEach(itemRow => {
-        const saleItemId = parseInt(itemRow.dataset.itemId, 10);
-        const saleItem = item.items.find(i => i.id === saleItemId);
-        if (!saleItem) return;
+    const itemsTableBody = itemsContainer.querySelector('.items-table tbody');
+    if (itemsTableBody) {
+        itemsTableBody.innerHTML = '';
+        (item.items || []).forEach(saleItem => {
+            const newRow = document.createElement('tr');
+            newRow.dataset.itemId = saleItem.id;
+            newRow.innerHTML = `
+                <td>${productNameMap[saleItem.product] || 'Desconhecido'}</td>
+                <td><input type="number" step="0.01" class="form-input" name="quantity" value="${escapeAttr(saleItem.quantity)}"></td>
+                <td><input type="number" step="0.01" class="form-input" name="unitPrice" value="${escapeAttr(saleItem.unitPrice)}"></td>
+                <td><input type="number" step="0.01" class="form-input" name="break" value="${escapeAttr(saleItem.break)}"></td>
+                <td></td>
+            `;
+            itemsTableBody.appendChild(newRow);
+        });
+    }
 
-        itemRow.querySelector('[data-item-field="quantity"]').innerHTML = `<input type="number" step="0.01" class="form-input" name="quantity" value="${saleItem.quantity}">`;
-        itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML = `<input type="number" step="0.01" class="form-input" name="unitPrice" value="${saleItem.unitPrice}">`;
-        itemRow.querySelector('[data-item-field="break"]').innerHTML = `<input type="number" step="0.01" class="form-input" name="break" value="${saleItem.break || 0}">`;
-    });
+    const paymentsTableBody = itemsContainer.querySelector('.payments-table tbody');
+    if(paymentsTableBody) {
+        paymentsTableBody.innerHTML = '';
+        (item.payments || []).forEach(payment => {
+            const paymentDateStr = (payment.paymentDate || payment.date).split('T')[0];
+            const paymentMethodOptions = Object.entries(paymentMethodMap)
+                .map(([key, value]) => `<option value="${key}" ${parseInt(key) === payment.paymentMethod ? 'selected' : ''}>${value}</option>`)
+                .join('');
+            const newRow = document.createElement('tr');
+            // ✅ CORREÇÃO: Removido o 'dataset.paymentId' que não existe
+            newRow.innerHTML = `
+                <td><input type="date" name="paymentDate" class="form-input" value="${escapeAttr(paymentDateStr)}"></td>
+                <td><input type="number" step="0.01" name="amount" class="form-input" value="${escapeAttr(payment.amount)}"></td>
+                <td><select name="paymentMethod" class="form-input">${paymentMethodOptions}</select></td>
+            `;
+            paymentsTableBody.appendChild(newRow);
+        });
+    }
+
+    const handleEditInput = () => {
+        try {
+            updateEditedSaleTotals(saleId);
+        } catch (e) {
+            console.error("Erro ao recalcular totais:", e);
+        }
+    };
+    
+    row.addEventListener('input', handleEditInput);
+    itemsRow.addEventListener('input', handleEditInput);
 };
 
 window.saveSaleChanges = async (saleId) => {
@@ -526,20 +604,18 @@ window.saveSaleChanges = async (saleId) => {
 
     try {
         const originalItem = historyItemsCache.find(i => i.id === saleId);
-        if (!originalItem) {
-            throw new Error("Dados originais da venda não encontrados.");
-        }
+        if (!originalItem) { throw new Error("Dados originais da venda não encontrados."); }
 
+        // --- Coleta de Itens ---
         const editedItems = [];
-        // A tabela de itens é a primeira dentro do container expansível
-        const itemsTableBody = itemsRow.querySelector('table:first-of-type tbody');
+        const itemsTableBody = itemsRow.querySelector('.items-table tbody');
         itemsTableBody.querySelectorAll('tr').forEach(itemTr => {
-            const originalSaleItemId = parseInt(itemTr.dataset.itemId, 10);
-            const originalSaleItem = originalItem.items.find(i => i.id === originalSaleItemId);
+            const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
             if (originalSaleItem) {
+                const productId = productStringToIdMap[originalSaleItem.product];
                 editedItems.push({
                     id: originalSaleItem.id,
-                    product: originalSaleItem.product,
+                    product: productId,
                     quantity: parseFloat(itemTr.querySelector('[name="quantity"]').value),
                     unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value),
                     break: parseFloat(itemTr.querySelector('[name="break"]').value) || 0
@@ -547,34 +623,37 @@ window.saveSaleChanges = async (saleId) => {
             }
         });
 
-        const saleDateStr = (originalItem.saleDate || originalItem.date).split('T')[0];
+        // --- Coleta de Pagamentos ---
+        // ✅ CORREÇÃO: Lê os pagamentos da tela sem depender de um ID
+        const editedPayments = [];
+        const paymentsTableBody = itemsRow.querySelector('.payments-table tbody');
+        paymentsTableBody.querySelectorAll('tr').forEach(paymentTr => {
+            editedPayments.push({
+                 // O ID é omitido pois não vem da API
+                 paymentDate: paymentTr.querySelector('[name="paymentDate"]').value,
+                 amount: parseFloat(paymentTr.querySelector('[name="amount"]').value),
+                 paymentMethod: parseInt(paymentTr.querySelector('[name="paymentMethod"]').value, 10)
+            });
+        });
 
-        const updatePayload = {
+        // --- Montagem do Payload Final ---
+        const saleData = {
             id: saleId,
             noteNumber: parseInt(row.querySelector('[name="NoteNumber"]').value, 10),
             customerName: row.querySelector('[name="CustomerName"]').value,
             customerPhone: row.querySelector('[name="CustomerPhone"]').value,
             city: row.querySelector('[name="City"]').value,
+            state: row.querySelector('[name="State"]').value,
             status: parseInt(row.querySelector('[name="Status"]').value, 10),
             discount: parseFloat(row.querySelector('[name="Discount"]').value) || 0,
-            date: saleDateStr,
-            state: originalItem.state || '',
+            date: row.querySelector('[name="Date"]').value,
             customerAddress: originalItem.customerAddress || '',
-            payments: originalItem.payments || [], // Pagamentos não são editáveis nesta tela
-            items: editedItems.map(item => {
-                const productId = (typeof item.product === 'string')
-                    ? productEnumNameToIdMap[item.product]
-                    : item.product;
-                return { 
-                    id: item.id, 
-                    product: productId, 
-                    quantity: item.quantity, 
-                    unitPrice: item.unitPrice, 
-                    break: item.break 
-                };
-            })
+            items: editedItems,
+            payments: editedPayments
         };
-
+        
+        const updatePayload = saleData;
+        
         console.log("📤 Enviando payload JSON para Atualização:", updatePayload);
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
@@ -588,13 +667,17 @@ window.saveSaleChanges = async (saleId) => {
             delete originalRowHTML_Sale[saleId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorText = await response.text();
-            alert(`Erro ao salvar: ${errorText}`);
-            cancelEditSale(saleId);
+            try {
+                const errorJson = await response.json();
+                const errorMessages = errorJson.errors ? Object.values(errorJson.errors).flat().join('\n') : (errorJson.message || 'Erro desconhecido.');
+                alert(`Erro ao salvar:\n${errorMessages}`);
+            } catch (e) {
+                const errorText = await response.text();
+                alert(`Erro ao salvar: ${errorText}`);
+            }
         }
     } catch (error) {
         alert(`Erro de conexão: ${error.message}`);
-        cancelEditSale(saleId);
     } finally {
         if (row.querySelector('.btn-save')) {
             saveBtn.disabled = false;

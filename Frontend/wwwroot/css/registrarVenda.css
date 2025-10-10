@@ -1630,3 +1630,43 @@ h3{
     margin-top: 50px;
     margin-bottom: 50px;
 }
+/* Adicione este CSS para a barra de rolagem horizontal na tabela */
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+/* =================================================== */
+/* CSS CORRIGIDO para Campos de Edição na Tabela       */
+/* (Substitua o código anterior por este)              */
+/* =================================================== */
+
+/* 1. Estilo base para todos os inputs que aparecem na tabela.
+  Isso garante uma aparência consistente (bordas, espaçamento, etc.).
+*/
+.results-table td input.form-input {
+    padding: 6px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Essencial para o controle de tamanho */
+}
+
+/* 2. Aplica largura total SOMENTE aos campos que são filhos diretos da célula.
+  Isso corrige o bug dos campos de Cidade/Estado, pois eles estão dentro de outra div.
+  Isso se aplicará a: Nº Nota, Cliente, Telefone, etc.
+*/
+.results-table td > input.form-input {
+    width: 100%;
+}
+
+/* 3. Aplica largura total aos campos DENTRO da tabela de itens, como Quantidade e Preço.
+*/
+.results-table .items-table td input.form-input {
+    width: 100%;
+}
+
+/* 4. Regra para alinhar o texto de TODOS os campos numéricos à direita.
+*/
+.results-table td input[type="number"].form-input {
+    text-align: right;
+}
