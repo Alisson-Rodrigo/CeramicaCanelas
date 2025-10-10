@@ -13,6 +13,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
         public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }
         public decimal Subtotal { get; set; }
+        public int Break {  get; set; }
     }
 
 }
