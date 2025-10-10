@@ -1,6 +1,7 @@
 ﻿using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.BalanceByAccountsPayReport;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.BalanceByCategoryRequest;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.DashboardFinancialSummaryResult;
+using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.GetTrialBalanceReportPdfQuery;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.PagedRequestCashFlowReport;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.PagedRequestLaunchByClient;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.PendingLaunchQuery;
@@ -81,6 +82,20 @@ namespace CeramicaCanelas.WebApi.Controllers
         {
             var result = await _mediator.Send(request);
             return Ok(result);
+        }
+
+        /// <summary>
+        /// 📘 Gera o PDF do Balancete de Verificação.
+        /// </summary>
+        /// <param name="query">Filtros opcionais de data, grupo, categoria e método de pagamento</param>
+        /// <returns>Arquivo PDF do balancete</returns>
+        [HttpGet("trial-balance/pdf")]
+        public async Task<IActionResult> GetTrialBalanceReportPdf([FromQuery] GetTrialBalanceReportPdfQuery query)
+        {
+            var pdfBytes = await _mediator.Send(query);
+
+            var fileName = $"Balancete_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+            return File(pdfBytes, "application/pdf", fileName);
         }
 
 
