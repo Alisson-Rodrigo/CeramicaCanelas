@@ -71,10 +71,12 @@ public class GetProductItemsReportPdfHandler
         q = q.Where(s => s.Date >= startDateOnly && s.Date <= endDateOnly);
 
         // Explode itens e calcula RECEITA LÍQUIDA do item (rateio proporcional do desconto da venda)
+        // Explode itens e calcula RECEITA LÍQUIDA do item (rateio proporcional do desconto da venda)
         var itemsQ = q.SelectMany(s => s.Items.Select(i => new
         {
             i.Product,
             Milheiros = (decimal)i.Quantity,
+            i.Break, // 🔹 NOVO: quebra do item
             Subtotal = i.UnitPrice * (decimal)i.Quantity,
             SaleGross = s.TotalGross,
             SaleDiscount = s.Discount
@@ -83,12 +85,14 @@ public class GetProductItemsReportPdfHandler
         {
             x.Product,
             x.Milheiros,
+            x.Break, // 🔹 mantém o campo
             NetRevenueRounded = Math.Round(
                 (x.SaleGross > 0m)
                     ? x.Subtotal * (1m - (x.SaleDiscount / x.SaleGross))
                     : x.Subtotal,
                 2)
         });
+
 
         if (req.Product.HasValue)
             itemsQ = itemsQ.Where(x => x.Product == req.Product.Value);
@@ -100,10 +104,12 @@ public class GetProductItemsReportPdfHandler
             {
                 Product = g.Key,
                 Milheiros = g.Sum(z => z.Milheiros),
-                Revenue = g.Sum(z => z.NetRevenueRounded)
+                Revenue = g.Sum(z => z.NetRevenueRounded),
+                Breaks = g.Sum(z => z.Break) // 🔹 soma total de quebras
             })
             .OrderByDescending(r => r.Revenue)
             .ToListAsync(ct);
+
 
         // Totais
         var totalMilheiros = grouped.Sum(x => x.Milheiros);

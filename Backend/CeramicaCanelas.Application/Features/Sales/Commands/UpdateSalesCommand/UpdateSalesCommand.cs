@@ -49,7 +49,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
     public class UpdateSalesPayment
     {
         public Guid? Id { get; set; }                  // nulo = pagamento novo
-        public DateOnly PaymentDate { get; set; }
+        public DateOnly? PaymentDate { get; set; }
         public decimal Amount { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
     }
