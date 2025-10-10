@@ -29,9 +29,12 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             CancellationToken ct)
         {
             // =====================================
-            // 🔹 1️⃣ EXTRATOS BANCÁRIOS (ENTRADAS)
+            // 🔹 1️⃣ ENTRADAS (EXTRATOS + LANÇAMENTOS)
             // =====================================
-            var extracts = _extractRepository.QueryAll().Where(e => e.IsActive);
+
+            // Extratos bancários ativos (positivos)
+            var extracts = _extractRepository.QueryAll()
+                .Where(e => e.IsActive);
 
             if (request.StartDate.HasValue)
                 extracts = extracts.Where(e => e.Date >= request.StartDate);
@@ -40,7 +43,6 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             if (request.PaymentMethod.HasValue)
                 extracts = extracts.Where(e => e.PaymentMethod == request.PaymentMethod.Value);
 
-            // Extratos detalhados (para exibição)
             var extractDetails = await extracts
                 .Select(e => new BankExtractDetail
                 {
@@ -52,18 +54,51 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
                 .OrderByDescending(e => e.Date)
                 .ToListAsync(ct);
 
-            // Entradas agregadas por conta
-            var accountIncomes = extractDetails
+            // Somar apenas os valores positivos dos extratos
+            var extractIncomes = extractDetails
+                .Where(e => e.Value > 0)
                 .GroupBy(e => e.AccountName)
                 .Select(g => new AccountIncomeSummary
                 {
                     AccountName = g.Key,
-                    TotalIncome = g.Where(x => x.Value > 0).Sum(x => x.Value)
+                    TotalIncome = g.Sum(x => x.Value)
+                })
+                .ToList();
+
+            // Lançamentos de entrada (LaunchType.Income)
+            var incomeLaunches = _launchRepository.QueryAllWithIncludes()
+                .Where(l => l.Status == PaymentStatus.Paid && l.Type == LaunchType.Income);
+
+            if (request.StartDate.HasValue)
+                incomeLaunches = incomeLaunches.Where(l => l.LaunchDate >= request.StartDate.Value);
+            if (request.EndDate.HasValue)
+                incomeLaunches = incomeLaunches.Where(l => l.LaunchDate <= request.EndDate.Value);
+            if (request.PaymentMethod.HasValue)
+                incomeLaunches = incomeLaunches.Where(l => l.PaymentMethod == request.PaymentMethod.Value);
+
+            // Soma de lançamentos de entrada
+            var launchIncomes = await incomeLaunches
+                .GroupBy(l => l.PaymentMethod)
+                .Select(g => new AccountIncomeSummary
+                {
+                    AccountName = g.Key.ToString(),
+                    TotalIncome = g.Sum(x => x.Amount)
+                })
+                .ToListAsync(ct);
+
+            // Combina entradas de extratos + lançamentos
+            var combinedIncomes = extractIncomes
+                .Concat(launchIncomes)
+                .GroupBy(a => a.AccountName)
+                .Select(g => new AccountIncomeSummary
+                {
+                    AccountName = g.Key,
+                    TotalIncome = g.Sum(x => x.TotalIncome)
                 })
                 .OrderByDescending(a => a.TotalIncome)
                 .ToList();
 
-            var totalIncomeOverall = accountIncomes.Sum(a => a.TotalIncome);
+            var totalIncomeOverall = combinedIncomes.Sum(a => a.TotalIncome);
 
             // =====================================
             // 🔹 2️⃣ LANÇAMENTOS (SAÍDAS)
@@ -133,12 +168,13 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             {
                 StartDate = minDate,
                 EndDate = maxDate,
-                Accounts = accountIncomes,
+                Accounts = combinedIncomes, // ✅ Corrigido aqui
                 Groups = groups,
-                Extracts = extractDetails, // 🔹 Incluído aqui
+                Extracts = extractDetails,
                 TotalIncomeOverall = totalIncomeOverall,
                 TotalExpenseOverall = totalExpenseOverall
             };
+
         }
     }
 }
