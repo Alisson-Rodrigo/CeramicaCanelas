@@ -5,6 +5,8 @@
 // CONTROLE DE VERSÃO PARA LIMPEZA DE CACHE AUTOMÁTICA
 // Mude esta versão sempre que atualizar o sistema (ex: '1.0.1')
 const APP_VERSION = '1.0.0';
+const productStringToIdMap = {};
+
 
 const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
 // const API_BASE_URL = 'http://localhost:5087/api';
@@ -280,3 +282,6 @@ async function loadLaunchCategories(selectElement, defaultOptionText = 'Selecion
         selectElement.disabled = true;
     } 
 }
+Object.keys(productNameMap).forEach((key, index) => {
+    productStringToIdMap[key] = index;
+});
