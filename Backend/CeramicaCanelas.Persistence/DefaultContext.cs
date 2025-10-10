@@ -211,10 +211,13 @@ public class DefaultContext : IdentityDbContext<User>
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Id).HasDefaultValueSql("uuid_generate_v4()");
             entity.Property(p => p.Amount).HasPrecision(18, 2);
-            entity.Property(p => p.PaymentDate)
-                  .HasColumnType("date")
-                  .HasConversion(v => v.ToDateTime(TimeOnly.MinValue),
-                                 v => DateOnly.FromDateTime(v));
+            entity.Property(e => e.PaymentDate)
+                .HasColumnType("date")
+                .HasConversion(
+                    v => v.HasValue ? v.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                    v => v.HasValue ? DateOnly.FromDateTime(v.Value) : (DateOnly?)null
+                );
+
             entity.Property(p => p.PaymentMethod).HasConversion<int>();
 
             entity.HasOne(p => p.Sale)
