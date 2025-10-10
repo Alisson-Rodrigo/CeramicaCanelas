@@ -29,7 +29,7 @@ public class LoginCommandHandler(IIdentityAbstractor identityAbstractor, ITokenS
             AccessToken = token,
             Roles = roles,
             IssuedAt = DateTime.UtcNow,
-            ExpirationDate = DateTime.UtcNow.AddHours(2)
+            ExpirationDate = DateTime.UtcNow.AddHours(11)
         };
     }
 
