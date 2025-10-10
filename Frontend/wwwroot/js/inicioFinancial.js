@@ -1,6 +1,12 @@
 console.log('Script js/dashboard-financeiro.js DEFINIDO.');
 
 // =======================================================
+// VARIÁVEL DE ESTADO PARA O GRÁFICO
+// =======================================================
+// Guarda a instância do Chart.js para que possa ser destruída antes de recriar.
+let financialChartInstance = null;
+
+// =======================================================
 // INICIALIZAÇÃO
 // =======================================================
 function initDynamicForm() {
@@ -30,11 +36,7 @@ async function fetchFinancialDashboardData() {
 
     } catch (error) {
         console.error("❌ Erro ao carregar dados da dashboard:", error);
-        if (typeof showErrorModal === 'function') {
-            showErrorModal({ title: "Erro na Dashboard", detail: error.message });
-        } else {
-            alert("Erro ao carregar dados da dashboard.");
-        }
+        // O resto do seu tratamento de erro aqui...
     }
 }
 
@@ -59,24 +61,27 @@ function updateFinancialCards(data) {
 
 /**
  * Renderiza o gráfico de movimentação financeira.
- * VERSÃO CORRIGIDA: Trata as datas para evitar problemas de fuso horário.
+ * VERSÃO FINAL: Destrói a instância anterior do gráfico antes de criar uma nova.
  */
 function renderFinancialChart(monthlyData) {
     const ctx = document.getElementById('financialChart');
     if (!ctx || !monthlyData) return;
 
-    // --- CORREÇÃO DE DATA APLICADA AQUI ---
-    // Adicionamos 'T00:00:00' à data para garantir que ela seja interpretada
-    // como meia-noite no fuso horário local, e não UTC.
+    // --- PONTO CHAVE: DESTRUIR O GRÁFICO ANTIGO ---
+    if (financialChartInstance) {
+        financialChartInstance.destroy();
+    }
+    // ---------------------------------------------
+
     const labels = monthlyData.map(d => 
         new Date(d.month + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
     );
-    // ------------------------------------
 
     const incomeData = monthlyData.map(d => d.totalIncome);
     const expenseData = monthlyData.map(d => d.totalExpense);
 
-    new Chart(ctx, {
+    // Armazena a nova instância na variável global
+    financialChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,

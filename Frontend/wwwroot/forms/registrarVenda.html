@@ -1,5 +1,4 @@
 
-
     <div class="container">
         <h2 class="form-title">Registrar Nova Venda</h2>
         <div class="form-container">
@@ -47,6 +46,10 @@
                             <label for="sale-unit-price">Preço Unitário (R$)</label>
                             <input type="number" id="sale-unit-price" class="form-input" step="0.01" value="0.00">
                         </div>
+                        <div class="form-group">
+                            <label for="sale-break">Quebra (Qtd)</label>
+                            <input type="number" id="sale-break" class="form-input" step="0.01" value="0.00">
+                        </div>
                     </div>
                     <button type="button" id="add-sale-item-btn" class="add-item-btn">Adicionar Item</button>
                 </div>
@@ -59,12 +62,13 @@
                                 <th>Produto</th>
                                 <th>Quantidade</th>
                                 <th>Preço Unit.</th>
+                                <th>Quebra (Qtd)</th>
                                 <th>Subtotal</th>
                                 <th>Ação</th>
                             </tr>
                         </thead>
                         <tbody id="saleItemsTbody">
-                            <tr id="placeholder-row"><td colspan="5">Nenhum item adicionado.</td></tr>
+                            <tr id="placeholder-row"><td colspan="6">Nenhum item adicionado.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -73,7 +77,11 @@
 
                 <div class="form-section">
                     <div class="financial-summary">
-                        <div class="summary-row"><span>Subtotal:</span><span id="subtotal">R$ 0,00</span></div>
+                        <div class="summary-row"><span>Subtotal dos Itens:</span><span id="subtotal">R$ 0,00</span></div>
+                        <div class="summary-row">
+                            <label for="saleDiscount">(-) Desconto (R$):</label>
+                            <input type="number" id="saleDiscount" class="form-input discount-input" value="0.00" step="0.01">
+                        </div>
                         <div class="summary-row total"><span>Total a Pagar:</span><span id="total">R$ 0,00</span></div>
                         <div class="summary-row">
                             <label for="amountPaid">Valor Pago (R$):</label>
@@ -88,7 +96,7 @@
                         </div>
                         <div class="form-group">
                             <label for="paymentDate">Data do Pagamento</label>
-                            <input type="date" id="paymentDate" name="PaymentDate" class="form-input" required>
+                            <input type="date" id="paymentDate" name="PaymentDate" class="form-input">
                         </div>
                         <div class="form-group">
                             <label for="saleStatus">Status da Venda</label>
@@ -105,24 +113,24 @@
         <h2>Vendas Realizadas</h2>
         <div class="filter-bar">
              <div class="filter-group large">
-                   <label for="historySearch">Buscar por Cliente/Nota:</label>
-                   <input type="text" id="historySearch" class="form-input">
+                 <label for="historySearch">Buscar por Cliente/Nota:</label>
+                 <input type="text" id="historySearch" class="form-input">
              </div>
              <div class="filter-group">
-                   <label for="historyStatus">Status:</label>
-                   <select id="historyStatus" class="form-input"></select>
+                 <label for="historyStatus">Status:</label>
+                 <select id="historyStatus" class="form-input"></select>
              </div>
              <div class="filter-group">
-                   <label for="historyStartDate">Data Inicial:</label>
-                   <input type="date" id="historyStartDate" class="form-input">
+                 <label for="historyStartDate">Data Inicial:</label>
+                 <input type="date" id="historyStartDate" class="form-input">
              </div>
              <div class="filter-group">
-                   <label for="historyEndDate">Data Final:</label>
-                   <input type="date" id="historyEndDate" class="form-input">
+                 <label for="historyEndDate">Data Final:</label>
+                 <input type="date" id="historyEndDate" class="form-input">
              </div>
              <div class="filter-group-buttons">
-                   <button type="button" id="historyFilterBtn" class="search-btn">Filtrar</button>
-                   <button type="button" id="historyClearBtn" class="btn-cancel">Limpar</button>
+                 <button type="button" id="historyFilterBtn" class="search-btn">Filtrar</button>
+                 <button type="button" id="historyClearBtn" class="btn-cancel">Limpar</button>
              </div>
         </div>
 
@@ -137,6 +145,8 @@
                         <th>Cidade</th>
                         <th>Data</th>
                         <th>Itens</th>
+                        <th>Total Quebra (Qtd)</th>
+                        <th>Desconto</th>
                         <th>Total</th>
                         <th>Saldo Devedor</th> 
                         <th>Status</th>
@@ -148,4 +158,4 @@
         </div>
         <div id="pagination-controls" class="pagination-controls"></div>
     </div>
-
+    

@@ -1,0 +1,135 @@
+<div class="container dashboard-container">
+    <div class="header">
+        <h1>Balancete de Verificação</h1>
+        <p>Visão consolidada das suas finanças com extratos e lançamentos</p>
+    </div>
+
+    <!-- Seção de Filtros -->
+    <div class="search-section">
+        <div class="search-title">
+            <div class="search-icon">🔍</div>
+            Filtros do Relatório
+        </div>
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label" for="start-date">Data Inicial</label>
+                <input type="date" id="start-date" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="end-date">Data Final</label>
+                <input type="date" id="end-date" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="group-filter">Grupo de Categoria</label>
+                <select id="group-filter" class="filter-input"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="category-filter">Categoria</label>
+                <select id="category-filter" class="filter-input"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="payment-method-filter">Método de Pagamento</label>
+                <select id="payment-method-filter" class="filter-input"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="status-filter">Status do Lançamento</label>
+                <select id="status-filter" class="filter-input"></select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="search-input">Buscar na Descrição</label>
+                <input type="text" id="search-input" class="filter-input" placeholder="Ex: combustível, fornecedor...">
+            </div>
+        </div>
+        <div class="search-actions">
+            <button id="generateReportBtn" class="search-button"><span>📊</span> Gerar Relatório</button>
+            <button id="clearFiltersBtn" class="clear-button"><span>🗑️</span> Limpar Filtros</button>
+            <!-- BOTÃO DE PDF ADICIONADO -->
+            <button id="generatePdfButton" class="pdf-button"><span>📄</span> Gerar PDF</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading" style="display: none;">
+        <div class="spinner"></div>
+        Gerando relatório, por favor aguarde...
+    </div>
+    
+    <!-- Seção de Resultados -->
+    <div id="results-section" style="display: none;">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon income-icon"><i class="fas fa-arrow-up"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="total-income">R$ 0,00</div>
+                    <div class="kpi-label">Total de Entradas</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon expense-icon"><i class="fas fa-arrow-down"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="total-expense">R$ 0,00</div>
+                    <div class="kpi-label">Total de Saídas</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon balance-icon"><i class="fas fa-balance-scale"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="net-balance">R$ 0,00</div>
+                    <div class="kpi-label">Saldo Líquido</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fas fa-calendar-alt"></i></div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="report-period">--</div>
+                    <div class="kpi-label">Período do Relatório</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="details-grid">
+            <div class="report-table-container">
+                <h3>Resumo por Conta</h3>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Conta / Método de Pagamento</th>
+                            <th>Total de Entradas (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="totals-by-account-body"></tbody>
+                </table>
+            </div>
+            <div class="report-table-container">
+                <h3>Despesas por Grupo e Categoria</h3>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Grupo / Categoria</th>
+                            <th>Total de Saídas (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenses-by-group-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="report-table-container full-width">
+             <h3>Últimos Lançamentos (Extrato Consolidado)</h3>
+             <div class="table-responsive">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Conta</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="extracts-history-body"></tbody>
+                </table>
+             </div>
+        </div>
+    </div>
+</div>

@@ -6,10 +6,12 @@
 // Mude esta versão sempre que atualizar o sistema (ex: '1.0.1')
 const APP_VERSION = '1.0.0';
 
-const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
-// const API_BASE_URL = 'http://localhost:5087/api';
+// const API_BASE_URL = 'https://api.ceramicacanelas.shop/api';
+const API_BASE_URL = 'http://localhost:5087/api';
 const originalRowHTML = {};
-
+// =======================================================
+let categoriesCache = [];
+let groupsCache = [];
 // Cache para a tabela de histórico em páginas complexas
 let historyItemsCache = []; 
 const originalRowHTML_Extract = {};

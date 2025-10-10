@@ -171,19 +171,18 @@ function initializePaymentModal() {
     form?.addEventListener('submit', handlePaymentSubmit);
 }
 
+// ✅✅✅ FUNÇÃO ALTERADA ✅✅✅
+// O campo de valor do pagamento agora é iniciado vazio para evitar erros.
 window.openPaymentModal = (saleId, amountToPay) => {
     const modal = document.getElementById('paymentModal');
-    const form = document.getElementById('paymentForm');
     
     document.getElementById('paymentSaleId').value = saleId;
-    document.getElementById('paymentAmount').value = amountToPay > 0 ? amountToPay.toFixed(2) : '0.00';
+    // O campo de valor agora inicia vazio.
+    document.getElementById('paymentAmount').value = ''; 
     document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
     modal.style.display = 'block';
 };
 
-
-// ✅✅✅ FUNÇÃO CORRIGIDA ✅✅✅
-// Remove o cálculo e o envio do campo 'Status', pois a API é responsável por essa lógica.
 async function handlePaymentSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -192,9 +191,11 @@ async function handlePaymentSubmit(event) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processando...';
 
-    const formData = new FormData(form);
-    
-    // A lógica que calculava e adicionava o "Status" foi removida daqui.
+    const formData = new FormData();
+    formData.append('SaleId', document.getElementById('paymentSaleId').value);
+    formData.append('Amount', document.getElementById('paymentAmount').value);
+    formData.append('PaymentMethod', document.getElementById('paymentMethodModal').value);
+    formData.append('PaymentDate', document.getElementById('paymentDate').value);
 
     try {
         const accessToken = localStorage.getItem('accessToken');
@@ -211,8 +212,8 @@ async function handlePaymentSubmit(event) {
             document.getElementById('paymentModal').style.display = 'none';
             fetchReportData(currentPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro" }));
-            showErrorModal({ title: "Falha ao Atualizar", detail: errorData.message || "Não foi possível registrar o pagamento." });
+            const errorData = await response.json().catch(() => ({ message: "Não foi possível registrar o pagamento." }));
+            showErrorModal({ title: "Falha ao Atualizar", detail: errorData.message || "Ocorreu um erro desconhecido." });
         }
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
