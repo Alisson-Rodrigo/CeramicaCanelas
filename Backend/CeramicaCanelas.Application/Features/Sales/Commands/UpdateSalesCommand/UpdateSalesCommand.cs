@@ -39,6 +39,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
         public ProductType Product { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }
+        public int Break { get; set; } = 0; // Quebra (apenas para ladrilhos)
+
     }
 
     /// <summary>

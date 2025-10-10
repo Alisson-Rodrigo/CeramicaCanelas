@@ -15,6 +15,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
         public decimal Milheiros { get; set; }
         public decimal Units => Milheiros * 1000m;
         public decimal Revenue { get; set; }
+
+        public int Breaks { get; set; } = 0;
         public decimal AvgPrice => Milheiros > 0 ? Revenue / Milheiros : 0;
     }
 }

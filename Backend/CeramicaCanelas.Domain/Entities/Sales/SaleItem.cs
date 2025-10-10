@@ -17,6 +17,7 @@ namespace CeramicaCanelas.Domain.Entities
         // Valores
         public decimal UnitPrice { get; set; }
         public decimal Quantity { get; set; }
+        public int Break { get; set; } = 0; // Quebra (apenas para ladrilhos)
 
         // Calculado
         public decimal Subtotal => Math.Round(UnitPrice * Quantity, 2);

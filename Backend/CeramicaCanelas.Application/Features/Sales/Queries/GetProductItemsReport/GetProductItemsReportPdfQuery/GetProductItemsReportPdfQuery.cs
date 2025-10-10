@@ -30,7 +30,10 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
         public ProductType Product { get; set; }
         public decimal Milheiros { get; set; }                 // Σ Quantity (milheiros)
         public decimal Unidades => Milheiros * 1000m;          // derivado
-        public decimal Revenue { get; set; }                   // Σ (UnitPrice * Milheiros)
+        public decimal Revenue { get; set; }        
+        
+        public int Breaks { get; set; } = 0;                      // Σ Break (apenas para ladrilhos)
+
         public decimal AvgPrice => Milheiros > 0 ? Math.Round(Revenue / Milheiros, 2) : 0m; // R$/milheiro
     }
 
