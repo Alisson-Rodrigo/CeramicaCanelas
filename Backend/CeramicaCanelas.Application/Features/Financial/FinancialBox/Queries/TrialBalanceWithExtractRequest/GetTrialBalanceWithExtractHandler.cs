@@ -39,11 +39,6 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
                 extracts = extracts.Where(e => e.Date <= request.EndDate);
             if (request.PaymentMethod.HasValue)
                 extracts = extracts.Where(e => e.PaymentMethod == request.PaymentMethod.Value);
-            if (!string.IsNullOrWhiteSpace(request.Search))
-            {
-                var s = request.Search.ToLower();
-                extracts = extracts.Where(e => e.Description.ToLower().Contains(s));
-            }
 
             // Extratos detalhados (para exibição)
             var extractDetails = await extracts
@@ -51,7 +46,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
                 {
                     AccountName = e.PaymentMethod.ToString(),
                     Date = e.Date,
-                    Description = e.Description,
+                    Description = e.Observations ?? "Sem observações",
                     Value = e.Value
                 })
                 .OrderByDescending(e => e.Date)
