@@ -6,6 +6,7 @@ using MigraDocCore.DocumentObjectModel;
 using MigraDocCore.DocumentObjectModel.Tables;
 using MigraDocCore.Rendering;
 using System.Globalization;
+using static CeramicaCanelas.Application.Contracts.Application.Services.IPdfReportService;
 
 namespace CeramicaCanelas.Infrastructure.Reports
 {
@@ -330,5 +331,200 @@ namespace CeramicaCanelas.Infrastructure.Reports
             renderer.PdfDocument.Save(ms, false);
             return ms.ToArray();
         }
+
+        // =====================================
+        // 📘 Relatório de Balancete de Verificação
+        // =====================================
+        public byte[] BuildTrialBalancePdf(
+            CompanyProfile company,
+            (DateOnly start, DateOnly end) period,
+            IEnumerable<TrialBalanceAccountRow> accounts,
+            IEnumerable<TrialBalanceGroupRow> groups,
+            IEnumerable<TrialBalanceExtractRow> extracts,
+            decimal totalIncomeOverall,
+            decimal totalExpenseOverall,
+            string? logoPath = null,
+            IEnumerable<TrialBalanceFilter>? filters = null)
+        {
+            var culture = new CultureInfo("pt-BR");
+            var primaryColor = Colors.Orange;
+            var textColor = Colors.White;
+
+            var doc = new Document();
+            doc.Info.Title = "Balancete de Verificação";
+            doc.DefaultPageSetup.TopMargin = Unit.FromCentimeter(1.5);
+            doc.DefaultPageSetup.LeftMargin = Unit.FromCentimeter(1.0);
+            doc.DefaultPageSetup.RightMargin = Unit.FromCentimeter(1.2);
+            doc.DefaultPageSetup.BottomMargin = Unit.FromCentimeter(2);
+
+            var section = doc.AddSection();
+
+            // -------------------------------
+            // Cabeçalho
+            // -------------------------------
+            var headerTable = section.AddTable();
+            headerTable.AddColumn(Unit.FromCentimeter(17));
+            var headerRow = headerTable.AddRow();
+            headerRow.Shading.Color = primaryColor;
+
+            var headerCell = headerRow.Cells[0];
+            headerCell.Format.Alignment = ParagraphAlignment.Center;
+            headerCell.Format.Font.Color = textColor;
+
+            var namePara = headerCell.AddParagraph(company.Name);
+            namePara.Format.Font.Size = 18;
+            namePara.Format.Font.Bold = true;
+
+            headerCell.AddParagraph(company.TradeDescription);
+            headerCell.AddParagraph($"{company.Cnpj} • {company.StateRegistration}");
+
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(10);
+
+            // -------------------------------
+            // Título
+            // -------------------------------
+            var title = section.AddParagraph("📘 BALANCETE DE VERIFICAÇÃO");
+            title.Format.Font.Size = 15;
+            title.Format.Font.Bold = true;
+            title.Format.Alignment = ParagraphAlignment.Center;
+            section.AddParagraph($"Período: {period.start:dd/MM/yyyy} a {period.end:dd/MM/yyyy}")
+                   .Format.Alignment = ParagraphAlignment.Center;
+
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(10);
+
+            // -------------------------------
+            // Filtros
+            // -------------------------------
+            if (filters != null && filters.Any())
+            {
+                var filtersTitle = section.AddParagraph("🔍 Filtros Aplicados:");
+                filtersTitle.Format.Font.Bold = true;
+                filtersTitle.Format.Font.Size = 11;
+                foreach (var f in filters)
+                {
+                    section.AddParagraph($"• {f.Label}: {f.Value}").Format.Font.Size = 9;
+                }
+                section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(10);
+            }
+
+            // -------------------------------
+            // Entradas
+            // -------------------------------
+            var tableAccounts = section.AddTable();
+            tableAccounts.Borders.Width = 0.5;
+            tableAccounts.AddColumn(Unit.FromCentimeter(10));
+            tableAccounts.AddColumn(Unit.FromCentimeter(5));
+
+            var headerA = tableAccounts.AddRow();
+            headerA.Shading.Color = Colors.Black;
+            headerA.Format.Font.Color = Colors.White;
+            headerA.Format.Font.Bold = true;
+            headerA.Cells[0].AddParagraph("Conta / Banco");
+            headerA.Cells[1].AddParagraph("Entradas (R$)").Format.Alignment = ParagraphAlignment.Right;
+
+            foreach (var a in accounts)
+            {
+                var r = tableAccounts.AddRow();
+                r.Cells[0].AddParagraph(a.AccountName);
+                r.Cells[1].AddParagraph(a.TotalIncome.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+            }
+
+            var totalA = tableAccounts.AddRow();
+            totalA.Shading.Color = Colors.LightYellow;
+            totalA.Cells[0].AddParagraph("💰 Total Geral de Entradas");
+            totalA.Cells[1].AddParagraph(totalIncomeOverall.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
+
+            // -------------------------------
+            // Saídas
+            // -------------------------------
+            var tableGroups = section.AddTable();
+            tableGroups.Borders.Width = 0.5;
+            tableGroups.AddColumn(Unit.FromCentimeter(10));
+            tableGroups.AddColumn(Unit.FromCentimeter(5));
+
+            var headerG = tableGroups.AddRow();
+            headerG.Shading.Color = Colors.Black;
+            headerG.Format.Font.Color = Colors.White;
+            headerG.Format.Font.Bold = true;
+            headerG.Cells[0].AddParagraph("Grupo / Categoria");
+            headerG.Cells[1].AddParagraph("Saídas (R$)").Format.Alignment = ParagraphAlignment.Right;
+
+            foreach (var g in groups)
+            {
+                var groupRow = tableGroups.AddRow();
+                groupRow.Shading.Color = Colors.LightGray;
+                groupRow.Cells[0].AddParagraph($"📂 {g.GroupName}");
+                groupRow.Cells[1].AddParagraph(g.GroupExpense.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+
+                foreach (var c in g.Categories)
+                {
+                    var catRow = tableGroups.AddRow();
+                    catRow.Cells[0].AddParagraph($"   └ {c.CategoryName}");
+                    catRow.Cells[1].AddParagraph(c.TotalExpense.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+                }
+            }
+
+            var totalG = tableGroups.AddRow();
+            totalG.Shading.Color = Colors.LightYellow;
+            totalG.Cells[0].AddParagraph("💸 Total Geral de Saídas");
+            totalG.Cells[1].AddParagraph(totalExpenseOverall.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
+
+            // -------------------------------
+            // Extratos Bancários
+            // -------------------------------
+            var tableExtracts = section.AddTable();
+            tableExtracts.Borders.Width = 0.5;
+            tableExtracts.AddColumn(Unit.FromCentimeter(4));
+            tableExtracts.AddColumn(Unit.FromCentimeter(3));
+            tableExtracts.AddColumn(Unit.FromCentimeter(7));
+            tableExtracts.AddColumn(Unit.FromCentimeter(4));
+
+            var headerE = tableExtracts.AddRow();
+            headerE.Shading.Color = Colors.Black;
+            headerE.Format.Font.Color = Colors.White;
+            headerE.Format.Font.Bold = true;
+            headerE.Cells[0].AddParagraph("Conta");
+            headerE.Cells[1].AddParagraph("Data");
+            headerE.Cells[2].AddParagraph("Descrição");
+            headerE.Cells[3].AddParagraph("Valor (R$)").Format.Alignment = ParagraphAlignment.Right;
+
+            foreach (var e in extracts.OrderByDescending(x => x.Date))
+            {
+                var r = tableExtracts.AddRow();
+                r.Cells[0].AddParagraph(e.AccountName);
+                r.Cells[1].AddParagraph(e.Date.ToString("dd/MM/yyyy"));
+                r.Cells[2].AddParagraph(e.Description);
+                var val = r.Cells[3].AddParagraph(e.Value.ToString("N2", culture));
+                val.Format.Font.Color = e.Value >= 0 ? Colors.DarkGreen : Colors.Red;
+                r.Cells[3].Format.Alignment = ParagraphAlignment.Right;
+            }
+
+            // -------------------------------
+            // Rodapé
+            // -------------------------------
+            var footer = section.Footers.Primary;
+            var footerLine = footer.AddParagraph(new string('─', 90));
+            footerLine.Format.Font.Color = primaryColor;
+            footerLine.Format.Alignment = ParagraphAlignment.Center;
+
+            var footerText = footer.AddParagraph($"Relatório gerado em {DateTime.Now:dd/MM/yyyy HH:mm}");
+            footerText.Format.Font.Size = 8;
+            footerText.Format.Alignment = ParagraphAlignment.Center;
+            footerText.Format.Font.Color = Colors.Gray;
+
+            // -------------------------------
+            // Renderização final
+            // -------------------------------
+            var renderer = new PdfDocumentRenderer(unicode: true) { Document = doc };
+            renderer.RenderDocument();
+            using var ms = new MemoryStream();
+            renderer.PdfDocument.Save(ms, false);
+            return ms.ToArray();
+        }
     }
 }
+
