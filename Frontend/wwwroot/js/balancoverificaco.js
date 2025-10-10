@@ -149,13 +149,6 @@ function updateDashboardUI(data) {
     renderExtractsTable(data.extracts);
 }
 
-// ===============================================================
-// >> INÍCIO DA FUNÇÃO ALTERADA <<
-// ===============================================================
-/**
- * Renderiza a tabela de totais por conta, exibindo apenas o nome da conta e o total de entradas.
- * @param {Array<Object>} accounts - A lista de contas vinda da API.
- */
 function renderAccountsTable(accounts) {
     const tableBody = document.getElementById('totals-by-account-body');
     if (!tableBody) return;
@@ -175,9 +168,6 @@ function renderAccountsTable(accounts) {
         tableBody.innerHTML = '<tr><td colspan="2">Nenhum dado de conta encontrado.</td></tr>';
     }
 }
-// ===============================================================
-// >> FIM DA FUNÇÃO ALTERADA <<
-// ===============================================================
 
 function renderGroupsTable(groups) {
     const tableBody = document.getElementById('expenses-by-group-body');
@@ -206,11 +196,26 @@ function renderGroupsTable(groups) {
     }
 }
 
+// ===============================================================
+// >> INÍCIO DA FUNÇÃO ALTERADA <<
+// ===============================================================
+/**
+ * Renderiza a tabela de extratos e calcula o total dos lançamentos.
+ * @param {Array<Object>} extracts - A lista de lançamentos vinda da API.
+ */
 function renderExtractsTable(extracts) {
     const tableBody = document.getElementById('extracts-history-body');
+    const tableFooterCell = document.getElementById('extracts-total');
+    const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
     tableBody.innerHTML = '';
+    let totalValue = 0;
+
     if (extracts && extracts.length > 0) {
         extracts.forEach(ext => {
+            // Soma o valor (considerando entradas como positivo e saídas como negativo)
+            totalValue += (ext.type.toLowerCase() === 'entrada' ? ext.value : -ext.value);
+            
             const row = tableBody.insertRow();
             const valueClass = ext.type.toLowerCase() === 'entrada' ? 'income' : 'expense';
             row.innerHTML = `
@@ -218,13 +223,22 @@ function renderExtractsTable(extracts) {
                 <td>${ext.description}</td>
                 <td>${ext.accountName}</td>
                 <td>${ext.type}</td>
-                <td class="${valueClass}">${(ext.value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td class="${valueClass}">${formatCurrency(ext.value)}</td>
             `;
         });
     } else {
         tableBody.innerHTML = '<tr><td colspan="5">Nenhum lançamento no extrato para este período.</td></tr>';
     }
+
+    // Atualiza a célula do rodapé com o total calculado
+    if (tableFooterCell) {
+        tableFooterCell.textContent = formatCurrency(totalValue);
+        tableFooterCell.className = totalValue >= 0 ? 'income' : 'expense';
+    }
 }
+// ===============================================================
+// >> FIM DA FUNÇÃO ALTERADA <<
+// ===============================================================
 
 async function generatePdfReport() {
     const loadingDiv = document.getElementById('loading');
