@@ -37,7 +37,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             if (req.Status.HasValue)
                 q = q.Where(s => s.Status == req.Status.Value);
 
-            // CORREÇÃO → agora consulta na coleção Payments
+            // Forma de pagamento → agora consulta na coleção Payments
             if (req.PaymentMethod.HasValue)
                 q = q.Where(s => s.Payments.Any(p => p.PaymentMethod == req.PaymentMethod.Value));
 
@@ -57,6 +57,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             var itemsQ = q.SelectMany(s => s.Items.Select(i => new
             {
                 i.Product,
+                i.Break, // 🔹 agora inclui o campo de quebra
                 Milheiros = (decimal)i.Quantity,
                 Subtotal = i.UnitPrice * (decimal)i.Quantity,
                 SaleGross = s.TotalGross,
@@ -65,6 +66,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             .Select(x => new
             {
                 x.Product,
+                x.Break,
                 x.Milheiros,
                 NetRevenueRounded = Math.Round(
                     (x.SaleGross > 0m)
@@ -76,14 +78,15 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             if (req.Product.HasValue)
                 itemsQ = itemsQ.Where(x => x.Product == req.Product.Value);
 
+            // Agrupa e soma as quebras reais
             var grouped = await itemsQ
                 .GroupBy(x => x.Product)
                 .Select(g => new ProductItemsRowDto
                 {
                     Product = g.Key,
                     Milheiros = g.Sum(z => z.Milheiros),
-                    Breaks = g.Count(),
-                    Revenue = g.Sum(z => z.NetRevenueRounded)
+                    Revenue = g.Sum(z => z.NetRevenueRounded),
+                    Breaks = g.Sum(z => z.Break) // ✅ soma total das quebras
                 })
                 .OrderByDescending(r => r.Revenue)
                 .ToListAsync(ct);

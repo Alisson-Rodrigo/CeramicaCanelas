@@ -13,7 +13,7 @@ namespace CeramicaCanelas.Domain.Entities.Sales
         public Guid SaleId { get; set; }
         public Sale Sale { get; set; } = null!;
 
-        public DateOnly PaymentDate { get; set; }
+        public DateOnly? PaymentDate { get; set; }
         public decimal Amount { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
     }

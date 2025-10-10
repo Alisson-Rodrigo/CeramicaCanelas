@@ -56,7 +56,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
                     SaleId = sale.Id,
                     Product = i.Product,
                     UnitPrice = i.UnitPrice,
-                    Quantity = i.Quantity
+                    Quantity = i.Quantity,
                     Break = i.Break
                     // Subtotal é calculado automaticamente
                 };
