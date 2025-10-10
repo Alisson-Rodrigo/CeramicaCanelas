@@ -4,6 +4,7 @@ using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Dashbo
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.PagedRequestCashFlowReport;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.PagedRequestLaunchByClient;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.PendingLaunchQuery;
+using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.TrialBalanceWithExtractRequest;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -72,6 +73,13 @@ namespace CeramicaCanelas.WebApi.Controllers
         public async Task<IActionResult> GetClientsBalance([FromQuery] PagedClientIncomeRequest query)
         {
             var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        [HttpGet("with-extract")]
+        public async Task<IActionResult> GetWithExtract([FromQuery] TrialBalanceWithExtractRequest request)
+        {
+            var result = await _mediator.Send(request);
             return Ok(result);
         }
 
