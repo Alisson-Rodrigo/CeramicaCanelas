@@ -14,6 +14,8 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
 
         public decimal TotalIncomeOverall { get; set; }
         public decimal TotalExpenseOverall { get; set; }
+        public decimal TotalExtractOverall { get; set; } // ✅ novo campo
+
         public decimal NetBalance => TotalIncomeOverall - TotalExpenseOverall;
 
         public List<AccountIncomeSummary> Accounts { get; set; } = new(); // Entradas

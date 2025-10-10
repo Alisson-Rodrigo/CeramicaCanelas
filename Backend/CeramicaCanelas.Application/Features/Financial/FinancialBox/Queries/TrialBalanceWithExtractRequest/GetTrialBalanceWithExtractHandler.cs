@@ -32,6 +32,10 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             // 🔹 1️⃣ ENTRADAS (EXTRATOS + LANÇAMENTOS)
             // =====================================
 
+            // =====================================
+            // 🔹 1️⃣ ENTRADAS (EXTRATOS + LANÇAMENTOS)
+            // =====================================
+
             // Extratos bancários ativos (positivos)
             var extracts = _extractRepository.QueryAll()
                 .Where(e => e.IsActive);
@@ -53,6 +57,10 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
                 })
                 .OrderByDescending(e => e.Date)
                 .ToListAsync(ct);
+
+            // ✅ Total geral dos extratos (entradas + saídas)
+            var totalExtractOverall = extractDetails.Sum(e => e.Value);
+
 
             // Somar apenas os valores positivos dos extratos
             var extractIncomes = extractDetails
@@ -168,12 +176,14 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             {
                 StartDate = minDate,
                 EndDate = maxDate,
-                Accounts = combinedIncomes, // ✅ Corrigido aqui
+                Accounts = combinedIncomes,
                 Groups = groups,
                 Extracts = extractDetails,
                 TotalIncomeOverall = totalIncomeOverall,
-                TotalExpenseOverall = totalExpenseOverall
+                TotalExpenseOverall = totalExpenseOverall,
+                TotalExtractOverall = totalExtractOverall // ✅ novo campo retornado
             };
+
 
         }
     }
