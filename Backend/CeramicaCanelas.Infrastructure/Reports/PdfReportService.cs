@@ -332,19 +332,17 @@ namespace CeramicaCanelas.Infrastructure.Reports
             return ms.ToArray();
         }
 
-        // =====================================
-        // 📘 Relatório de Balancete de Verificação
-        // =====================================
         public byte[] BuildTrialBalancePdf(
-            CompanyProfile company,
-            (DateOnly start, DateOnly end) period,
-            IEnumerable<TrialBalanceAccountRow> accounts,
-            IEnumerable<TrialBalanceGroupRow> groups,
-            IEnumerable<TrialBalanceExtractRow> extracts,
-            decimal totalIncomeOverall,
-            decimal totalExpenseOverall,
-            string? logoPath = null,
-            IEnumerable<TrialBalanceFilter>? filters = null)
+    CompanyProfile company,
+    (DateOnly start, DateOnly end) period,
+    IEnumerable<TrialBalanceAccountRow> accounts,
+    IEnumerable<TrialBalanceGroupRow> groups,
+    IEnumerable<TrialBalanceExtractRow> extracts,
+    decimal totalIncomeOverall,
+    decimal totalExpenseOverall,
+    decimal totalExtractOverall, // ✅ novo parâmetro
+    string? logoPath = null,
+    IEnumerable<TrialBalanceFilter>? filters = null)
         {
             var culture = new CultureInfo("pt-BR");
             var primaryColor = Colors.Orange;
@@ -503,6 +501,14 @@ namespace CeramicaCanelas.Infrastructure.Reports
                 r.Cells[3].Format.Alignment = ParagraphAlignment.Right;
             }
 
+            // ✅ Total geral dos extratos
+            var totalExtractRow = tableExtracts.AddRow();
+            totalExtractRow.Shading.Color = Colors.LightYellow;
+            totalExtractRow.Cells[0].AddParagraph("🏦 Saldo Geral dos Extratos");
+            totalExtractRow.Cells[3].AddParagraph(totalExtractOverall.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(10);
+
             // -------------------------------
             // Rodapé
             // -------------------------------
@@ -525,6 +531,7 @@ namespace CeramicaCanelas.Infrastructure.Reports
             renderer.PdfDocument.Save(ms, false);
             return ms.ToArray();
         }
+
     }
 }
 

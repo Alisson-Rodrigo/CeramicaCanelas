@@ -11,7 +11,7 @@ namespace CeramicaCanelas.Application.Contracts.Application.Services
     public interface IPdfReportService
     {
         // ======================================================
-        // 🔹 RELATÓRIO DE PRODUTOS (já existente)
+        // 🔹 RELATÓRIO DE PRODUTOS
         // ======================================================
         byte[] BuildProductItemsReportPdf(
             CompanyProfile company,
@@ -25,16 +25,17 @@ namespace CeramicaCanelas.Application.Contracts.Application.Services
         );
 
         // ======================================================
-        // 🔹 RELATÓRIO DE BALANCETE DE VERIFICAÇÃO (NOVO)
+        // 🔹 RELATÓRIO DE BALANCETE DE VERIFICAÇÃO
         // ======================================================
         byte[] BuildTrialBalancePdf(
             CompanyProfile company,
             (DateOnly start, DateOnly end) period,
-            IEnumerable<TrialBalanceAccountRow> accounts, // Entradas por conta
-            IEnumerable<TrialBalanceGroupRow> groups,      // Saídas por grupo/categoria
-            IEnumerable<TrialBalanceExtractRow> extracts,  // Extratos detalhados
-            decimal totalIncomeOverall,
-            decimal totalExpenseOverall,
+            IEnumerable<TrialBalanceAccountRow> accounts,   // Entradas por conta
+            IEnumerable<TrialBalanceGroupRow> groups,       // Saídas por grupo/categoria
+            IEnumerable<TrialBalanceExtractRow> extracts,   // Extratos detalhados
+            decimal totalIncomeOverall,                     // Total de entradas (extratos + lançamentos)
+            decimal totalExpenseOverall,                    // Total de saídas (lançamentos)
+            decimal totalExtractOverall,                    // ✅ Total geral dos extratos (saldo líquido)
             string? logoPath = null,
             IEnumerable<TrialBalanceFilter>? filters = null
         );

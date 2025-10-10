@@ -41,7 +41,6 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
             // 🔹 1️⃣ ENTRADAS (EXTRATOS + LANÇAMENTOS)
             // ============================
 
-            // Extratos bancários ativos
             var extracts = _extractRepository.QueryAll().Where(e => e.IsActive);
 
             if (req.StartDate.HasValue)
@@ -61,6 +60,9 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
                 })
                 .OrderByDescending(e => e.Date)
                 .ToListAsync(ct);
+
+            // ✅ Total geral do extrato (entradas + saídas)
+            var totalExtractOverall = extractDetails.Sum(e => e.Value);
 
             // Entradas vindas de extratos (valores positivos)
             var extractIncomes = extractDetails
@@ -84,7 +86,6 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
             if (req.PaymentMethod.HasValue)
                 incomeLaunches = incomeLaunches.Where(l => l.PaymentMethod == req.PaymentMethod.Value);
 
-            // Agrupa lançamentos por conta
             var launchIncomes = await incomeLaunches
                 .GroupBy(l => l.PaymentMethod)
                 .Select(g => new
@@ -175,7 +176,6 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
             string? logoPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, LogoRelative));
             if (!File.Exists(logoPath)) logoPath = null;
 
-            // ✅ Mapeia para DTOs esperados pelo serviço PDF
             var accountRows = combinedAccounts
                 .Select(a => new TrialBalanceAccountRow
                 {
@@ -208,12 +208,12 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
                 })
                 .ToList();
 
-            // ✅ Converte filtros para o tipo correto
             var filterRows = new List<TrialBalanceFilter>
             {
                 new("Período", $"{startDate:dd/MM/yyyy} a {endDate:dd/MM/yyyy}"),
                 new("Conta", req.PaymentMethod?.ToString() ?? "Todas"),
-                new("Gerado em", DateTime.Now.ToString("dd/MM/yyyy HH:mm"))
+                new("Gerado em", DateTime.Now.ToString("dd/MM/yyyy HH:mm")),
+                new("Saldo Geral dos Extratos", totalExtractOverall.ToString("C2"))
             };
 
             // ============================
@@ -227,9 +227,11 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
                 extracts: extractRows,
                 totalIncomeOverall: totalIncomeOverall,
                 totalExpenseOverall: totalExpenseOverall,
+                totalExtractOverall: totalExtractOverall, // ✅ novo total geral dos extratos
                 logoPath: logoPath,
                 filters: filterRows
             );
+
         }
     }
 }
