@@ -16,44 +16,39 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
         public decimal TotalExpenseOverall { get; set; }
         public decimal NetBalance => TotalIncomeOverall - TotalExpenseOverall;
 
-        public List<GroupBalanceDto> Groups { get; set; } = new();
-        public List<BankExtractSummary> BankExtracts { get; set; } = new();
-
-        public decimal BankTotalBalance => BankExtracts.Sum(b => b.Balance);
-        public decimal Difference => NetBalance - BankTotalBalance;
+        public List<AccountIncomeSummary> Accounts { get; set; } = new(); // Entradas
+        public List<GroupBalanceSummary> Groups { get; set; } = new(); // Saídas
+        public List<BankExtractDetail> Extracts { get; set; } = new(); // Extratos detalhados
     }
 
-    public class BankExtractSummary
+    // ====== ENTRADAS POR CONTA ======
+    public class AccountIncomeSummary
     {
-        public string PaymentMethod { get; set; } = string.Empty;
-        public decimal TotalInflow { get; set; } // valores positivos
-        public decimal TotalOutflow { get; set; } // valores negativos
-        public decimal Balance => TotalInflow - TotalOutflow;
+        public string AccountName { get; set; } = "Desconhecido";
+        public decimal TotalIncome { get; set; }
     }
 
-    public class GroupBalanceDto
+    // ====== DESPESAS POR GRUPO/CATEGORIA ======
+    public class GroupBalanceSummary
     {
         public string GroupName { get; set; } = "Sem grupo";
-        public List<CategoryBalanceDto> Categories { get; set; } = new();
-        public decimal TotalIncome => Categories.Sum(c => c.TotalIncome);
-        public decimal TotalExpense => Categories.Sum(c => c.TotalExpense);
-        public decimal NetBalance => TotalIncome - TotalExpense;
+        public List<CategoryBalanceSummary> Categories { get; set; } = new();
+        public decimal GroupExpense => Categories.Sum(c => c.TotalExpense);
     }
 
-    public class CategoryBalanceDto
+    public class CategoryBalanceSummary
     {
         public string CategoryName { get; set; } = "Sem categoria";
-        public decimal TotalIncome { get; set; }
         public decimal TotalExpense { get; set; }
-        public List<EntryDto> Entries { get; set; } = new();
     }
 
-    public class EntryDto
+    // ====== DETALHAMENTO DOS EXTRATOS ======
+    public class BankExtractDetail
     {
-        public DateOnly LaunchDate { get; set; }
+        public string AccountName { get; set; } = "Desconhecido";
+        public DateOnly Date { get; set; }
         public string Description { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public LaunchType Type { get; set; }
-        public string PaymentMethod { get; set; } = string.Empty;
+        public decimal Value { get; set; }
+        public string Type => Value >= 0 ? "Entrada" : "Saída";
     }
 }

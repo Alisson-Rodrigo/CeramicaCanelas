@@ -10,32 +10,81 @@ using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.TrialBalanceWithExtractRequest
 {
-    public class GetTrialBalanceWithExtractHandler : IRequestHandler<TrialBalanceWithExtractRequest, TrialBalanceWithExtractResult>
+    public class GetTrialBalanceWithExtractHandler
+            : IRequestHandler<TrialBalanceWithExtractRequest, TrialBalanceWithExtractResult>
     {
         private readonly ILaunchRepository _launchRepository;
         private readonly IExtractRepository _extractRepository;
 
-        public GetTrialBalanceWithExtractHandler(ILaunchRepository launchRepository, IExtractRepository extractRepository)
+        public GetTrialBalanceWithExtractHandler(
+            ILaunchRepository launchRepository,
+            IExtractRepository extractRepository)
         {
             _launchRepository = launchRepository;
             _extractRepository = extractRepository;
         }
 
-        public async Task<TrialBalanceWithExtractResult> Handle(TrialBalanceWithExtractRequest request, CancellationToken ct)
+        public async Task<TrialBalanceWithExtractResult> Handle(
+            TrialBalanceWithExtractRequest request,
+            CancellationToken ct)
         {
-            // === 1️⃣ LANÇAMENTOS ===
-            var launches = _launchRepository.QueryAllWithIncludes()
-                .Include(l => l.Category)!.ThenInclude(c => c.Group)
-                .Where(l => l.Status == PaymentStatus.Paid);
+            // =====================================
+            // 🔹 1️⃣ EXTRATOS BANCÁRIOS (ENTRADAS)
+            // =====================================
+            var extracts = _extractRepository.QueryAll().Where(e => e.IsActive);
 
             if (request.StartDate.HasValue)
-                launches = launches.Where(l => l.LaunchDate >= request.StartDate);
+                extracts = extracts.Where(e => e.Date >= request.StartDate);
             if (request.EndDate.HasValue)
-                launches = launches.Where(l => l.LaunchDate <= request.EndDate);
+                extracts = extracts.Where(e => e.Date <= request.EndDate);
+            if (request.PaymentMethod.HasValue)
+                extracts = extracts.Where(e => e.PaymentMethod == request.PaymentMethod.Value);
+            if (!string.IsNullOrWhiteSpace(request.Search))
+            {
+                var s = request.Search.ToLower();
+                extracts = extracts.Where(e => e.Description.ToLower().Contains(s));
+            }
+
+            // Extratos detalhados (para exibição)
+            var extractDetails = await extracts
+                .Select(e => new BankExtractDetail
+                {
+                    AccountName = e.PaymentMethod.ToString(),
+                    Date = e.Date,
+                    Description = e.Description,
+                    Value = e.Value
+                })
+                .OrderByDescending(e => e.Date)
+                .ToListAsync(ct);
+
+            // Entradas agregadas por conta
+            var accountIncomes = extractDetails
+                .GroupBy(e => e.AccountName)
+                .Select(g => new AccountIncomeSummary
+                {
+                    AccountName = g.Key,
+                    TotalIncome = g.Where(x => x.Value > 0).Sum(x => x.Value)
+                })
+                .OrderByDescending(a => a.TotalIncome)
+                .ToList();
+
+            var totalIncomeOverall = accountIncomes.Sum(a => a.TotalIncome);
+
+            // =====================================
+            // 🔹 2️⃣ LANÇAMENTOS (SAÍDAS)
+            // =====================================
+            var launches = _launchRepository.QueryAllWithIncludes()
+                .Include(l => l.Category)!.ThenInclude(c => c.Group)
+                .Where(l => l.Status == PaymentStatus.Paid && l.Type == LaunchType.Expense);
+
+            if (request.StartDate.HasValue)
+                launches = launches.Where(l => l.LaunchDate >= request.StartDate.Value);
+            if (request.EndDate.HasValue)
+                launches = launches.Where(l => l.LaunchDate <= request.EndDate.Value);
             if (request.GroupId.HasValue)
-                launches = launches.Where(l => l.Category!.GroupId == request.GroupId);
+                launches = launches.Where(l => l.Category!.GroupId == request.GroupId.Value);
             if (request.CategoryId.HasValue)
-                launches = launches.Where(l => l.CategoryId == request.CategoryId);
+                launches = launches.Where(l => l.CategoryId == request.CategoryId.Value);
             if (request.PaymentMethod.HasValue)
                 launches = launches.Where(l => l.PaymentMethod == request.PaymentMethod.Value);
             if (!string.IsNullOrWhiteSpace(request.Search))
@@ -47,69 +96,53 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
                     (l.Category!.Group != null && l.Category.Group.Name.ToLower().Contains(s)));
             }
 
-            var launchList = await launches
+            var expenseList = await launches
                 .Select(l => new
                 {
-                    l.LaunchDate,
-                    l.Description,
-                    l.Amount,
-                    l.Type,
-                    l.PaymentMethod,
-                    CategoryName = l.Category != null ? l.Category.Name : "Sem categoria",
-                    GroupName = l.Category != null && l.Category.Group != null ? l.Category.Group.Name : "Sem grupo"
+                    GroupName = l.Category != null && l.Category.Group != null
+                        ? l.Category.Group.Name
+                        : "Sem grupo",
+                    CategoryName = l.Category != null
+                        ? l.Category.Name
+                        : "Sem categoria",
+                    l.Amount
                 })
                 .ToListAsync(ct);
 
-            var groups = launchList
+            var groups = expenseList
                 .GroupBy(g => g.GroupName)
-                .Select(g => new GroupBalanceDto
+                .Select(g => new GroupBalanceSummary
                 {
                     GroupName = g.Key,
                     Categories = g.GroupBy(c => c.CategoryName)
-                        .Select(cg => new CategoryBalanceDto
+                        .Select(cg => new CategoryBalanceSummary
                         {
                             CategoryName = cg.Key,
-                            TotalIncome = cg.Where(x => x.Type == LaunchType.Income).Sum(x => x.Amount),
-                            TotalExpense = cg.Where(x => x.Type == LaunchType.Expense).Sum(x => x.Amount),
-                            Entries = cg.Select(e => new EntryDto
-                            {
-                                LaunchDate = e.LaunchDate,
-                                Description = e.Description,
-                                Amount = e.Amount,
-                                Type = e.Type,
-                                PaymentMethod = e.PaymentMethod.ToString()
-                            }).OrderBy(e => e.LaunchDate).ToList()
-                        }).ToList()
-                }).ToList();
-
-            // === 2️⃣ EXTRATOS BANCÁRIOS ===
-            var extracts = _extractRepository.QueryAll()
-                .Where(e => e.IsActive);
-            if (request.StartDate.HasValue)
-                extracts = extracts.Where(e => e.Date >= request.StartDate);
-            if (request.EndDate.HasValue)
-                extracts = extracts.Where(e => e.Date <= request.EndDate);
-            if (request.PaymentMethod.HasValue)
-                extracts = extracts.Where(e => e.PaymentMethod == request.PaymentMethod.Value);
-
-            var extractList = await extracts
-                .GroupBy(e => e.PaymentMethod)
-                .Select(g => new BankExtractSummary
-                {
-                    PaymentMethod = g.Key.ToString(),
-                    TotalInflow = g.Where(x => x.Value > 0).Sum(x => x.Value),
-                    TotalOutflow = g.Where(x => x.Value < 0).Sum(x => Math.Abs(x.Value))
+                            TotalExpense = cg.Sum(x => x.Amount)
+                        })
+                        .OrderByDescending(c => c.TotalExpense)
+                        .ToList()
                 })
-                .ToListAsync(ct);
+                .OrderBy(g => g.GroupName)
+                .ToList();
+
+            var totalExpenseOverall = groups.Sum(g => g.GroupExpense);
+
+            // =====================================
+            // 🔹 3️⃣ FINALIZA RESULTADO
+            // =====================================
+            var minDate = request.StartDate ?? await launches.MinAsync(l => (DateOnly?)l.LaunchDate, ct);
+            var maxDate = request.EndDate ?? await launches.MaxAsync(l => (DateOnly?)l.LaunchDate, ct);
 
             return new TrialBalanceWithExtractResult
             {
-                StartDate = request.StartDate,
-                EndDate = request.EndDate,
+                StartDate = minDate,
+                EndDate = maxDate,
+                Accounts = accountIncomes,
                 Groups = groups,
-                BankExtracts = extractList,
-                TotalIncomeOverall = groups.Sum(g => g.TotalIncome),
-                TotalExpenseOverall = groups.Sum(g => g.TotalExpense)
+                Extracts = extractDetails, // 🔹 Incluído aqui
+                TotalIncomeOverall = totalIncomeOverall,
+                TotalExpenseOverall = totalExpenseOverall
             };
         }
     }
