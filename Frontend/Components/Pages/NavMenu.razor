@@ -15,7 +15,6 @@
     </div>
 
     <div class="menu">
-        <!-- ALMOXARIFADO -->
         <div class="menu-section" id="almoxarifado-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
                 <svg class="expand-icon" viewBox="0 0 24 24">
@@ -23,8 +22,7 @@
                 </svg>
                 <span>Almoxarifado</span>
             </div>
-            <div class="submenu-container expanded" id="almoxarifado-submenu">
-                <!-- Dashboards -->
+            <div class="submenu-container" id="almoxarifado-submenu">
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Dashboards</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicio'); setActive(this); closeMobileMenu();">
@@ -65,7 +63,6 @@
                     </a>
                 </div>
 
-                <!-- Cadastros -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Cadastros</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('product'); setActive(this); closeMobileMenu();">
@@ -94,7 +91,6 @@
                     </a>
                 </div>
 
-                <!-- Movimentação de Produtos -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Movimentação de Produtos</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('entrada'); setActive(this); closeMobileMenu();">
@@ -119,7 +115,6 @@
             </div>
         </div>
 
-        <!-- FINANCEIRO -->
         <div class="menu-section" id="financeiro-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
                 <svg class="expand-icon" viewBox="0 0 24 24">
@@ -127,7 +122,7 @@
                 </svg>
                 <span>Financeiro</span>
             </div>
-            <div class="submenu-container expanded" id="financeiro-submenu">
+            <div class="submenu-container" id="financeiro-submenu">
                 <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicioFinancial'); setActive(this); closeMobileMenu();">
                     <svg class="menu-icon" viewBox="0 0 24 24">
                         <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" />
@@ -135,7 +130,6 @@
                     <span class="menu-text">Início</span>
                 </a>
 
-                <!-- Cadastros e Lançamentos -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Cadastros e Lançamentos</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('lancamentocategory'); setActive(this); closeMobileMenu();">
@@ -176,7 +170,6 @@
                     </a>
                 </div>
 
-                <!-- Relatórios e Balancetes -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Relatórios e Balancetes</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('movimentocaixa'); setActive(this); closeMobileMenu();">
@@ -213,7 +206,6 @@
             </div>
         </div>
 
-        <!-- VENDAS -->
         <div class="menu-section" id="vendas-section" style="display: none;">
             <div class="menu-title expandable" onclick="toggleSubmenu(this)">
                 <svg class="expand-icon" viewBox="0 0 24 24">
@@ -221,8 +213,7 @@
                 </svg>
                 <span>Vendas</span>
             </div>
-            <div class="submenu-container expanded" id="vendas-submenu">
-                <!-- Dashboards e Lançamentos -->
+            <div class="submenu-container" id="vendas-submenu">
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Dashboards e Lançamentos</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('inicioVendas'); setActive(this); closeMobileMenu();">
@@ -239,7 +230,6 @@
                     </a>
                 </div>
 
-                <!-- Relatórios -->
                 <div class="menu-subsection">
                     <div class="menu-subtitle">Relatórios</div>
                     <a href="#" class="menu-item" onclick="event.preventDefault(); loadForm('vendasPendentes'); setActive(this); closeMobileMenu();">
@@ -258,7 +248,6 @@
             </div>
         </div>
 
-        <!-- SEÇÃO DE LOGOUT E ADMIN -->
         <div class="menu-section logout-section">
             <a href="#" class="menu-item admin-only" id="userSystemMenu" onclick="event.preventDefault(); loadForm('usersys'); setActive(this); closeMobileMenu();" style="display: none;">
                 <svg class="menu-icon" viewBox="0 0 24 24">
@@ -303,11 +292,11 @@
                 const isAlmoxarifado = decodedToken.role === 'Almoxarifado';
                 const isFinancial = decodedToken.role === 'Financial';
                 const isSales = decodedToken.role === 'Sales';
-                
+
                 const hasAlmoxarifadoAccess = isAdmin || isAlmoxarifado;
                 const hasFinancialAccess = isAdmin || isFinancial;
                 const hasSalesAccess = isAdmin || isSales;
-                
+
                 showMenusByRole(isAdmin, hasAlmoxarifadoAccess, hasFinancialAccess, hasSalesAccess);
             } else {
                 showMenusByRole(false, false, false, false);
@@ -349,12 +338,48 @@
         element.classList.add("active");
     }
 
+    // --- FUNÇÕES MODIFICADAS E NOVAS ---
+
+    // NOVA FUNÇÃO: Salva o estado atual (aberto/fechado) de todos os submenus
+    function saveMenuState() {
+        const menuState = {};
+        document.querySelectorAll('.submenu-container').forEach(submenu => {
+            if (submenu.id) {
+                menuState[submenu.id] = submenu.classList.contains('expanded');
+            }
+        });
+        localStorage.setItem('sidebarMenuState', JSON.stringify(menuState));
+    }
+
+    // NOVA FUNÇÃO: Carrega e aplica o estado dos submenus salvo no localStorage
+    function loadMenuState() {
+        const savedState = localStorage.getItem('sidebarMenuState');
+        if (savedState) {
+            const menuState = JSON.parse(savedState);
+            Object.keys(menuState).forEach(submenuId => {
+                const submenu = document.getElementById(submenuId);
+                if (submenu && menuState[submenuId]) { // Se o estado salvo for 'true' (aberto)
+                    const titleElement = submenu.previousElementSibling;
+                    const icon = titleElement.querySelector(".expand-icon");
+                    submenu.classList.add('expanded');
+                    if (icon) {
+                        icon.classList.add('rotated');
+                    }
+                }
+            });
+        }
+    }
+
+    // MODIFICADO: Agora também salva o estado após o clique
     function toggleSubmenu(element) {
         const submenu = element.nextElementSibling;
         const icon = element.querySelector(".expand-icon");
         submenu.classList.toggle("expanded");
         icon.classList.toggle("rotated");
+        saveMenuState(); // Salva o novo estado
     }
+
+    // --- FIM DAS MODIFICAÇÕES ---
 
     function toggleMobileMenu() {
         const sidebar = document.getElementById('sidebar');
@@ -378,18 +403,15 @@
 
     function logout() {
         localStorage.removeItem("accessToken");
+        // Limpa o estado do menu ao sair para não afetar o próximo login
+        localStorage.removeItem("sidebarMenuState");
         window.location.href = "/";
         alert("Logout realizado com sucesso!");
     }
 
     document.addEventListener("DOMContentLoaded", function () {
         checkToken();
-        document.querySelectorAll('.submenu-container').forEach(submenu => {
-            submenu.classList.add('expanded');
-        });
-        document.querySelectorAll('.expand-icon').forEach(icon => {
-            icon.classList.add('rotated');
-        });
+        loadMenuState(); // Carrega o estado dos menus em vez de abrir todos
 
         const hamburger = document.getElementById('hamburgerBtn');
         const overlay = document.getElementById('overlay');
