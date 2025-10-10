@@ -1,10 +1,10 @@
+
 <div class="container dashboard-container">
     <div class="header">
         <h1>Balancete de Verificação</h1>
         <p>Visão consolidada das suas finanças com extratos e lançamentos</p>
     </div>
 
-    <!-- Seção de Filtros -->
     <div class="search-section">
         <div class="search-title">
             <div class="search-icon">🔍</div>
@@ -43,18 +43,15 @@
         <div class="search-actions">
             <button id="generateReportBtn" class="search-button"><span>📊</span> Gerar Relatório</button>
             <button id="clearFiltersBtn" class="clear-button"><span>🗑️</span> Limpar Filtros</button>
-            <!-- BOTÃO DE PDF ADICIONADO -->
             <button id="generatePdfButton" class="pdf-button"><span>📄</span> Gerar PDF</button>
         </div>
     </div>
 
-    <!-- Loading -->
     <div class="loading" id="loading" style="display: none;">
         <div class="spinner"></div>
         Gerando relatório, por favor aguarde...
     </div>
     
-    <!-- Seção de Resultados -->
     <div id="results-section" style="display: none;">
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -93,7 +90,7 @@
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Conta / Método de Pagamento</th>
+                            <th>Conta</th>
                             <th>Total de Entradas (R$)</th>
                         </tr>
                     </thead>
@@ -115,21 +112,21 @@
         </div>
         
         <div class="report-table-container full-width">
-             <h3>Últimos Lançamentos (Extrato Consolidado)</h3>
-             <div class="table-responsive">
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Descrição</th>
-                            <th>Conta</th>
-                            <th>Tipo</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="extracts-history-body"></tbody>
-                </table>
-             </div>
+              <h3>Últimos Lançamentos (Extrato Consolidado)</h3>
+              <div class="table-responsive">
+                  <table class="results-table">
+                      <thead>
+                          <tr>
+                              <th>Data</th>
+                              <th>Descrição</th>
+                              <th>Conta</th>
+                              <th>Tipo</th>
+                              <th>Valor</th>
+                          </tr>
+                      </thead>
+                      <tbody id="extracts-history-body"></tbody>
+                  </table>
+              </div>
         </div>
     </div>
 </div>

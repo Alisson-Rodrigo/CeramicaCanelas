@@ -2,7 +2,11 @@ console.log('Script js/dashboard-financeiro.js DEFINIDO.');
 
 // =======================================================
 // MAPAS E VARIÁVEIS GLOBAIS
-// =======================================================
+// (Defina seus maps como paymentMethodMap e statusMap aqui, se não estiverem em outro arquivo)
+// let paymentMethodMap = { 1: 'Dinheiro', 2: 'Cartão de Crédito', ... };
+// let statusMap = { 1: 'Pendente', 2: 'Pago', ... };
+// let groupsCache = [];
+// let categoriesCache = [];
 
 // =======================================================
 // INICIALIZAÇÃO
@@ -22,10 +26,10 @@ function initializeFilters() {
     document.getElementById('generateReportBtn')?.addEventListener('click', fetchReportData);
     document.getElementById('clearFiltersBtn')?.addEventListener('click', clearFilters);
     document.getElementById('generatePdfButton')?.addEventListener('click', generatePdfReport);
-    
-    populateSelect(document.getElementById('payment-method-filter'), paymentMethodMap, 'Todos os Métodos');
-    populateSelect(document.getElementById('status-filter'), statusMap, 'Todos os Status');
-    
+
+    // populateSelect(document.getElementById('payment-method-filter'), paymentMethodMap, 'Todos os Métodos');
+    // populateSelect(document.getElementById('status-filter'), statusMap, 'Todos os Status');
+
     fetchAndPopulateGroups();
     fetchAndPopulateCategories();
 }
@@ -48,8 +52,11 @@ async function fetchAndPopulateGroups() {
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error('Falha ao buscar grupos');
         const data = await response.json();
-        groupsCache = data.items;
-        populateSelect(document.getElementById('group-filter'), groupsCache.reduce((map, group) => { map[group.id] = group.name; return map; }, {}), 'Todos os Grupos');
+        const groupsMap = data.items.reduce((map, group) => {
+            map[group.id] = group.name;
+            return map;
+        }, {});
+        populateSelect(document.getElementById('group-filter'), groupsMap, 'Todos os Grupos');
     } catch (error) {
         console.error("Erro ao buscar grupos para filtro:", error);
     }
@@ -62,8 +69,11 @@ async function fetchAndPopulateCategories() {
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error('Falha ao buscar categorias');
         const data = await response.json();
-        categoriesCache = data.items;
-        populateSelect(document.getElementById('category-filter'), categoriesCache.reduce((map, cat) => { map[cat.id] = cat.name; return map; }, {}), 'Todas as Categorias');
+        const categoriesMap = data.items.reduce((map, cat) => {
+            map[cat.id] = cat.name;
+            return map;
+        }, {});
+        populateSelect(document.getElementById('category-filter'), categoriesMap, 'Todas as Categorias');
     } catch (error) {
         console.error("Erro ao buscar categorias para filtro:", error);
     }
@@ -75,7 +85,7 @@ async function fetchAndPopulateCategories() {
 async function fetchReportData() {
     const loadingDiv = document.getElementById('loading');
     const resultsSection = document.getElementById('results-section');
-    
+
     if (loadingDiv) loadingDiv.style.display = 'flex';
     if (resultsSection) resultsSection.style.display = 'none';
 
@@ -103,15 +113,15 @@ async function fetchReportData() {
         const url = `${API_BASE_URL}/financial/dashboard-financial/with-extract?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error(`Falha ao buscar dados (Status: ${response.status})`);
-        
+
         const data = await response.json();
-        
+
         updateDashboardUI(data);
-        
+
         if (resultsSection) resultsSection.style.display = 'block';
 
     } catch (error) {
-        if(typeof showErrorModal === 'function') {
+        if (typeof showErrorModal === 'function') {
             showErrorModal({ title: "Erro ao Gerar Relatório", detail: error.message });
         } else {
             alert(`Erro: ${error.message}`);
@@ -123,13 +133,13 @@ async function fetchReportData() {
 
 function updateDashboardUI(data) {
     const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : '--';
-    
+    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '--';
+
     const period = `${formatDate(data.startDate)} a ${formatDate(data.endDate)}`;
     document.getElementById('report-period').textContent = (data.startDate && data.endDate) ? period : 'Período Completo';
     document.getElementById('total-income').textContent = formatCurrency(data.totalIncomeOverall);
     document.getElementById('total-expense').textContent = formatCurrency(data.totalExpenseOverall);
-    
+
     const netBalanceEl = document.getElementById('net-balance');
     netBalanceEl.textContent = formatCurrency(data.netBalance);
     netBalanceEl.style.color = data.netBalance >= 0 ? '#28a745' : '#dc3545';
@@ -139,21 +149,35 @@ function updateDashboardUI(data) {
     renderExtractsTable(data.extracts);
 }
 
+// ===============================================================
+// >> INÍCIO DA FUNÇÃO ALTERADA <<
+// ===============================================================
+/**
+ * Renderiza a tabela de totais por conta, exibindo apenas o nome da conta e o total de entradas.
+ * @param {Array<Object>} accounts - A lista de contas vinda da API.
+ */
 function renderAccountsTable(accounts) {
     const tableBody = document.getElementById('totals-by-account-body');
+    if (!tableBody) return;
+
     tableBody.innerHTML = '';
+    const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
     if (accounts && accounts.length > 0) {
         accounts.forEach(acc => {
             const row = tableBody.insertRow();
             row.innerHTML = `
                 <td>${acc.accountName}</td>
-                <td class="income">${(acc.totalIncome || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td class="income">${formatCurrency(acc.totalIncome)}</td>
             `;
         });
     } else {
         tableBody.innerHTML = '<tr><td colspan="2">Nenhum dado de conta encontrado.</td></tr>';
     }
 }
+// ===============================================================
+// >> FIM DA FUNÇÃO ALTERADA <<
+// ===============================================================
 
 function renderGroupsTable(groups) {
     const tableBody = document.getElementById('expenses-by-group-body');
@@ -190,7 +214,7 @@ function renderExtractsTable(extracts) {
             const row = tableBody.insertRow();
             const valueClass = ext.type.toLowerCase() === 'entrada' ? 'income' : 'expense';
             row.innerHTML = `
-                <td>${new Date(ext.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
+                <td>${new Date(ext.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                 <td>${ext.description}</td>
                 <td>${ext.accountName}</td>
                 <td>${ext.type}</td>
@@ -226,9 +250,9 @@ async function generatePdfReport() {
         if (paymentMethod) params.append('PaymentMethod', paymentMethod);
         if (status) params.append('Status', status);
         if (search) params.append('Search', search);
-        
+
         const url = `${API_BASE_URL}/financial/dashboard-financial/trial-balance/pdf?${params.toString()}`;
-        
+
         const response = await fetch(url, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -241,7 +265,7 @@ async function generatePdfReport() {
 
         const blob = await response.blob();
         const fileURL = URL.createObjectURL(blob);
-        
+
         window.open(fileURL, '_blank');
         URL.revokeObjectURL(fileURL);
 
@@ -266,4 +290,3 @@ function populateSelect(selectElement, map, defaultOptionText) {
         selectElement.appendChild(new Option(value, key));
     }
 }
-
