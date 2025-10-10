@@ -134,6 +134,15 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             foreach (var pay in toRemovePayments)
                 await _salesPaymentsRepository.Delete(pay);
 
+            // ✅ Recarrega os itens atualizados da venda
+            var updatedItems = await _saleItemsRepository.FindAsync(i => i.SaleId == sale.Id, cancellationToken);
+
+            // Atualiza a lista de itens na entidade e recalcula os totais
+            sale.SetItems(updatedItems);  // Este método chama RecalculateTotals()
+
+            // Atualiza a data de modificação
+            sale.ModifiedOn = DateTime.UtcNow;
+
             // ✅ Só agora atualize a venda
             await _salesRepository.Update(sale);
 
