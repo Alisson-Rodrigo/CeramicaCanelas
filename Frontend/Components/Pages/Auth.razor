@@ -134,7 +134,7 @@
                 const params = new URLSearchParams();
                 params.append('Username', formData.get('username'));
                 params.append('Password', formData.get('password'));
-                const url = `http://localhost:5087/api/auth?${params.toString()}`;
+                const url = `https://api.ceramicacanelas.shop/api/auth?${params.toString()}`;
 
                 try {
                     const response = await fetch(url, { method: 'POST' });
