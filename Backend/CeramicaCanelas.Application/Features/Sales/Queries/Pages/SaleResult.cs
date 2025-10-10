@@ -68,7 +68,8 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.Pages
                     Product = i.Product.ToString(),
                     UnitPrice = i.UnitPrice,
                     Quantity = i.Quantity,
-                    Subtotal = i.Subtotal
+                    Subtotal = i.Subtotal,
+                    Break = i.Break
                 })
                 .ToList() ?? new List<SaleItemResult>();
         }
