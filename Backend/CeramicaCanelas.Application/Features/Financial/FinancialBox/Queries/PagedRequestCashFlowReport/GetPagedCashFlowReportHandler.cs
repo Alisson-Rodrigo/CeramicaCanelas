@@ -51,9 +51,10 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Pa
             {
                 var search = request.SearchCategoryOrCustomer.Trim().ToLowerInvariant();
                 baseQuery = baseQuery.Where(l =>
-                    (l.Category != null && (l.Category.Name ?? string.Empty).ToLower().Contains(search)) ||
-                    (l.Customer != null && (l.Customer.Name ?? string.Empty).ToLower().Contains(search)));
+                    l.Category != null &&
+                    (l.Category.Name ?? string.Empty).ToLower().Contains(search));
             }
+
 
             // Filtro por tipo (para a lista/contagem)
             var filteredQuery = baseQuery;
