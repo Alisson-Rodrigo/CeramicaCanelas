@@ -59,7 +59,7 @@ async function fetchReportData() {
 
     } catch (error) {
         if(typeof showErrorModal === 'function') {
-            showErrorModal({ title: "Erro ao Gerar Relatório", detail: error.message });
+            
         } else {
             alert(`Erro: ${error.message}`);
         }

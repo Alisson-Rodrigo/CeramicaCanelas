@@ -1,85 +1,66 @@
-<div class="container">
-    <div class="header">
+
+    <div class="container">
         <h1>Relatório de Itens Vendidos</h1>
-        <p>Análise detalhada de produtos vendidos por período e outros filtros</p>
-    </div>
 
-    <div class="search-section">
-        <div class="search-title">
-            <div class="search-icon">🔍</div>
-            Filtros de Pesquisa
+        <div class="filters-container">
+            <div class="filters-grid">
+                <div class="form-group">
+                    <label for="product-filter">Produto</label>
+                    <select id="product-filter" class="form-input"></select>
+                </div>
+                <div class="form-group">
+                    <label for="status-filter">Status da Venda</label>
+                    <select id="status-filter" class="form-input"></select>
+                </div>
+                <div class="form-group">
+                    <label for="payment-method-filter">Método de Pagamento</label>
+                    <select id="payment-method-filter" class="form-input"></select>
+                </div>
+                <div class="form-group">
+                    <label for="city-filter">Cidade</label>
+                    <input type="text" id="city-filter" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="state-filter">Estado</label>
+                    <input type="text" id="state-filter" class="form-input" maxlength="2">
+                </div>
+                <div class="form-group">
+                    <label for="start-date">Data Inicial</label>
+                    <input type="date" id="start-date" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="end-date">Data Final</label>
+                    <input type="date" id="end-date" class="form-input">
+                </div>
+                <div class="buttons-group">
+                    <button id="searchButton" class="btn btn-primary">Buscar</button>
+                    <button id="clearButton" class="btn btn-secondary">Limpar</button>
+                </div>
+            </div>
         </div>
-        
-        <div class="filters-grid">
-            <div class="filter-group">
-                <label class="filter-label" for="product-filter">Produto</label>
-                <select id="product-filter" class="filter-input"></select>
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="status-filter">Status da Venda</label>
-                <select id="status-filter" class="filter-input"></select>
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="payment-method-filter">Método de Pagamento</label>
-                <select id="payment-method-filter" class="filter-input"></select>
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="city-filter">Cidade</label>
-                <input type="text" id="city-filter" class="filter-input" placeholder="Ex: Picos">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="state-filter">Estado</label>
-                <input type="text" id="state-filter" class="filter-input" placeholder="Ex: PI">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="start-date">Data Inicial</label>
-                <input type="date" id="start-date" class="filter-input">
-            </div>
-            <div class="filter-group">
-                <label class="filter-label" for="end-date">Data Final</label>
-                <input type="date" id="end-date" class="filter-input">
-            </div>
-        </div>
-        
-        <div class="search-actions">
-            <button id="searchButton" class="search-button">
-                <span>📊</span>
-                Buscar
-            </button>
-            <button id="clearButton" class="clear-button">
-                <span>🗑️</span>
-                Limpar
-            </button>
-            <button id="generatePdfButton" class="pdf-button">
-                <span>📄</span>
-                Gerar PDF
-            </button>
-        </div>
-    </div>
 
-    <div class="loading" id="loading" style="display: none;">
-        <div class="spinner"></div>
-        Carregando relatório...
-    </div>
+        <div id="loading">Carregando dados...</div>
 
-    <div class="results-section" id="resultsSection" style="display: none;">
-        <div class="table-responsive">
-            <table class="results-table" id="resultsTable">
-                <thead>
-                    <tr>
-                        <th>Produto</th>
-                        <th>Milheiros Vendidos</th>
-                        <th>Unidades Vendidas</th>
-                        <th>Receita Total</th>
-                        <th>Preço Médio</th>
-                    </tr>
-                </thead>
-                <tbody id="report-table-body"></tbody>
-            </table>
+        <div id="resultsSection" style="display: none;">
+            <button id="generatePdfButton" class="btn btn-success" style="margin-bottom: 15px;">Gerar PDF</button>
+
+            <div class="table-responsive">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Milheiros</th>
+                            <th>Unidades</th>
+                            <th>Quebra (Qtd)</th> <th>Receita (R$)</th>
+                            <th>Preço Médio/Milheiro (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-table-body">
+                        </tbody>
+                </table>
+            </div>
+
+            <div id="noResults" style="display: none;">Nenhum resultado encontrado para os filtros aplicados.</div>
+            <div id="pagination-controls" class="pagination-controls"></div>
         </div>
-        <div class="no-results" id="noResults" style="display: none;">
-            <p>Nenhum item vendido encontrado para os filtros aplicados.</p>
-        </div>
-        <div id="pagination-controls" class="pagination-controls"></div>
     </div>
-</div>

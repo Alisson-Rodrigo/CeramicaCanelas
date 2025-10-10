@@ -15,7 +15,7 @@ function initializeFilters() {
     document.getElementById('clearButton')?.addEventListener('click', clearFilters);
     document.getElementById('generatePdfButton')?.addEventListener('click', generatePdfReport);
     
-    // Popula os selects de filtro (assumindo que os mapas estão em main.js)
+    // Popula os selects de filtro (assumindo que os mapas estão definidos no HTML)
     populateSelect(document.getElementById('product-filter'), productTypeMap, 'Todos os Produtos');
     populateSelect(document.getElementById('status-filter'), saleStatusMap, 'Todos os Status');
     populateSelect(document.getElementById('payment-method-filter'), paymentMethodMap, 'Todos os Métodos');
@@ -86,8 +86,7 @@ async function fetchReportData(page = 1) {
         if(resultsSection) resultsSection.style.display = 'block';
 
     } catch (error) {
-        if(typeof showErrorModal === 'function') showErrorModal({ title: "Erro na Pesquisa", detail: error.message });
-        else alert(`Erro na Pesquisa: ${error.message}`);
+        alert(`Erro na Pesquisa: ${error.message}`);
     } finally {
         if(loadingDiv) loadingDiv.style.display = 'none';
     }
@@ -101,9 +100,11 @@ function renderReportTable(items) {
     tableBody.innerHTML = '';
     if (!items || items.length === 0) {
         noResultsDiv.style.display = 'block';
+        tableBody.style.display = 'none'; // Esconde o corpo da tabela
         return;
     }
     noResultsDiv.style.display = 'none';
+    tableBody.style.display = ''; // Garante que o corpo da tabela está visível
 
     const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -113,6 +114,7 @@ function renderReportTable(items) {
             <td>${item.productName || 'N/A'}</td>
             <td>${item.milheiros || 0}</td>
             <td>${item.units || 0}</td>
+            <td>${item.breaks || 0}</td>
             <td class="income">${formatCurrency(item.revenue)}</td>
             <td>${formatCurrency(item.avgPrice)}</td>
         `;
@@ -193,12 +195,11 @@ async function generatePdfReport() {
         URL.revokeObjectURL(fileURL);
 
     } catch (error) {
-        if (typeof showErrorModal === 'function') {
-            showErrorModal({ title: "Erro ao Gerar PDF", detail: error.message });
-        } else {
-            alert(`Erro: ${error.message}`);
-        }
+        alert(`Erro ao Gerar PDF: ${error.message}`);
     } finally {
         if (loadingDiv) loadingDiv.style.display = 'none';
     }
 }
+
+// Chamar a inicialização quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', initDynamicForm);

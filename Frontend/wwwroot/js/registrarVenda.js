@@ -1,7 +1,5 @@
 console.log('Script js/venda.js DEFINIDO.');
 
-
-
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -20,17 +18,17 @@ function initDynamicForm() {
 function initializeSaleForm() {
     const saleForm = document.getElementById('saleForm');
     const amountPaidInput = document.getElementById('amountPaid');
+    const discountInput = document.getElementById('saleDiscount');
     const itemsTbody = document.getElementById('saleItemsTbody');
     const addItemBtn = document.getElementById('add-sale-item-btn');
 
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('saleDate').value = today;
-    // Não preenche a data de pagamento por padrão para forçar o usuário a escolher
     document.getElementById('paymentDate').value = "";
-
 
     saleForm.addEventListener('submit', handleSaleSubmit);
     if (amountPaidInput) amountPaidInput.addEventListener('input', updateTotals);
+    if (discountInput) discountInput.addEventListener('input', updateTotals);
     if (addItemBtn) addItemBtn.addEventListener('click', addProductToCart);
 
     itemsTbody.addEventListener('click', (event) => {
@@ -71,13 +69,15 @@ function populateProductSelect() {
 function updateTotals() {
     const itemRows = document.querySelectorAll('#saleItemsTbody tr:not(#placeholder-row)');
     let subtotal = 0;
+
     itemRows.forEach(row => {
         const quantity = parseFloat(row.dataset.quantity) || 0;
         const price = parseFloat(row.dataset.price) || 0;
         subtotal += quantity * price;
     });
 
-    const total = subtotal;
+    const discount = parseFloat(document.getElementById('saleDiscount').value) || 0;
+    const total = subtotal - discount;
     const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
     const balance = total - amountPaid;
 
@@ -88,33 +88,31 @@ function updateTotals() {
 
 async function handleSaleSubmit(event) {
     event.preventDefault();
-
     const submitBtn = event.submitter || document.querySelector('#saleForm button[type="submit"]');
     if (submitBtn) {
         submitBtn.disabled = true;
-        const originalText = submitBtn.textContent;
         submitBtn.textContent = "Enviando...";
         
         try {
             const itemsRows = document.querySelectorAll('#saleItemsTbody tr:not(#placeholder-row)');
             if (itemsRows.length === 0) {
-                showErrorModal({ title: "Validação", detail: "A venda deve possuir ao menos um item." });
+                alert("A venda deve possuir ao menos um item.");
                 return;
             }
 
             const items = Array.from(itemsRows).map(row => ({
                 product: parseInt(row.dataset.productId, 10),
                 quantity: parseFloat(row.dataset.quantity),
-                unitPrice: parseFloat(row.dataset.price)
+                unitPrice: parseFloat(row.dataset.price),
+                break: parseFloat(row.dataset.break)
             }));
 
             const payments = [];
             const amountPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
             const paymentDate = document.getElementById('paymentDate').value;
-
             if (amountPaid > 0) {
                 if (!paymentDate) {
-                    showErrorModal({ title: "Validação", detail: "A data do pagamento é obrigatória ao informar um valor pago." });
+                    alert("A data do pagamento é obrigatória se houver valor pago.");
                     return;
                 }
                 payments.push({
@@ -125,7 +123,7 @@ async function handleSaleSubmit(event) {
             }
 
             const selectedStatus = parseInt(document.getElementById('saleStatus').value, 10);
-
+            
             const salePayload = {
                 noteNumber: parseInt(document.getElementById('noteNumber').value, 10),
                 customerName: document.getElementById('customerName').value,
@@ -134,22 +132,17 @@ async function handleSaleSubmit(event) {
                 state: document.getElementById('state').value,
                 customerPhone: document.getElementById('customerPhone').value,
                 date: document.getElementById('saleDate').value,
-                discount: 0,
+                discount: parseFloat(document.getElementById('saleDiscount').value) || 0,
                 saleStatus: selectedStatus,
-                status: selectedStatus,
                 items,
                 payments
             };
 
             console.log("📤 Enviando payload JSON para Criação:", salePayload);
-
             const accessToken = localStorage.getItem('accessToken');
             const response = await fetch(`${API_BASE_URL}/sales`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(salePayload)
             });
 
@@ -164,40 +157,35 @@ async function handleSaleSubmit(event) {
                 fetchAndRenderHistory(1);
             } else {
                 const errorText = await response.text();
-                console.error("Erro da API:", response.status, errorText);
-                let errorData = { message: `Erro ${response.status}. Verifique o console.` };
-                try { errorData = JSON.parse(errorText); } catch (e) {
-                    if (response.status === 415) errorData.detail = "Erro 415: Formato de mídia não suportado.";
-                }
-                showErrorModal({ title: errorData.title || "Erro ao Salvar", detail: errorData.message || errorText });
+                alert(`Erro ao salvar: ${errorText}`);
             }
         } catch (error) {
-            console.error("Erro de Conexão:", error);
-            showErrorModal({ title: "Erro de Conexão", detail: error.message });
+            alert(`Erro de conexão: ${error.message}`);
         } finally {
-            // 🔹 Reabilita o botão sempre
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = "Salvar Venda";
+                submitBtn.textContent = "Finalizar Venda";
             }
         }
     }
 }
 
-
 function addProductToCart() {
     const productSelect = document.getElementById('product-select');
     const quantityInput = document.getElementById('sale-quantity');
     const priceInput = document.getElementById('sale-unit-price');
+    const breakInput = document.getElementById('sale-break'); 
 
     const productId = productSelect.value;
     const productName = productSelect.options[productSelect.selectedIndex].text;
     const quantity = parseFloat(quantityInput.value);
     const unitPrice = parseFloat(priceInput.value);
+    const breakAmount = parseFloat(breakInput.value);
 
-    if (!productId) { alert('Selecione um produto.'); return; }
-    if (isNaN(quantity) || quantity <= 0) { alert('Insira uma quantidade válida.'); return; }
-    if (isNaN(unitPrice) || unitPrice < 0) { alert('Insira um preço válido.'); return; }
+    if (!productId || isNaN(quantity) || quantity <= 0 || isNaN(unitPrice) || unitPrice < 0 || isNaN(breakAmount) || breakAmount < 0) {
+        alert('Por favor, preencha todos os campos do item com valores válidos.');
+        return;
+    }
 
     const tbody = document.getElementById('saleItemsTbody');
     if (tbody.querySelector(`tr[data-product-id="${productId}"]`)) {
@@ -212,11 +200,13 @@ function addProductToCart() {
     newRow.dataset.productId = productId;
     newRow.dataset.quantity = quantity;
     newRow.dataset.price = unitPrice;
+    newRow.dataset.break = breakAmount;
 
     newRow.innerHTML = `
         <td>${productName}</td>
         <td>${quantity.toFixed(2)}</td>
         <td>${unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        <td>${breakAmount.toFixed(2)}</td>
         <td>${subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         <td><button type="button" class="btn-action btn-delete-item">Remover</button></td>
     `;
@@ -227,6 +217,7 @@ function addProductToCart() {
     productSelect.value = '';
     quantityInput.value = '1.00';
     priceInput.value = '0.00';
+    breakInput.value = '0.00';
     productSelect.focus();
 }
 
@@ -236,12 +227,11 @@ function checkPlaceholder() {
     const hasItems = tbody.querySelector('tr:not(#placeholder-row)');
 
     if (placeholder && hasItems) {
-        placeholder.remove();
-    } else if (!hasItems && !placeholder) {
-        tbody.innerHTML = '<tr id="placeholder-row"><td colspan="5">Nenhum item adicionado.</td></tr>';
+        placeholder.style.display = 'none';
+    } else if (placeholder) {
+        placeholder.style.display = 'table-row';
     }
 }
-
 
 // =======================================================
 // LÓGICA DA TABELA DE HISTÓRICO DE VENDAS
@@ -269,11 +259,12 @@ function initializeHistoryFilters() {
 
 async function fetchAndRenderHistory(page = 1) {
     currentHistoryPage = page;
-    for (const k in originalRowHTML_Sale) delete originalRowHTML_Sale[k];
+    Object.keys(originalRowHTML_Sale).forEach(key => delete originalRowHTML_Sale[key]);
 
     const tableBody = document.getElementById('sales-history-body');
+    const colspan = 13;
     if (!tableBody) return;
-    tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center;">Buscando vendas...</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center;">Buscando vendas...</td></tr>`;
     try {
         const accessToken = localStorage.getItem('accessToken');
         const params = new URLSearchParams({ Page: page, PageSize: 10 });
@@ -291,21 +282,23 @@ async function fetchAndRenderHistory(page = 1) {
         if (!response.ok) throw new Error(`Falha ao buscar vendas (Status: ${response.status})`);
         const paginatedData = await response.json();
 
-        console.log("📥 Dados recebidos da API de Histórico:", paginatedData);
-
         historyItemsCache = paginatedData.items;
         renderHistoryTable(paginatedData.items);
         renderHistoryPagination(paginatedData);
     } catch (error) {
-        tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center; color: red;">Erro: ${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; color: red;">Erro: ${error.message}</td></tr>`;
     }
 }
 
+// =======================================================
+// ✅✅✅ FUNÇÃO ALTERADA ✅✅✅
+// =======================================================
 function renderHistoryTable(items) {
     const tableBody = document.getElementById('sales-history-body');
     tableBody.innerHTML = '';
+    const colspan = 13;
     if (!items || items.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="11" style="text-align: center;">Nenhuma venda encontrada.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center;">Nenhuma venda encontrada.</td></tr>`;
         return;
     }
     items.forEach((item) => {
@@ -313,18 +306,18 @@ function renderHistoryTable(items) {
         const date = new Date(dateStr);
         const formattedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
 
-        // ✅ Usa o 'totalNet' vindo da API para a coluna Total.
-        const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const totalBreak = (item.items || []).reduce((acc, curr) => acc + (curr.break || 0), 0);
         
-        // ✅✅✅ Usa o 'remainingBalance' vindo da API para a nova coluna Saldo Devedor.
+        const formattedTotalBreak = totalBreak.toFixed(2);
+        const formattedDiscount = (item.discount || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const formattedTotal = (item.totalNet || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const formattedBalance = (item.remainingBalance || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
         const statusText = saleStatusMap[item.status ?? item.saleStatus] || 'Desconhecido';
 
         const saleRow = document.createElement('tr');
         saleRow.className = 'sale-row';
         saleRow.id = `row-sale-${item.id}`;
-        // ✅ Linha da tabela atualizada com a nova coluna
+        
         saleRow.innerHTML = `
             <td><button class="expand-btn">+</button></td>
             <td data-field="noteNumber">${item.noteNumber}</td>
@@ -333,12 +326,14 @@ function renderHistoryTable(items) {
             <td data-field="city">${item.city || 'N/A'}</td>
             <td data-field="saleDate">${formattedDate}</td>
             <td data-field="itemsCount">${item.itemsCount || 0}</td>
+            <td data-field="totalBreak">${formattedTotalBreak}</td>
+            <td data-field="discount">${formattedDiscount}</td>
             <td data-field="totalNet">${formattedTotal}</td>
             <td data-field="remainingBalance">${formattedBalance}</td>
             <td data-field="status">${statusText}</td>
             <td class="actions-cell" data-field="actions">
-                <button class="btn-action btn-edit">Editar</button>
-                <button class="btn-action btn-delete">Excluir</button>
+                <button type="button" class="btn-action btn-edit">Editar</button>
+                <button type="button" class="btn-action btn-delete">Excluir</button>
             </td>
         `;
 
@@ -352,35 +347,67 @@ function renderHistoryTable(items) {
         itemsRow.id = `items-${item.id}`;
         itemsRow.style.display = 'none';
 
-        // ✅ Colspan da linha de itens aninhados atualizado para 11
-        let itemsHtml = `<td colspan="11" class="items-container"><table class="nested-table">
-            <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead>
+        // Início da construção do HTML para a linha expansível (itens + pagamentos)
+        let itemsHtml = `<td colspan="${colspan}" class="items-container">`;
+        
+        // Tabela de Itens
+        itemsHtml += `<h4>Itens da Venda</h4><table class="nested-table">
+            <thead><tr><th>Produto</th><th>Quantidade</th><th>Preço Unit.</th><th>Quebra (Qtd)</th><th>Subtotal</th></tr></thead>
             <tbody>`;
         if (item.items && item.items.length > 0) {
             item.items.forEach(saleItem => {
                 let productName = 'Produto desconhecido';
-                // A API retorna o nome do enum como string (ex: "Bands6")
                 if (typeof saleItem.product === 'string' && typeof productEnumNameToIdMap !== 'undefined') {
                     const productId = productEnumNameToIdMap[saleItem.product];
                     productName = productTypeMap[productId] || saleItem.product;
-                } 
-                // Fallback para caso retorne número
-                else if (typeof saleItem.product === 'number') {
+                } else if (typeof saleItem.product === 'number') {
                     productName = productTypeMap[saleItem.product] || 'Produto desconhecido';
                 }
-
+                const formattedBreak = (saleItem.break || 0).toFixed(2);
                 const subtotal = (saleItem.quantity * saleItem.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 itemsHtml += `
                     <tr data-item-id="${saleItem.id}">
                         <td data-item-field="product">${productName}</td>
                         <td data-item-field="quantity">${saleItem.quantity.toFixed(2)}</td>
                         <td data-item-field="unitPrice">${(saleItem.unitPrice || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                        <td data-item-field="break">${formattedBreak}</td>
                         <td>${subtotal}</td>
                     </tr>
                 `;
             });
+        } else {
+             itemsHtml += '<tr><td colspan="5">Nenhum item encontrado.</td></tr>';
         }
-        itemsHtml += '</tbody></table></td>';
+        itemsHtml += '</tbody></table>';
+
+        // NOVO: Tabela de Pagamentos
+        itemsHtml += `<h4 style="margin-top: 15px;">Pagamentos</h4><table class="nested-table">
+            <thead><tr><th>Data Pag.</th><th>Valor Pago</th><th>Método</th></tr></thead>
+            <tbody>`;
+        
+        if (item.payments && item.payments.length > 0) {
+            item.payments.forEach(payment => {
+                const paymentDateStr = payment.paymentDate || payment.date;
+                const pDate = new Date(paymentDateStr);
+                const formattedPaymentDate = new Date(pDate.getTime() + pDate.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
+                
+                const formattedAmount = (payment.amount || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const paymentMethodText = paymentMethodMap[payment.paymentMethod] || 'Desconhecido';
+
+                itemsHtml += `
+                    <tr>
+                        <td>${formattedPaymentDate}</td>
+                        <td>${formattedAmount}</td>
+                        <td>${paymentMethodText}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            itemsHtml += '<tr><td colspan="3">Nenhum pagamento registrado.</td></tr>';
+        }
+        itemsHtml += '</tbody></table>';
+
+        itemsHtml += '</td>'; // Fecha o <td> principal
         itemsRow.innerHTML = itemsHtml;
         tableBody.appendChild(itemsRow);
     });
@@ -413,7 +440,6 @@ function renderHistoryPagination(paginationData) {
 // =======================================================
 // EDIÇÃO E AÇÕES DA TABELA
 // =======================================================
-
 window.toggleItems = (button, saleId) => {
     const itemsRow = document.getElementById(`items-${saleId}`);
     if (itemsRow.style.display === 'none') {
@@ -437,11 +463,11 @@ window.deleteSale = async (saleId) => {
             alert('Venda excluída com sucesso!');
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Excluir" }));
-            showErrorModal(errorData);
+            const errorText = await response.text();
+            alert(`Erro ao excluir: ${errorText}`);
         }
     } catch (error) {
-        showErrorModal({ title: "Erro de Conexão", detail: error.message });
+        alert(`Erro de conexão: ${error.message}`);
     }
 };
 
@@ -455,22 +481,23 @@ window.editSale = (saleId) => {
 
     originalRowHTML_Sale[item.id] = { main: row.innerHTML, items: itemsRow.innerHTML };
 
-    row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="NoteNumber" class="edit-input" value="${item.noteNumber}">`;
-    row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="CustomerName" class="edit-input" value="${item.customerName}">`;
-    row.querySelector('[data-field="customerPhone"]').innerHTML = `<input type="text" name="CustomerPhone" class="edit-input" value="${item.customerPhone || ''}">`;
-    row.querySelector('[data-field="city"]').innerHTML = `<input type="text" name="City" class="edit-input" value="${item.city || ''}">`;
-
+    row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="NoteNumber" class="form-input" value="${item.noteNumber}">`;
+    row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="CustomerName" class="form-input" value="${item.customerName}">`;
+    row.querySelector('[data-field="customerPhone"]').innerHTML = `<input type="text" name="CustomerPhone" class="form-input" value="${item.customerPhone || ''}">`;
+    row.querySelector('[data-field="city"]').innerHTML = `<input type="text" name="City" class="form-input" value="${item.city || ''}">`;
+    row.querySelector('[data-field="discount"]').innerHTML = `<input type="number" step="0.01" name="Discount" class="form-input" value="${item.discount || 0}">`;
+    
     const currentStatus = item.status ?? item.saleStatus ?? 0;
     let statusOptions = '';
     for (const [key, value] of Object.entries(saleStatusMap)) {
         const selected = parseInt(key) === parseInt(currentStatus) ? 'selected' : '';
         statusOptions += `<option value="${key}" ${selected}>${value}</option>`;
     }
-    row.querySelector('[data-field="status"]').innerHTML = `<select name="Status" class="edit-input">${statusOptions}</select>`;
+    row.querySelector('[data-field="status"]').innerHTML = `<select name="Status" class="form-input">${statusOptions}</select>`;
 
     row.querySelector('[data-field="actions"]').innerHTML = `
-        <button class="btn-action btn-save">Salvar</button>
-        <button class="btn-action btn-cancel">Cancelar</button>
+        <button type="button" class="btn-action btn-save">Salvar</button>
+        <button type="button" class="btn-action btn-cancel">Cancelar</button>
     `;
 
     row.querySelector('.btn-save').addEventListener('click', () => saveSaleChanges(item.id));
@@ -478,11 +505,13 @@ window.editSale = (saleId) => {
 
     const itemsTableBody = itemsRow.querySelector('tbody');
     itemsTableBody.querySelectorAll('tr').forEach(itemRow => {
-        const saleItem = item.items.find(i => i.id === itemRow.dataset.itemId);
+        const saleItemId = parseInt(itemRow.dataset.itemId, 10);
+        const saleItem = item.items.find(i => i.id === saleItemId);
         if (!saleItem) return;
 
-        itemRow.querySelector('[data-item-field="quantity"]').innerHTML = `<input type="number" step="0.01" class="edit-input" name="quantity" value="${saleItem.quantity}">`;
-        itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML = `<input type="number" step="0.01" class="edit-input" name="unitPrice" value="${saleItem.unitPrice}">`;
+        itemRow.querySelector('[data-item-field="quantity"]').innerHTML = `<input type="number" step="0.01" class="form-input" name="quantity" value="${saleItem.quantity}">`;
+        itemRow.querySelector('[data-item-field="unitPrice"]').innerHTML = `<input type="number" step="0.01" class="form-input" name="unitPrice" value="${saleItem.unitPrice}">`;
+        itemRow.querySelector('[data-item-field="break"]').innerHTML = `<input type="number" step="0.01" class="form-input" name="break" value="${saleItem.break || 0}">`;
     });
 };
 
@@ -492,90 +521,65 @@ window.saveSaleChanges = async (saleId) => {
     if (!row) return;
 
     const saveBtn = row.querySelector('.btn-save');
-    if (saveBtn) {
-        saveBtn.disabled = true;
-        const originalText = saveBtn.textContent;
-        saveBtn.textContent = "Salvando...";
-    }
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Salvando...";
 
     try {
         const originalItem = historyItemsCache.find(i => i.id === saleId);
         if (!originalItem) {
-            showErrorModal({ title: "Erro", detail: "Dados originais não encontrados." });
-            cancelEditSale(saleId);
-            return;
-        }
-
-        const statusValue = parseInt(row.querySelector('[name="Status"]').value, 10);
-        const originalStatus = originalItem.status ?? originalItem.saleStatus ?? 0;
-
-        const isAttemptingToPay = (originalStatus === 0) && (statusValue === 1 || statusValue === 2);
-        if (isAttemptingToPay && (!originalItem.payments || originalItem.payments.length === 0)) {
-            showErrorModal({
-                title: "Ação Inválida",
-                detail: "Para registrar um pagamento em uma venda pendente, use a tela 'Vendas Pendentes'."
-            });
-            return;
+            throw new Error("Dados originais da venda não encontrados.");
         }
 
         const editedItems = [];
-        itemsRow.querySelectorAll('tbody tr').forEach(itemTr => {
-            const originalSaleItem = originalItem.items.find(i => i.id === itemTr.dataset.itemId);
+        // A tabela de itens é a primeira dentro do container expansível
+        const itemsTableBody = itemsRow.querySelector('table:first-of-type tbody');
+        itemsTableBody.querySelectorAll('tr').forEach(itemTr => {
+            const originalSaleItemId = parseInt(itemTr.dataset.itemId, 10);
+            const originalSaleItem = originalItem.items.find(i => i.id === originalSaleItemId);
             if (originalSaleItem) {
                 editedItems.push({
                     id: originalSaleItem.id,
                     product: originalSaleItem.product,
                     quantity: parseFloat(itemTr.querySelector('[name="quantity"]').value),
-                    unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value)
+                    unitPrice: parseFloat(itemTr.querySelector('[name="unitPrice"]').value),
+                    break: parseFloat(itemTr.querySelector('[name="break"]').value) || 0
                 });
             }
         });
 
-        let saleDateStr = originalItem.saleDate || originalItem.date;
-        if (typeof saleDateStr === 'string' && saleDateStr.includes('T'))
-            saleDateStr = saleDateStr.split('T')[0];
-
-        const validatedPayments = (originalItem.payments || []).map(payment => {
-            let paymentDateStr = payment.paymentDate || payment.date;
-            if (typeof paymentDateStr === 'string' && paymentDateStr.includes('T'))
-                paymentDateStr = paymentDateStr.split('T')[0];
-            return {
-                id: payment.id,
-                paymentDate: paymentDateStr || saleDateStr,
-                amount: payment.amount || 0,
-                paymentMethod: payment.paymentMethod || 0
-            };
-        });
+        const saleDateStr = (originalItem.saleDate || originalItem.date).split('T')[0];
 
         const updatePayload = {
             id: saleId,
-            noteNumber: parseInt(row.querySelector('[name="NoteNumber"]').value, 10) || 0,
-            customerName: row.querySelector('[name="CustomerName"]').value || '',
-            customerPhone: row.querySelector('[name="CustomerPhone"]').value || '',
-            city: row.querySelector('[name="City"]').value || '',
-            status: statusValue,
+            noteNumber: parseInt(row.querySelector('[name="NoteNumber"]').value, 10),
+            customerName: row.querySelector('[name="CustomerName"]').value,
+            customerPhone: row.querySelector('[name="CustomerPhone"]').value,
+            city: row.querySelector('[name="City"]').value,
+            status: parseInt(row.querySelector('[name="Status"]').value, 10),
+            discount: parseFloat(row.querySelector('[name="Discount"]').value) || 0,
+            date: saleDateStr,
             state: originalItem.state || '',
             customerAddress: originalItem.customerAddress || '',
-            discount: originalItem.discount,
-            date: saleDateStr,
+            payments: originalItem.payments || [], // Pagamentos não são editáveis nesta tela
             items: editedItems.map(item => {
                 const productId = (typeof item.product === 'string')
                     ? productEnumNameToIdMap[item.product]
                     : item.product;
-                return { id: item.id, product: productId, quantity: item.quantity, unitPrice: item.unitPrice };
-            }),
-            payments: validatedPayments
+                return { 
+                    id: item.id, 
+                    product: productId, 
+                    quantity: item.quantity, 
+                    unitPrice: item.unitPrice, 
+                    break: item.break 
+                };
+            })
         };
 
         console.log("📤 Enviando payload JSON para Atualização:", updatePayload);
-
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(`${API_BASE_URL}/sales`, {
             method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(updatePayload)
         });
 
@@ -584,13 +588,15 @@ window.saveSaleChanges = async (saleId) => {
             delete originalRowHTML_Sale[saleId];
             fetchAndRenderHistory(currentHistoryPage);
         } else {
-            const errorData = await response.json().catch(() => ({ title: "Erro ao Salvar", detail: "Ocorreu um erro inesperado." }));
-            showErrorModal(errorData);
+            const errorText = await response.text();
+            alert(`Erro ao salvar: ${errorText}`);
+            cancelEditSale(saleId);
         }
     } catch (error) {
-        showErrorModal({ title: "Erro de Conexão", detail: error.message });
+        alert(`Erro de conexão: ${error.message}`);
+        cancelEditSale(saleId);
     } finally {
-        if (saveBtn) {
+        if (row.querySelector('.btn-save')) {
             saveBtn.disabled = false;
             saveBtn.textContent = "Salvar";
         }
