@@ -24,59 +24,56 @@ public class GetProductItemsReportPdfHandler
 
     public async Task<byte[]> Handle(GetProductItemsReportPdfQuery req, CancellationToken ct)
     {
-        // Período padrão (últimos 30 dias) e normalização
+        // ===========================================
+        // 🔹 Período padrão e normalização
+        // ===========================================
         var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
         var startDate = req.StartDate == default ? today.AddDays(-30) : req.StartDate;
         var endDate = req.EndDate == default ? today : req.EndDate;
-        if (endDate < startDate) (startDate, endDate) = (endDate, startDate);
 
-        // Converter datas de São Paulo para UTC
-        var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+        if (endDate < startDate)
+            (startDate, endDate) = (endDate, startDate);
 
-        var localStart = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, tz);
-
-        var localEnd = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Unspecified);
-        var endUtc = TimeZoneInfo.ConvertTimeToUtc(localEnd, tz);
-
-        // Query base (só ativas pelo HasQueryFilter)
+        // ===========================================
+        // 🔹 Query base
+        // ===========================================
         var q = _salesRepository.QueryAllWithIncludes();
 
         // Status
         if (req.Status is not null)
-        {
             q = q.Where(s => s.Status == req.Status);
-        }
 
-        // Forma de pagamento → agora consulta os pagamentos vinculados
+        // Forma de pagamento
         if (req.PaymentMethod.HasValue)
-        {
             q = q.Where(s => s.Payments.Any(p => p.PaymentMethod == req.PaymentMethod.Value));
-        }
 
+        // Cidade
         if (!string.IsNullOrWhiteSpace(req.City))
         {
             var city = req.City.Trim().ToLower();
             q = q.Where(s => s.City != null && s.City.ToLower() == city);
         }
+
+        // Estado (UF)
         if (!string.IsNullOrWhiteSpace(req.State))
         {
             var uf = req.State.Trim().ToLowerInvariant();
             q = q.Where(s => s.State.ToLower() == uf);
         }
 
-        var startDateOnly = DateOnly.FromDateTime(startUtc.Date);
-        var endDateOnly = DateOnly.FromDateTime(endUtc.Date);
+        // ===========================================
+        // 🔹 Filtro de período (sem timezone)
+        // ===========================================
+        q = q.Where(s => s.Date >= startDate && s.Date <= endDate);
 
-        q = q.Where(s => s.Date >= startDateOnly && s.Date <= endDateOnly);
-
-        // Explode itens e calcula RECEITA LÍQUIDA do item (rateio proporcional do desconto da venda)
-        // Explode itens e calcula RECEITA LÍQUIDA do item (rateio proporcional do desconto da venda)
+        // ===========================================
+        // 🔹 Explode itens com rateio proporcional
+        // ===========================================
         var itemsQ = q.SelectMany(s => s.Items.Select(i => new
         {
             i.Product,
             Milheiros = (decimal)i.Quantity,
-            i.Break, // 🔹 NOVO: quebra do item
+            i.Break,
             Subtotal = i.UnitPrice * (decimal)i.Quantity,
             SaleGross = s.TotalGross,
             SaleDiscount = s.Discount
@@ -85,7 +82,7 @@ public class GetProductItemsReportPdfHandler
         {
             x.Product,
             x.Milheiros,
-            x.Break, // 🔹 mantém o campo
+            x.Break,
             NetRevenueRounded = Math.Round(
                 (x.SaleGross > 0m)
                     ? x.Subtotal * (1m - (x.SaleDiscount / x.SaleGross))
@@ -93,11 +90,12 @@ public class GetProductItemsReportPdfHandler
                 2)
         });
 
-
         if (req.Product.HasValue)
             itemsQ = itemsQ.Where(x => x.Product == req.Product.Value);
 
-        // Agrega por produto usando a RECEITA LÍQUIDA
+        // ===========================================
+        // 🔹 Agrupamento
+        // ===========================================
         var grouped = await itemsQ
             .GroupBy(x => x.Product)
             .Select(g => new ProductItemsRow
@@ -105,19 +103,21 @@ public class GetProductItemsReportPdfHandler
                 Product = g.Key,
                 Milheiros = g.Sum(z => z.Milheiros),
                 Revenue = g.Sum(z => z.NetRevenueRounded),
-                Breaks = g.Sum(z => z.Break) // 🔹 soma total de quebras
+                Breaks = g.Sum(z => z.Break)
             })
             .OrderByDescending(r => r.Revenue)
             .ToListAsync(ct);
 
-
-        // Totais
+        // ===========================================
+        // 🔹 Totais
+        // ===========================================
         var totalMilheiros = grouped.Sum(x => x.Milheiros);
         var totalRevenue = Math.Round(grouped.Sum(x => x.Revenue), 2);
-
         var subtitle = req.Product.HasValue ? $"Produto: {req.Product.Value}" : null;
 
-        // Hard-code da empresa
+        // ===========================================
+        // 🔹 Dados da empresa
+        // ===========================================
         var company = new CompanyProfile
         {
             Name = "CERÂMICA CANELAS",
@@ -134,7 +134,9 @@ public class GetProductItemsReportPdfHandler
         string? logoPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, LogoRelative));
         if (!File.Exists(logoPath)) logoPath = null;
 
-        // Helpers para descrever filtros
+        // ===========================================
+        // 🔹 Descrição dos filtros
+        // ===========================================
         string GetStatusDescription(SaleStatus? status) =>
             status switch
             {
@@ -157,11 +159,12 @@ public class GetProductItemsReportPdfHandler
             new("Cidade", string.IsNullOrWhiteSpace(req.City) ? "Todas" : req.City!.Trim()),
             new("UF", string.IsNullOrWhiteSpace(req.State) ? "Todas" : req.State!.Trim().ToUpperInvariant()),
             new("Produto", req.Product.HasValue ? req.Product.Value.GetDescription() : "Todos"),
-            new("Janela UTC aplicada", $"{startUtc:yyyy-MM-dd HH:mm:ss} → {endUtc:yyyy-MM-dd HH:mm:ss}"),
             new("Gerado em", DateTime.Now.ToString("dd/MM/yyyy HH:mm"))
         };
 
-        // Gera PDF
+        // ===========================================
+        // 🔹 Gera PDF
+        // ===========================================
         return _pdf.BuildProductItemsReportPdf(
             company: company,
             period: (startDate, endDate),

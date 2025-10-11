@@ -17,21 +17,19 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
 
         public async Task<PagedResult<ProductItemsRowDto>> Handle(PagedRequestProductItems req, CancellationToken ct)
         {
+            // ===============================
+            // 🔹 Garantir datas válidas
+            // ===============================
             var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
             var startDate = req.StartDate == default ? today.AddDays(-30) : req.StartDate;
             var endDate = req.EndDate == default ? today : req.EndDate;
-            if (endDate < startDate) (startDate, endDate) = (endDate, startDate);
 
-            // Converter datas de São Paulo para UTC
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+            if (endDate < startDate)
+                (startDate, endDate) = (endDate, startDate);
 
-            var localStart = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-            var startUtc = TimeZoneInfo.ConvertTimeToUtc(localStart, tz);
-
-            var localEnd = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Unspecified);
-            var endUtc = TimeZoneInfo.ConvertTimeToUtc(localEnd, tz);
-
-            // Query base
+            // ===============================
+            // 🔹 Query base
+            // ===============================
             var q = _salesRepository.QueryAllWithIncludes();
 
             if (req.Status.HasValue)
@@ -47,17 +45,18 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             if (!string.IsNullOrWhiteSpace(req.State))
                 q = q.Where(s => s.State.ToLower() == req.State.ToLower());
 
-            // Período
-            var startDateOnly = DateOnly.FromDateTime(startUtc.Date);
-            var endDateOnly = DateOnly.FromDateTime(endUtc.Date);
+            // ===============================
+            // 🔹 Filtro de período (DateOnly)
+            // ===============================
+            q = q.Where(s => s.Date >= startDate && s.Date <= endDate);
 
-            q = q.Where(s => s.Date >= startDateOnly && s.Date <= endDateOnly);
-
-            // Explode itens com rateio proporcional do desconto da venda
+            // ===============================
+            // 🔹 Explode itens com rateio proporcional do desconto
+            // ===============================
             var itemsQ = q.SelectMany(s => s.Items.Select(i => new
             {
                 i.Product,
-                i.Break, // 🔹 agora inclui o campo de quebra
+                i.Break, // 🔹 campo de quebra
                 Milheiros = (decimal)i.Quantity,
                 Subtotal = i.UnitPrice * (decimal)i.Quantity,
                 SaleGross = s.TotalGross,
@@ -78,7 +77,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
             if (req.Product.HasValue)
                 itemsQ = itemsQ.Where(x => x.Product == req.Product.Value);
 
-            // Agrupa e soma as quebras reais
+            // ===============================
+            // 🔹 Agrupamento e somas
+            // ===============================
             var grouped = await itemsQ
                 .GroupBy(x => x.Product)
                 .Select(g => new ProductItemsRowDto
@@ -86,7 +87,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                     Product = g.Key,
                     Milheiros = g.Sum(z => z.Milheiros),
                     Revenue = g.Sum(z => z.NetRevenueRounded),
-                    Breaks = g.Sum(z => z.Break) // ✅ soma total das quebras
+                    Breaks = g.Sum(z => z.Break)
                 })
                 .OrderByDescending(r => r.Revenue)
                 .ToListAsync(ct);
@@ -97,6 +98,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsRepo
                 .Take(req.PageSize)
                 .ToList();
 
+            // ===============================
+            // 🔹 Retorno final
+            // ===============================
             return new PagedResult<ProductItemsRowDto>
             {
                 Items = paged,
