@@ -4,6 +4,7 @@ using CeramicaCanelas.Application.Features.Sales.Commands.PaySalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand;
 using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.GetProductItemsReportPdfQuery;
 using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.PagedRequestProductItems;
+using CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQuery;
 using CeramicaCanelas.Application.Features.Sales.Queries.GetSalesDashboardIndicatorsQueryHandler;
 using CeramicaCanelas.Application.Features.Sales.Queries.Pages;
 using CeramicaCanelas.Application.Services.Reports;
@@ -117,6 +118,16 @@ namespace CeramicaCanelas.WebApi.Controllers
             var result = await _mediator.Send(query, cancellationToken);
             return Ok(result);
         }
+
+        [Authorize(Roles = "Sales,Financial,Admin")]
+
+        [HttpGet("{id}/receipt")]
+        public async Task<IActionResult> GetSaleReceipt(Guid id)
+        {
+            var pdf = await _mediator.Send(new GetSaleReceiptPdfQuery(id));
+            return File(pdf, "application/pdf", $"Recibo-{id}.pdf");
+        }
+
 
 
 
