@@ -333,16 +333,17 @@ namespace CeramicaCanelas.Infrastructure.Reports
         }
 
         public byte[] BuildTrialBalancePdf(
-    CompanyProfile company,
-    (DateOnly start, DateOnly end) period,
-    IEnumerable<TrialBalanceAccountRow> accounts,
-    IEnumerable<TrialBalanceGroupRow> groups,
-    IEnumerable<TrialBalanceExtractRow> extracts,
-    decimal totalIncomeOverall,
-    decimal totalExpenseOverall,
-    decimal totalExtractOverall, // ✅ novo parâmetro
-    string? logoPath = null,
-    IEnumerable<TrialBalanceFilter>? filters = null)
+            CompanyProfile company,
+            (DateOnly start, DateOnly end) period,
+            IEnumerable<TrialBalanceAccountRow> accounts,
+            IEnumerable<TrialBalanceGroupRow> groups,
+            IEnumerable<TrialBalanceExtractRow> extracts,
+            decimal totalIncomeOverall,
+            decimal totalExpenseOverall,
+            decimal totalExtractOverall,
+            IEnumerable<TrialBalanceAccountRow>? expenseAccounts = null, // ✅ incluído aqui
+            string? logoPath = null,
+            IEnumerable<TrialBalanceFilter>? filters = null)
         {
             var culture = new CultureInfo("pt-BR");
             var primaryColor = Colors.Orange;
@@ -385,11 +386,10 @@ namespace CeramicaCanelas.Infrastructure.Reports
             title.Format.Font.Size = 15;
             title.Format.Font.Bold = true;
             title.Format.Alignment = ParagraphAlignment.Center;
+
             section.AddParagraph($"Período: {period.start:dd/MM/yyyy} a {period.end:dd/MM/yyyy}")
                    .Format.Alignment = ParagraphAlignment.Center;
-
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(10);
-
 
             // -------------------------------
             // Resumo Financeiro (3 quadrados)
@@ -444,7 +444,6 @@ namespace CeramicaCanelas.Infrastructure.Reports
 
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(15);
 
-
             // -------------------------------
             // Filtros
             // -------------------------------
@@ -454,9 +453,8 @@ namespace CeramicaCanelas.Infrastructure.Reports
                 filtersTitle.Format.Font.Bold = true;
                 filtersTitle.Format.Font.Size = 11;
                 foreach (var f in filters)
-                {
                     section.AddParagraph($"• {f.Label}: {f.Value}").Format.Font.Size = 9;
-                }
+
                 section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(10);
             }
 
@@ -490,7 +488,46 @@ namespace CeramicaCanelas.Infrastructure.Reports
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
 
             // -------------------------------
-            // Saídas
+            // Saídas por Conta / Banco ✅ (novo)
+            // -------------------------------
+            if (expenseAccounts != null && expenseAccounts.Any())
+            {
+                section.AddParagraph("💸 SAÍDAS POR CONTA / BANCO").Format.Font.Bold = true;
+                section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(4);
+
+                var tableExpenseAccounts = section.AddTable();
+                tableExpenseAccounts.Borders.Width = 0.5;
+                tableExpenseAccounts.AddColumn(Unit.FromCentimeter(10));
+                tableExpenseAccounts.AddColumn(Unit.FromCentimeter(5));
+
+                var headerEA = tableExpenseAccounts.AddRow();
+                headerEA.Shading.Color = Colors.Black;
+                headerEA.Format.Font.Color = Colors.White;
+                headerEA.Format.Font.Bold = true;
+                headerEA.Cells[0].AddParagraph("Conta / Banco");
+                headerEA.Cells[1].AddParagraph("Saídas (R$)").Format.Alignment = ParagraphAlignment.Right;
+
+                foreach (var a in expenseAccounts)
+                {
+                    var r = tableExpenseAccounts.AddRow();
+                    r.Cells[0].AddParagraph(a.AccountName);
+                    var val = r.Cells[1].AddParagraph(a.TotalIncome.ToString("N2", culture));
+                    val.Format.Font.Color = Colors.DarkRed;
+                    val.Format.Alignment = ParagraphAlignment.Right;
+                }
+
+                var totalEA = tableExpenseAccounts.AddRow();
+                totalEA.Shading.Color = Colors.LightYellow;
+                totalEA.Cells[0].AddParagraph("💸 Total Geral de Saídas por Conta");
+                var totalVal = totalEA.Cells[1].AddParagraph(expenseAccounts.Sum(a => a.TotalIncome).ToString("N2", culture));
+                totalVal.Format.Font.Bold = true;
+                totalVal.Format.Alignment = ParagraphAlignment.Right;
+
+                section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
+            }
+
+            // -------------------------------
+            // Saídas por Grupo
             // -------------------------------
             var tableGroups = section.AddTable();
             tableGroups.Borders.Width = 0.5;
@@ -504,16 +541,13 @@ namespace CeramicaCanelas.Infrastructure.Reports
             headerG.Cells[0].AddParagraph("Grupo / Categoria");
             headerG.Cells[1].AddParagraph("Saídas (R$)").Format.Alignment = ParagraphAlignment.Right;
 
-            // Percorre os grupos de despesas
             foreach (var g in groups)
             {
-                // Cabeçalho do grupo
                 var groupRow = tableGroups.AddRow();
                 groupRow.Shading.Color = Colors.LightGray;
                 groupRow.Cells[0].AddParagraph($"📂 {g.GroupName}");
                 groupRow.Cells[1].AddParagraph("").Format.Alignment = ParagraphAlignment.Right;
 
-                // Linhas das categorias
                 foreach (var c in g.Categories)
                 {
                     var catRow = tableGroups.AddRow();
@@ -521,7 +555,6 @@ namespace CeramicaCanelas.Infrastructure.Reports
                     catRow.Cells[1].AddParagraph(c.TotalExpense.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
                 }
 
-                // Total do grupo (exibido ao final das categorias)
                 var totalGroupRow = tableGroups.AddRow();
                 totalGroupRow.Shading.Color = Colors.LightYellow;
                 totalGroupRow.Borders.Top.Width = 1;
@@ -559,7 +592,6 @@ namespace CeramicaCanelas.Infrastructure.Reports
 
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
 
-
             // -------------------------------
             // Extratos Bancários
             // -------------------------------
@@ -590,7 +622,6 @@ namespace CeramicaCanelas.Infrastructure.Reports
                 r.Cells[3].Format.Alignment = ParagraphAlignment.Right;
             }
 
-            // ✅ Total geral dos extratos
             var totalExtractRow = tableExtracts.AddRow();
             totalExtractRow.Shading.Color = Colors.LightYellow;
             totalExtractRow.Cells[0].AddParagraph("🏦 Saldo Geral dos Extratos");
@@ -620,6 +651,7 @@ namespace CeramicaCanelas.Infrastructure.Reports
             renderer.PdfDocument.Save(ms, false);
             return ms.ToArray();
         }
+
 
     }
 }
