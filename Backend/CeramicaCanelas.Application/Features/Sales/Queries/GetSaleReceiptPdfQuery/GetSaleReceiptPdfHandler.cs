@@ -85,7 +85,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             table.Borders.Width = 0;
 
             // 🔹 Ajuste das colunas (evita corte)
-            table.AddColumn(PdfUnit.FromMillimeter(27)); // Produto
+            table.AddColumn(PdfUnit.FromMillimeter(20)); // Produto
             table.AddColumn(PdfUnit.FromMillimeter(10)); // Qtd
             table.AddColumn(PdfUnit.FromMillimeter(12)); // Unit
             table.AddColumn(PdfUnit.FromMillimeter(12)); // Total
@@ -117,9 +117,14 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 row.Cells[0].Format.Alignment = ParagraphAlignment.Left;
                 row.Cells[0].Format.Font.Size = 8;
 
-                row.Cells[1].AddParagraph(item.Quantity.ToString("N0", culture)).Format.Alignment = ParagraphAlignment.Right;
-                row.Cells[2].AddParagraph(item.UnitPrice.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
-                row.Cells[3].AddParagraph((item.UnitPrice * item.Quantity).ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+                // 🔹 Exibir quantidade em milheiros (10 = 10.000)
+                var qtdDisplay = item.Quantity * 1000;
+                var totalItem = item.UnitPrice * item.Quantity; // cálculo normal, pois já é milheiro
+
+                row.Cells[1].AddParagraph(qtdDisplay.ToString("N0", culture)).Format.Alignment = ParagraphAlignment.Left;
+                row.Cells[2].AddParagraph(item.UnitPrice.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Left;
+                row.Cells[3].AddParagraph(totalItem.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Left;
+
             }
 
             section.AddParagraph().Format.SpaceAfter = PdfUnit.FromPoint(4);
@@ -152,6 +157,16 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 payTitle.Format.Font.Bold = true;
                 payTitle.Format.SpaceAfter = PdfUnit.FromPoint(3);
 
+                // 🔹 Exibe o status da venda com descrição amigável (usando EnumExtensions)
+                string statusDesc = (sale.Status as Enum)?.GetDescription()
+                                    ?? sale.Status.ToString();
+
+                var statusP = section.AddParagraph($"Status da Venda: {statusDesc}");
+                statusP.Format.Font.Size = 8;
+                statusP.Format.Font.Bold = true;
+                statusP.Format.SpaceAfter = PdfUnit.FromPoint(4);
+
+                // 🔹 Lista dos pagamentos realizados
                 foreach (var p in sale.Payments)
                 {
                     var line = section.AddParagraph($"{p.PaymentMethod} - {p.PaymentDate:dd/MM/yyyy} - R$ {p.Amount:N2}");
@@ -159,8 +174,10 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 }
 
                 var totalPago = sale.Payments.Sum(p => p.Amount);
-                var restante = total - totalPago;
+                var restante = sale.Items.Sum(i => i.UnitPrice * i.Quantity) - sale.Discount - totalPago;
+
                 section.AddParagraph().Format.SpaceAfter = PdfUnit.FromPoint(3);
+
                 var pagoP = section.AddParagraph($"Pago: R$ {totalPago:N2}");
                 pagoP.Format.Alignment = ParagraphAlignment.Right;
 
@@ -170,22 +187,38 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                     pendP.Format.Alignment = ParagraphAlignment.Right;
                 }
             }
+            else
+            {
+                // Caso não haja pagamentos, ainda mostramos o status
+                string statusDesc = (sale.Status as Enum)?.GetDescription()
+                                    ?? sale.Status.ToString();
+
+                var statusOnly = section.AddParagraph($"Status da Venda: {statusDesc}");
+                statusOnly.Format.Font.Size = 8;
+                statusOnly.Format.Font.Bold = true;
+                statusOnly.Format.SpaceAfter = PdfUnit.FromPoint(6);
+            }
+
 
             // ==============================
             // 🔸 Espaço para assinatura
             // ==============================
-            section.AddParagraph().Format.SpaceAfter = PdfUnit.FromPoint(20);
+
+            // 🔹 Aumenta o espaço total antes e depois
+            section.AddParagraph().Format.SpaceAfter = PdfUnit.FromPoint(40);
+
             var signLine = section.AddParagraph("_________________________________________");
             signLine.Format.Alignment = ParagraphAlignment.Center;
-            signLine.Format.SpaceBefore = PdfUnit.FromPoint(10);
+            signLine.Format.SpaceBefore = PdfUnit.FromPoint(20);
+            signLine.Format.SpaceAfter = PdfUnit.FromPoint(8);
 
             var signText = section.AddParagraph("Assinatura do Cliente");
             signText.Format.Alignment = ParagraphAlignment.Center;
             signText.Format.Font.Size = 8;
-            signText.Format.SpaceAfter = PdfUnit.FromPoint(15);
+            signText.Format.SpaceAfter = PdfUnit.FromPoint(25);
 
             // ==============================
-            // 🔸 Rodapé
+            // 🔸 Rodapé 
             // ==============================
             section.AddParagraph(new string('-', 40)).Format.Alignment = ParagraphAlignment.Center;
             var footer = section.AddParagraph("OBRIGADO PELA PREFERÊNCIA!");
@@ -202,6 +235,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             using var ms = new MemoryStream();
             renderer.PdfDocument.Save(ms, false);
             return ms.ToArray();
+
         }
     }
 }
