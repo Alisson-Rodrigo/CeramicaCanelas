@@ -157,6 +157,31 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
             var totalExpenseOverall = groupedExpenses.Sum(g => g.GroupExpense);
 
             // ============================
+            // 🔹 2️⃣b SAÍDAS POR CONTA
+            // ============================
+            var expenseLaunchesByAccount = _launchRepository.QueryAllWithIncludes()
+                .Where(l => l.Status == PaymentStatus.Paid && l.Type == LaunchType.Expense);
+
+            if (req.StartDate.HasValue)
+                expenseLaunchesByAccount = expenseLaunchesByAccount.Where(l => l.LaunchDate >= req.StartDate.Value);
+            if (req.EndDate.HasValue)
+                expenseLaunchesByAccount = expenseLaunchesByAccount.Where(l => l.LaunchDate <= req.EndDate.Value);
+            if (req.PaymentMethod.HasValue)
+                expenseLaunchesByAccount = expenseLaunchesByAccount.Where(l => l.PaymentMethod == req.PaymentMethod.Value);
+
+            var expenseAccounts = await expenseLaunchesByAccount
+                .GroupBy(l => l.PaymentMethod)
+                .Select(g => new
+                {
+                    AccountName = g.Key.ToString(),
+                    TotalExpense = g.Sum(x => x.Amount)
+                })
+                .ToListAsync(ct);
+
+            var totalExpenseByAccountOverall = expenseAccounts.Sum(a => a.TotalExpense);
+
+
+            // ============================
             // 🔹 3️⃣ Prepara dados PDF
             // ============================
 
@@ -222,15 +247,22 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
             return _pdf.BuildTrialBalancePdf(
                 company: company,
                 period: (startDate, endDate),
-                accounts: accountRows,
-                groups: groupRows,
-                extracts: extractRows,
+                accounts: accountRows,                         // Entradas
+                groups: groupRows,                             // Saídas por grupo
+                extracts: extractRows,                         // Extratos detalhados
                 totalIncomeOverall: totalIncomeOverall,
                 totalExpenseOverall: totalExpenseOverall,
-                totalExtractOverall: totalExtractOverall, // ✅ novo total geral dos extratos
+                totalExtractOverall: totalExtractOverall,
+                expenseAccounts: expenseAccounts.Select(a => new IPdfReportService.TrialBalanceAccountRow
+                {
+                    AccountName = a.AccountName,
+                    TotalIncome = a.TotalExpense
+                }).ToList(),                                   // ✅ Saídas por conta
                 logoPath: logoPath,
                 filters: filterRows
             );
+
+
 
         }
     }

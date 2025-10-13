@@ -27,18 +27,23 @@ namespace CeramicaCanelas.Application.Contracts.Application.Services
         // ======================================================
         // 🔹 RELATÓRIO DE BALANCETE DE VERIFICAÇÃO
         // ======================================================
-        byte[] BuildTrialBalancePdf(
+        public byte[] BuildTrialBalancePdf(
             CompanyProfile company,
             (DateOnly start, DateOnly end) period,
-            IEnumerable<TrialBalanceAccountRow> accounts,   // Entradas por conta
-            IEnumerable<TrialBalanceGroupRow> groups,       // Saídas por grupo/categoria
-            IEnumerable<TrialBalanceExtractRow> extracts,   // Extratos detalhados
-            decimal totalIncomeOverall,                     // Total de entradas (extratos + lançamentos)
-            decimal totalExpenseOverall,                    // Total de saídas (lançamentos)
-            decimal totalExtractOverall,                    // ✅ Total geral dos extratos (saldo líquido)
+            IEnumerable<TrialBalanceAccountRow> accounts,
+            IEnumerable<TrialBalanceGroupRow> groups,
+            IEnumerable<TrialBalanceExtractRow> extracts,
+            decimal totalIncomeOverall,
+            decimal totalExpenseOverall,
+            decimal totalExtractOverall,
+            IEnumerable<TrialBalanceAccountRow>? expenseAccounts = null, // 👈 ADICIONE ESTA LINHA
             string? logoPath = null,
-            IEnumerable<TrialBalanceFilter>? filters = null
-        );
+            IEnumerable<TrialBalanceFilter>? filters = null); 
+
+
+
+
+
 
         // ======================================================
         // 🔸 DTOs auxiliares para o PDF do Balancete
