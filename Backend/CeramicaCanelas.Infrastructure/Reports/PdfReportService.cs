@@ -390,6 +390,61 @@ namespace CeramicaCanelas.Infrastructure.Reports
 
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(10);
 
+
+            // -------------------------------
+            // Resumo Financeiro (3 quadrados)
+            // -------------------------------
+            var resumoTable = section.AddTable();
+            resumoTable.Borders.Width = 0;
+            resumoTable.AddColumn(Unit.FromCentimeter(5.5));
+            resumoTable.AddColumn(Unit.FromCentimeter(5.5));
+            resumoTable.AddColumn(Unit.FromCentimeter(6));
+
+            var resumoRow = resumoTable.AddRow();
+            resumoRow.Height = Unit.FromCentimeter(2.2);
+            resumoRow.VerticalAlignment = VerticalAlignment.Center;
+
+            // --- Entrada ---
+            var cellEntrada = resumoRow.Cells[0];
+            cellEntrada.Shading.Color = Colors.LightGreen;
+            cellEntrada.Borders.Width = 0.5;
+            cellEntrada.Borders.Color = Colors.Gray;
+            cellEntrada.Format.Alignment = ParagraphAlignment.Center;
+            cellEntrada.AddParagraph("💰 Entradas").Format.Font.Bold = true;
+            var valEntrada = cellEntrada.AddParagraph(totalIncomeOverall.ToString("C2", culture));
+            valEntrada.Format.Font.Size = 12;
+            valEntrada.Format.Font.Color = Colors.DarkGreen;
+            valEntrada.Format.Font.Bold = true;
+
+            // --- Saída ---
+            var cellSaida = resumoRow.Cells[1];
+            cellSaida.Shading.Color = Colors.LightSalmon;
+            cellSaida.Borders.Width = 0.5;
+            cellSaida.Borders.Color = Colors.Gray;
+            cellSaida.Format.Alignment = ParagraphAlignment.Center;
+            cellSaida.AddParagraph("💸 Saídas").Format.Font.Bold = true;
+            var valSaida = cellSaida.AddParagraph(totalExpenseOverall.ToString("C2", culture));
+            valSaida.Format.Font.Size = 12;
+            valSaida.Format.Font.Color = Colors.DarkRed;
+            valSaida.Format.Font.Bold = true;
+
+            // --- Saldo ---
+            var cellSaldo = resumoRow.Cells[2];
+            cellSaldo.Shading.Color = Colors.LightYellow;
+            cellSaldo.Borders.Width = 0.5;
+            cellSaldo.Borders.Color = Colors.Gray;
+            cellSaldo.Format.Alignment = ParagraphAlignment.Center;
+            cellSaldo.AddParagraph("📊 Saldo do Período").Format.Font.Bold = true;
+
+            decimal saldoPeriodo = totalIncomeOverall - totalExpenseOverall;
+            var valSaldo = cellSaldo.AddParagraph(saldoPeriodo.ToString("C2", culture));
+            valSaldo.Format.Font.Size = 12;
+            valSaldo.Format.Font.Bold = true;
+            valSaldo.Format.Font.Color = saldoPeriodo >= 0 ? Colors.DarkGreen : Colors.Red;
+
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(15);
+
+
             // -------------------------------
             // Filtros
             // -------------------------------
@@ -449,27 +504,61 @@ namespace CeramicaCanelas.Infrastructure.Reports
             headerG.Cells[0].AddParagraph("Grupo / Categoria");
             headerG.Cells[1].AddParagraph("Saídas (R$)").Format.Alignment = ParagraphAlignment.Right;
 
+            // Percorre os grupos de despesas
             foreach (var g in groups)
             {
+                // Cabeçalho do grupo
                 var groupRow = tableGroups.AddRow();
                 groupRow.Shading.Color = Colors.LightGray;
                 groupRow.Cells[0].AddParagraph($"📂 {g.GroupName}");
-                groupRow.Cells[1].AddParagraph(g.GroupExpense.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+                groupRow.Cells[1].AddParagraph("").Format.Alignment = ParagraphAlignment.Right;
 
+                // Linhas das categorias
                 foreach (var c in g.Categories)
                 {
                     var catRow = tableGroups.AddRow();
                     catRow.Cells[0].AddParagraph($"   └ {c.CategoryName}");
                     catRow.Cells[1].AddParagraph(c.TotalExpense.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
                 }
+
+                // Total do grupo (exibido ao final das categorias)
+                var totalGroupRow = tableGroups.AddRow();
+                totalGroupRow.Shading.Color = Colors.LightYellow;
+                totalGroupRow.Borders.Top.Width = 1;
+                totalGroupRow.Borders.Top.Color = primaryColor;
+                totalGroupRow.TopPadding = Unit.FromPoint(4);
+                totalGroupRow.BottomPadding = Unit.FromPoint(4);
+                totalGroupRow.VerticalAlignment = VerticalAlignment.Center;
+
+                var totalLabel = totalGroupRow.Cells[0].AddParagraph($"📊 Total do Grupo: {g.GroupName}");
+                totalLabel.Format.Font.Bold = true;
+                totalLabel.Format.Font.Size = 10;
+
+                var totalValue = totalGroupRow.Cells[1].AddParagraph(g.GroupExpense.ToString("N2", culture));
+                totalValue.Format.Font.Bold = true;
+                totalValue.Format.Font.Size = 10;
+                totalValue.Format.Alignment = ParagraphAlignment.Right;
             }
 
             var totalG = tableGroups.AddRow();
             totalG.Shading.Color = Colors.LightYellow;
-            totalG.Cells[0].AddParagraph("💸 Total Geral de Saídas");
-            totalG.Cells[1].AddParagraph(totalExpenseOverall.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
+            totalG.Borders.Top.Width = 2;
+            totalG.Borders.Top.Color = primaryColor;
+            totalG.TopPadding = Unit.FromPoint(6);
+            totalG.BottomPadding = Unit.FromPoint(6);
+            totalG.VerticalAlignment = VerticalAlignment.Center;
+
+            var totalLabelG = totalG.Cells[0].AddParagraph("💸 Total Geral de Saídas");
+            totalLabelG.Format.Font.Bold = true;
+            totalLabelG.Format.Font.Size = 11;
+
+            var totalValueG = totalG.Cells[1].AddParagraph(totalExpenseOverall.ToString("N2", culture));
+            totalValueG.Format.Font.Bold = true;
+            totalValueG.Format.Font.Size = 11;
+            totalValueG.Format.Alignment = ParagraphAlignment.Right;
 
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
+
 
             // -------------------------------
             // Extratos Bancários
