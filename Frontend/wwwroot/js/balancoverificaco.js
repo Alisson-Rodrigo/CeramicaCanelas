@@ -1,14 +1,6 @@
 console.log('Script js/dashboard-financeiro.js DEFINIDO.');
 
 // =======================================================
-// MAPAS E VARIÁVEIS GLOBAIS
-// (Defina seus maps como paymentMethodMap e statusMap aqui, se não estiverem em outro arquivo)
-// let paymentMethodMap = { 1: 'Dinheiro', 2: 'Cartão de Crédito', ... };
-// let statusMap = { 1: 'Pendente', 2: 'Pago', ... };
-// let groupsCache = [];
-// let categoriesCache = [];
-
-// =======================================================
 // INICIALIZAÇÃO
 // =======================================================
 function initDynamicForm() {
@@ -27,11 +19,25 @@ function initializeFilters() {
     document.getElementById('clearFiltersBtn')?.addEventListener('click', clearFilters);
     document.getElementById('generatePdfButton')?.addEventListener('click', generatePdfReport);
 
-    // populateSelect(document.getElementById('payment-method-filter'), paymentMethodMap, 'Todos os Métodos');
-    // populateSelect(document.getElementById('status-filter'), statusMap, 'Todos os Status');
+    // Popula os seletores de método de pagamento e status
+    populateSelect(document.getElementById('payment-method-filter'), paymentMethodMap, 'Todos os Métodos');
+    populateSelect(document.getElementById('status-filter'), statusMap, 'Todos os Status');
 
     fetchAndPopulateGroups();
     fetchAndPopulateCategories();
+    
+    // Listener para filtro de grupo - atualiza categorias
+    const groupFilter = document.getElementById('group-filter');
+    if (groupFilter) {
+        groupFilter.addEventListener('change', function() {
+            const selectedGroupId = this.value;
+            if (selectedGroupId) {
+                fetchAndPopulateCategories(selectedGroupId);
+            } else {
+                fetchAndPopulateCategories();
+            }
+        });
+    }
 }
 
 function clearFilters() {
@@ -42,6 +48,9 @@ function clearFilters() {
     document.getElementById('payment-method-filter').value = '';
     document.getElementById('status-filter').value = '';
     document.getElementById('search-input').value = '';
+    
+    // Recarrega todas as categorias quando limpar o filtro
+    fetchAndPopulateCategories();
     fetchReportData();
 }
 
@@ -62,10 +71,16 @@ async function fetchAndPopulateGroups() {
     }
 }
 
-async function fetchAndPopulateCategories() {
+async function fetchAndPopulateCategories(groupId = null) {
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const url = `${API_BASE_URL}/financial/launch-categories/paged`;
+        let url = `${API_BASE_URL}/financial/launch-categories/paged`;
+        
+        // Se houver groupId, filtra as categorias por grupo
+        if (groupId) {
+            url += `?GroupId=${groupId}`;
+        }
+        
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!response.ok) throw new Error('Falha ao buscar categorias');
         const data = await response.json();
@@ -94,6 +109,8 @@ async function fetchReportData() {
         if (!accessToken) throw new Error("Não autenticado.");
 
         const params = new URLSearchParams();
+        
+        // Captura os valores dos filtros
         const startDate = document.getElementById('start-date')?.value;
         const endDate = document.getElementById('end-date')?.value;
         const groupId = document.getElementById('group-filter')?.value;
@@ -102,25 +119,68 @@ async function fetchReportData() {
         const status = document.getElementById('status-filter')?.value;
         const search = document.getElementById('search-input')?.value;
 
-        if (startDate) params.append('StartDate', startDate);
-        if (endDate) params.append('EndDate', endDate);
-        if (groupId) params.append('GroupId', groupId);
-        if (categoryId) params.append('CategoryId', categoryId);
-        if (paymentMethod) params.append('PaymentMethod', paymentMethod);
-        if (status) params.append('Status', status);
-        if (search) params.append('Search', search);
+        // Adiciona apenas os parâmetros que possuem valor
+        if (startDate && startDate.trim() !== '') {
+            params.append('StartDate', startDate);
+        }
+        if (endDate && endDate.trim() !== '') {
+            params.append('EndDate', endDate);
+        }
+        if (groupId && groupId.trim() !== '') {
+            params.append('GroupId', groupId);
+        }
+        if (categoryId && categoryId.trim() !== '') {
+            params.append('CategoryId', categoryId);
+        }
+        if (paymentMethod && paymentMethod.trim() !== '') {
+            params.append('PaymentMethod', parseInt(paymentMethod, 10));
+        }
+        if (status && status.trim() !== '') {
+            params.append('Status', parseInt(status, 10));
+        }
+        if (search && search.trim() !== '') {
+            params.append('Search', search.trim());
+        }
 
         const url = `${API_BASE_URL}/financial/dashboard-financial/with-extract?${params.toString()}`;
-        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
-        if (!response.ok) throw new Error(`Falha ao buscar dados (Status: ${response.status})`);
+        console.log('🔍 URL da requisição:', url);
+        console.log('📋 Filtros aplicados:', {
+            startDate,
+            endDate,
+            groupId,
+            categoryId,
+            paymentMethod,
+            status,
+            search
+        });
+        
+        const response = await fetch(url, { 
+            headers: { 'Authorization': `Bearer ${accessToken}` } 
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.message || `Falha ao buscar dados (Status: ${response.status})`);
+        }
 
         const data = await response.json();
+        console.log('✅ Dados recebidos da API:', data);
 
-        updateDashboardUI(data);
+        // Aplica filtros adicionais no frontend se necessário
+        const filteredData = applyClientSideFilters(data, {
+            startDate,
+            endDate,
+            groupId,
+            categoryId,
+            search
+        });
+
+        updateDashboardUI(filteredData);
 
         if (resultsSection) resultsSection.style.display = 'block';
 
     } catch (error) {
+        console.error('❌ Erro ao buscar dados:', error);
         if (typeof showErrorModal === 'function') {
             showErrorModal({ title: "Erro ao Gerar Relatório", detail: error.message });
         } else {
@@ -129,6 +189,121 @@ async function fetchReportData() {
     } finally {
         if (loadingDiv) loadingDiv.style.display = 'none';
     }
+}
+
+/**
+ * Aplica filtros adicionais no lado do cliente para garantir consistência
+ */
+function applyClientSideFilters(data, filters) {
+    const { startDate, endDate, groupId, categoryId, search } = filters;
+    
+    // Clona os dados para não modificar o original
+    const filteredData = { ...data };
+    
+    // Verifica se há filtros ativos
+    const hasActiveFilters = Boolean(
+        (startDate && startDate.trim()) || 
+        (endDate && endDate.trim()) || 
+        (groupId && groupId.trim()) || 
+        (categoryId && categoryId.trim()) || 
+        (search && search.trim())
+    );
+    
+    console.log('🔍 Filtros ativos:', {
+        hasActiveFilters,
+        startDate,
+        endDate,
+        groupId,
+        categoryId,
+        search
+    });
+    
+    // Filtra grupos se necessário
+    if (groupId && groupId.trim() && data.groups) {
+        filteredData.groups = data.groups.filter(group => {
+            // Assumindo que a API pode retornar o groupId
+            // Se não houver, pode precisar de uma abordagem diferente
+            return true; // A API já deve filtrar corretamente
+        });
+    }
+    
+    // Filtra categorias dentro dos grupos se necessário
+    if (categoryId && categoryId.trim() && data.groups) {
+        filteredData.groups = data.groups.map(group => {
+            if (group.categories) {
+                return {
+                    ...group,
+                    categories: group.categories.filter(cat => {
+                        // Se tiver o ID da categoria, podemos filtrar
+                        return true; // A API já deve filtrar corretamente
+                    })
+                };
+            }
+            return group;
+        }).filter(group => group.categories && group.categories.length > 0);
+    }
+    
+    // Filtra extratos por data e busca
+    if (data.extracts) {
+        let filteredExtracts = [...data.extracts];
+        const originalCount = filteredExtracts.length;
+        
+        // Filtro por data inicial
+        if (startDate && startDate.trim() !== '') {
+            const start = new Date(startDate + 'T00:00:00');
+            console.log('📅 Filtrando por data inicial:', start);
+            
+            filteredExtracts = filteredExtracts.filter(ext => {
+                const extDate = new Date(ext.date + 'T00:00:00');
+                const isValid = extDate >= start;
+                if (!isValid) {
+                    console.log(`  ❌ Removendo: ${ext.date} (${ext.description})`);
+                }
+                return isValid;
+            });
+            
+            console.log(`  Após filtro inicial: ${originalCount} → ${filteredExtracts.length}`);
+        }
+        
+        // Filtro por data final
+        if (endDate && endDate.trim() !== '') {
+            const end = new Date(endDate + 'T23:59:59');
+            console.log('📅 Filtrando por data final:', end);
+            
+            const beforeEndFilter = filteredExtracts.length;
+            filteredExtracts = filteredExtracts.filter(ext => {
+                const extDate = new Date(ext.date + 'T00:00:00');
+                const isValid = extDate <= end;
+                if (!isValid) {
+                    console.log(`  ❌ Removendo: ${ext.date} (${ext.description})`);
+                }
+                return isValid;
+            });
+            
+            console.log(`  Após filtro final: ${beforeEndFilter} → ${filteredExtracts.length}`);
+        }
+        
+        // Filtro por busca
+        if (search && search.trim() !== '') {
+            const searchLower = search.trim().toLowerCase();
+            console.log('🔎 Filtrando por busca:', searchLower);
+            
+            const beforeSearchFilter = filteredExtracts.length;
+            filteredExtracts = filteredExtracts.filter(ext => {
+                const matchDescription = ext.description?.toLowerCase().includes(searchLower);
+                const matchAccount = ext.accountName?.toLowerCase().includes(searchLower);
+                return matchDescription || matchAccount;
+            });
+            
+            console.log(`  Após filtro de busca: ${beforeSearchFilter} → ${filteredExtracts.length}`);
+        }
+        
+        filteredData.extracts = filteredExtracts;
+        
+        console.log(`📊 TOTAL: Extratos filtrados de ${originalCount} para ${filteredExtracts.length}`);
+    }
+    
+    return filteredData;
 }
 
 function updateDashboardUI(data) {
@@ -172,33 +347,34 @@ function renderAccountsTable(accounts) {
 function renderGroupsTable(groups) {
     const tableBody = document.getElementById('expenses-by-group-body');
     tableBody.innerHTML = '';
+    
     if (groups && groups.length > 0) {
+        const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        
         groups.forEach(group => {
             const groupRow = tableBody.insertRow();
             groupRow.className = 'group-row';
             groupRow.innerHTML = `
                 <td><strong>${group.groupName}</strong></td>
-                <td class="expense"><strong>${(group.groupExpense || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></td>
+                <td class="expense"><strong>${formatCurrency(group.groupExpense)}</strong></td>
             `;
+            
             if (group.categories && group.categories.length > 0) {
                 group.categories.forEach(cat => {
                     const categoryRow = tableBody.insertRow();
                     categoryRow.className = 'category-row';
                     categoryRow.innerHTML = `
                         <td class="category-name">${cat.categoryName}</td>
-                        <td class="expense">${(cat.totalExpense || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                        <td class="expense">${formatCurrency(cat.totalExpense)}</td>
                     `;
                 });
             }
         });
     } else {
-        tableBody.innerHTML = '<tr><td colspan="2">Nenhum dado de grupo encontrado.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="2">Nenhum dado de grupo/categoria encontrado para os filtros aplicados.</td></tr>';
     }
 }
 
-// ===============================================================
-// >> INÍCIO DA FUNÇÃO ALTERADA <<
-// ===============================================================
 /**
  * Renderiza a tabela de extratos e calcula o total dos lançamentos.
  * @param {Array<Object>} extracts - A lista de lançamentos vinda da API.
@@ -212,7 +388,12 @@ function renderExtractsTable(extracts) {
     let totalValue = 0;
 
     if (extracts && extracts.length > 0) {
-        extracts.forEach(ext => {
+        // Ordena por data (mais recente primeiro)
+        const sortedExtracts = [...extracts].sort((a, b) => {
+            return new Date(b.date) - new Date(a.date);
+        });
+        
+        sortedExtracts.forEach(ext => {
             // Soma o valor (considerando entradas como positivo e saídas como negativo)
             totalValue += (ext.type.toLowerCase() === 'entrada' ? ext.value : -ext.value);
             
@@ -227,7 +408,7 @@ function renderExtractsTable(extracts) {
             `;
         });
     } else {
-        tableBody.innerHTML = '<tr><td colspan="5">Nenhum lançamento no extrato para este período.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5">Nenhum lançamento no extrato para os filtros aplicados.</td></tr>';
     }
 
     // Atualiza a célula do rodapé com o total calculado
@@ -236,9 +417,6 @@ function renderExtractsTable(extracts) {
         tableFooterCell.className = totalValue >= 0 ? 'income' : 'expense';
     }
 }
-// ===============================================================
-// >> FIM DA FUNÇÃO ALTERADA <<
-// ===============================================================
 
 async function generatePdfReport() {
     const loadingDiv = document.getElementById('loading');
@@ -249,6 +427,8 @@ async function generatePdfReport() {
         if (!accessToken) throw new Error("Não autenticado.");
 
         const params = new URLSearchParams();
+        
+        // Captura os valores dos filtros
         const startDate = document.getElementById('start-date')?.value;
         const endDate = document.getElementById('end-date')?.value;
         const groupId = document.getElementById('group-filter')?.value;
@@ -257,15 +437,31 @@ async function generatePdfReport() {
         const status = document.getElementById('status-filter')?.value;
         const search = document.getElementById('search-input')?.value;
 
-        if (startDate) params.append('StartDate', startDate);
-        if (endDate) params.append('EndDate', endDate);
-        if (groupId) params.append('GroupId', groupId);
-        if (categoryId) params.append('CategoryId', categoryId);
-        if (paymentMethod) params.append('PaymentMethod', paymentMethod);
-        if (status) params.append('Status', status);
-        if (search) params.append('Search', search);
+        // Adiciona apenas os parâmetros que possuem valor
+        if (startDate && startDate.trim() !== '') {
+            params.append('StartDate', startDate);
+        }
+        if (endDate && endDate.trim() !== '') {
+            params.append('EndDate', endDate);
+        }
+        if (groupId && groupId.trim() !== '') {
+            params.append('GroupId', groupId);
+        }
+        if (categoryId && categoryId.trim() !== '') {
+            params.append('CategoryId', categoryId);
+        }
+        if (paymentMethod && paymentMethod.trim() !== '') {
+            params.append('PaymentMethod', parseInt(paymentMethod, 10));
+        }
+        if (status && status.trim() !== '') {
+            params.append('Status', parseInt(status, 10));
+        }
+        if (search && search.trim() !== '') {
+            params.append('Search', search.trim());
+        }
 
         const url = `${API_BASE_URL}/financial/dashboard-financial/trial-balance/pdf?${params.toString()}`;
+        console.log('📄 URL do PDF:', url);
 
         const response = await fetch(url, {
             method: 'GET',
@@ -284,6 +480,7 @@ async function generatePdfReport() {
         URL.revokeObjectURL(fileURL);
 
     } catch (error) {
+        console.error('❌ Erro ao gerar PDF:', error);
         if (typeof showErrorModal === 'function') {
             showErrorModal({ title: "Erro ao Gerar PDF", detail: error.message });
         } else {

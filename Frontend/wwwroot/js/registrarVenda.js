@@ -1,7 +1,5 @@
 console.log('Script js/venda.js DEFINIDO.');
 
-
-
 // =======================================================
 // INICIALIZAÇÃO
 // =======================================================
@@ -333,12 +331,14 @@ function renderHistoryTable(items) {
             <td data-field="status">${statusText}</td>
             <td class="actions-cell" data-field="actions">
                 <button type="button" class="btn-action btn-edit">Editar</button>
+                <button type="button" class="btn-action btn-receipt">Recibo</button>
                 <button type="button" class="btn-action btn-delete">Excluir</button>
             </td>
         `;
 
         saleRow.querySelector('.expand-btn').addEventListener('click', (e) => toggleItems(e.target, item.id));
         saleRow.querySelector('.btn-edit').addEventListener('click', () => editSale(item.id));
+        saleRow.querySelector('.btn-receipt').addEventListener('click', () => generateReceipt(item.id));
         saleRow.querySelector('.btn-delete').addEventListener('click', () => deleteSale(item.id));
         tableBody.appendChild(saleRow);
 
@@ -383,7 +383,6 @@ function renderHistoryTable(items) {
                 const formattedPaymentDate = new Date(pDate.getTime() + pDate.getTimezoneOffset() * 60000).toLocaleDateString('pt-BR');
                 const formattedAmount = (payment.amount || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 const paymentMethodText = paymentMethodMap[payment.paymentMethod] || 'Desconhecido';
-                // ✅ CORREÇÃO: Removido o 'data-payment-id' que não existe
                 itemsHtml += `
                     <tr>
                         <td>${formattedPaymentDate}</td>
@@ -502,6 +501,36 @@ window.deleteSale = async (saleId) => {
     }
 };
 
+window.generateReceipt = async (saleId) => {
+    if (!saleId) {
+        alert("ID da venda não encontrado para gerar o recibo.");
+        return;
+    }
+    try {
+        const accessToken = localStorage.getItem('accessToken');
+        const url = `${API_BASE_URL}/sales/${saleId}/receipt`;
+        
+        console.log(`Gerando recibo para a venda ${saleId} a partir de: ${url}`);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const fileURL = URL.createObjectURL(blob);
+            window.open(fileURL, '_blank');
+            URL.revokeObjectURL(fileURL);
+        } else {
+            const errorText = await response.text();
+            alert(`Erro ao gerar recibo: ${errorText}`);
+        }
+    } catch (error) {
+        alert(`Erro de conexão ao gerar recibo: ${error.message}`);
+    }
+};
+
 window.editSale = (saleId) => {
     const item = historyItemsCache.find(i => i.id === saleId);
     if (!item) return;
@@ -571,7 +600,6 @@ window.editSale = (saleId) => {
                 .map(([key, value]) => `<option value="${key}" ${parseInt(key) === payment.paymentMethod ? 'selected' : ''}>${value}</option>`)
                 .join('');
             const newRow = document.createElement('tr');
-            // ✅ CORREÇÃO: Removido o 'dataset.paymentId' que não existe
             newRow.innerHTML = `
                 <td><input type="date" name="paymentDate" class="form-input" value="${escapeAttr(paymentDateStr)}"></td>
                 <td><input type="number" step="0.01" name="amount" class="form-input" value="${escapeAttr(payment.amount)}"></td>
@@ -624,15 +652,13 @@ window.saveSaleChanges = async (saleId) => {
         });
 
         // --- Coleta de Pagamentos ---
-        // ✅ CORREÇÃO: Lê os pagamentos da tela sem depender de um ID
         const editedPayments = [];
         const paymentsTableBody = itemsRow.querySelector('.payments-table tbody');
         paymentsTableBody.querySelectorAll('tr').forEach(paymentTr => {
             editedPayments.push({
-                 // O ID é omitido pois não vem da API
-                 paymentDate: paymentTr.querySelector('[name="paymentDate"]').value,
-                 amount: parseFloat(paymentTr.querySelector('[name="amount"]').value),
-                 paymentMethod: parseInt(paymentTr.querySelector('[name="paymentMethod"]').value, 10)
+                paymentDate: paymentTr.querySelector('[name="paymentDate"]').value,
+                amount: parseFloat(paymentTr.querySelector('[name="amount"]').value),
+                paymentMethod: parseInt(paymentTr.querySelector('[name="paymentMethod"]').value, 10)
             });
         });
 
@@ -696,6 +722,8 @@ window.cancelEditSale = (saleId) => {
         row.querySelector('.expand-btn').addEventListener('click', (e) => toggleItems(e.target, saleId));
         row.querySelector('.btn-edit').addEventListener('click', () => editSale(saleId));
         row.querySelector('.btn-delete').addEventListener('click', () => deleteSale(saleId));
+        // Adiciona o listener para o botão de recibo novamente após cancelar
+        row.querySelector('.btn-receipt').addEventListener('click', () => generateReceipt(saleId));
         delete originalRowHTML_Sale[saleId];
     }
 };
