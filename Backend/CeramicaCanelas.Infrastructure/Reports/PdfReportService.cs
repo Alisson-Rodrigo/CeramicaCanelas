@@ -461,6 +461,8 @@ namespace CeramicaCanelas.Infrastructure.Reports
             // -------------------------------
             // Entradas
             // -------------------------------
+            section.AddParagraph("💸 ENTRADAS POR CONTA / BANCO").Format.Font.Bold = true;
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(4);
             var tableAccounts = section.AddTable();
             tableAccounts.Borders.Width = 0.5;
             tableAccounts.AddColumn(Unit.FromCentimeter(10));
