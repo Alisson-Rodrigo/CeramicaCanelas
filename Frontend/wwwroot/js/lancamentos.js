@@ -1,9 +1,6 @@
 console.log('Script js/lancamento.js DEFINIDO.');
 
 // =======================================================
-
-
-// =======================================================
 // INICIALIZAÇÃO
 // =======================================================
 function initDynamicForm() {
@@ -35,7 +32,6 @@ async function downloadImage(imageUrl, filename) {
         }
         const correctedUrl = urlObj.toString();
         
-        // Cria um link temporário e força o download
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = correctedUrl;
@@ -45,7 +41,6 @@ async function downloadImage(imageUrl, filename) {
         document.body.appendChild(a);
         a.click();
         
-        // Remove o link após um pequeno delay
         setTimeout(() => {
             document.body.removeChild(a);
         }, 100);
@@ -149,14 +144,14 @@ function updateFormVisibility(type) {
 
     const categoryLabel = document.querySelector('#group-categoryId label');
 
+    // ✅ ALTERAÇÃO: Categoria agora é sempre visível e obrigatória para ambos os tipos.
+    if (categoryGroup) categoryGroup.style.display = 'block';
+    if (categoryLabel) categoryLabel.innerHTML = "Categoria <span style='color:red'>*</span>";
+
     if (type === '1') { // Entrada
-        if (categoryGroup) categoryGroup.style.display = 'none';
         if (customerGroup) customerGroup.style.display = 'block';
-        if (categoryLabel) categoryLabel.innerHTML = "Categoria (Opcional)";
     } else if (type === '2') { // Saída
-        if (categoryGroup) categoryGroup.style.display = 'block';
         if (customerGroup) customerGroup.style.display = 'none';
-        if (categoryLabel) categoryLabel.innerHTML = "Categoria <span style='color:red'>*</span>";
     }
 }
 
@@ -190,7 +185,6 @@ async function handleLaunchSubmit(event) {
         return;
     }
 
-    // 🔹 Pega o botão que enviou o form
     const submitBtn = event.submitter || form.querySelector('button[type="submit"]');
     let originalText = '';
     if (submitBtn) {
@@ -209,21 +203,29 @@ async function handleLaunchSubmit(event) {
             formData.append('ImageProofs', file);
         });
     }
-
-    if (selectedType.value === '1') {
-        if (!formData.get('CustomerId')) formData.delete('CustomerId');
-        formData.delete('CategoryId');
-    } else if (selectedType.value === '2') {
-        if (!formData.get('CategoryId')) {
-            showErrorModal({ title: "Validação Falhou", detail: "A Categoria é obrigatória para Saída." });
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                submitBtn.classList.remove("loading");
-            }
-            return;
+    
+    // ✅ ALTERAÇÃO: Validação de categoria agora é feita para ambos os tipos.
+    if (!formData.get('CategoryId')) {
+        showErrorModal({ title: "Validação Falhou", detail: "A Categoria é obrigatória." });
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.classList.remove("loading");
         }
+        return;
+    }
+
+    if (selectedType.value === '1') { // Entrada
+        if (!formData.get('CustomerId')) formData.delete('CustomerId');
+        // A linha formData.delete('CategoryId') foi removida daqui.
+    } else if (selectedType.value === '2') { // Saída
         formData.delete('CustomerId');
+    }
+
+    // ✅ CORREÇÃO: Garante que o campo DueDate não seja enviado se estiver vazio.
+    const dueDateValue = formData.get('DueDate');
+    if (!dueDateValue) {
+        formData.delete('DueDate');
     }
 
     try {
@@ -251,7 +253,6 @@ async function handleLaunchSubmit(event) {
     } catch (error) {
         showErrorModal({ title: "Erro de Conexão", detail: error.message });
     } finally {
-        // 🔹 Reabilita o botão mesmo em caso de erro
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
@@ -312,7 +313,6 @@ window.openImageProofModal = (imageUrls, imageIds = null, isEditMode = false) =>
         }
         const correctedUrl = urlObj.toString();
 
-        // Usa o ID do array idImages se disponível, senão extrai da URL
         let proofId;
         if (imageIds && imageIds[index]) {
             proofId = imageIds[index];
@@ -466,8 +466,8 @@ function initializeCustomerModal() {
                     if (row) {
                         const customerCell = row.querySelector('[data-field="customer"]');
                         if (customerCell) {
-                            customerCell.querySelector('.edit-selection-name').textContent = customerName;
-                            customerCell.dataset.newCustomerId = customerId;
+                             customerCell.querySelector('.edit-selection-name').textContent = customerName;
+                             customerCell.dataset.newCustomerId = customerId;
                         }
                     }
                 } else {
@@ -749,13 +749,19 @@ window.editLaunch = (item) => {
     row.querySelector('[data-field="status"]').innerHTML = `<select name="Status" class="edit-input">${statusOptions}</select>`;
     const originalDueDate = item.dueDate ? new Date(item.dueDate).toISOString().split('T')[0] : '';
     row.querySelector('[data-field="dueDate"]').innerHTML = `<input type="date" name="DueDate" class="edit-input" value="${originalDueDate}">`;
+    
     const categoryCell = row.querySelector('[data-field="category"]');
     const customerCell = row.querySelector('[data-field="customer"]');
-    if (categoryCell) categoryCell.dataset.newCategoryId = item.categoryId || '';
+
     if (customerCell) customerCell.dataset.newCustomerId = item.customerId || '';
-    if (item.type === 2 && categoryCell) {
+    
+    // ✅ ALTERAÇÃO: Categoria torna-se editável para ambos os tipos (Entrada e Saída).
+    if (categoryCell) {
+        categoryCell.dataset.newCategoryId = item.categoryId || '';
         categoryCell.innerHTML = `<div class="edit-selection-box"><span class="edit-selection-name">${item.categoryName || 'N/A'}</span><button type="button" class="btn-action btn-edit-modal" onclick="openCategoryModalForEdit('${item.id}')">Alterar</button></div>`;
     }
+
+    // A lógica do cliente permanece condicional ao tipo.
     if (item.type === 1 && customerCell) {
         customerCell.innerHTML = `<div class="edit-selection-box"><span class="edit-selection-name">${item.customerName || 'N/A'}</span><button type="button" class="btn-action btn-edit-modal" onclick="openCustomerModalForEdit('${item.id}')">Alterar</button></div>`;
     }
@@ -833,18 +839,24 @@ window.saveLaunchChanges = async (launchId) => {
         }
     }
 
-    if (originalItem.type === 2) {
-        const categoryCell = row.querySelector('[data-field="category"]');
-        const newCategoryId = categoryCell?.dataset.newCategoryId;
-        if (newCategoryId) formData.append('CategoryId', newCategoryId);
-        else if (originalItem.categoryId) formData.append('CategoryId', originalItem.categoryId);
+    // ✅ ALTERAÇÃO: A lógica para adicionar a categoria ao FormData agora é incondicional.
+    const categoryCell = row.querySelector('[data-field="category"]');
+    const newCategoryId = categoryCell?.dataset.newCategoryId;
+    if (newCategoryId) {
+        formData.append('CategoryId', newCategoryId);
+    } else if (originalItem.categoryId) {
+        formData.append('CategoryId', originalItem.categoryId);
     }
 
+    // A lógica para cliente continua condicional ao tipo.
     if (originalItem.type === 1) {
         const customerCell = row.querySelector('[data-field="customer"]');
         const newCustomerId = customerCell?.dataset.newCustomerId;
-        if (newCustomerId) formData.append('CustomerId', newCustomerId);
-        else if (originalItem.customerId) formData.append('CustomerId', originalItem.customerId);
+        if (newCustomerId) {
+            formData.append('CustomerId', newCustomerId);
+        } else if (originalItem.customerId) {
+            formData.append('CustomerId', originalItem.customerId);
+        }
     }
 
     try {
