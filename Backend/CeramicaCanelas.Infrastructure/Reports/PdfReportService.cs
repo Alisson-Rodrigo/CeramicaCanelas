@@ -622,11 +622,6 @@ namespace CeramicaCanelas.Infrastructure.Reports
                 r.Cells[3].Format.Alignment = ParagraphAlignment.Right;
             }
 
-            var totalExtractRow = tableExtracts.AddRow();
-            totalExtractRow.Shading.Color = Colors.LightYellow;
-            totalExtractRow.Cells[0].AddParagraph("🏦 Saldo Geral dos Extratos");
-            totalExtractRow.Cells[3].AddParagraph(totalExtractOverall.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Right;
-
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(10);
 
             // -------------------------------
