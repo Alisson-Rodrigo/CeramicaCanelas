@@ -59,6 +59,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
                     CategoryName = l.Category != null ? l.Category.Name : "Sem categoria",
                     CustomerName = l.Customer != null ? l.Customer.Name : "Sem cliente",
                     PaymentMethod = l.PaymentMethod.ToString(),
+                    Date = l.LaunchDate,
                     CreatedOn = l.CreatedOn,
                     ModifiedOn = l.ModifiedOn,
                     ChangeType =
