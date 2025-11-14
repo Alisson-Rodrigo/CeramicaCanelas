@@ -16,6 +16,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
         public string? CategoryName { get; set; }
         public string? CustomerName { get; set; }
         public string PaymentMethod { get; set; } = string.Empty;
+        public DateOnly Date { get; set; }
 
         public DateTime CreatedOn { get; set; }
         public DateTime ModifiedOn { get; set; }
