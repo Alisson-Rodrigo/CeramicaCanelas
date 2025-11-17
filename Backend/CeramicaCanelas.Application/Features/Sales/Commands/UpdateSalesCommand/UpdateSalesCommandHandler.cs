@@ -44,24 +44,20 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             if (sale == null)
                 throw new BadRequestException("Venda não encontrada.");
 
-            // 4️⃣ Verifica duplicidade de número de nota
-            if (sale.NoteNumber != request.NoteNumber &&
-                await _salesRepository.ExistsActiveNoteNumberAsync(request.NoteNumber, cancellationToken))
-            {
-                throw new BadRequestException($"Já existe uma venda ativa com o número {request.NoteNumber}.");
-            }
-
             // 5️⃣ Atualiza cabeçalho
-            sale.NoteNumber = request.NoteNumber;
             sale.City = request.City;
             sale.State = request.State;
             sale.CustomerName = request.CustomerName;
             sale.CustomerAddress = request.CustomerAddress;
             sale.CustomerPhone = request.CustomerPhone;
-            if (request.Date.HasValue) sale.Date = request.Date.Value;
+
+            if (request.Date.HasValue)
+                sale.Date = request.Date.Value;
+
             sale.ApplyDiscount(request.Discount, recalcStatus: false);
             sale.Status = request.Status;
             sale.ModifiedOn = DateTime.UtcNow;
+
 
             // ⚙️ Atualiza ITENS
             var existingItems = await _saleItemsRepository.FindAsync(i => i.SaleId == sale.Id, cancellationToken);

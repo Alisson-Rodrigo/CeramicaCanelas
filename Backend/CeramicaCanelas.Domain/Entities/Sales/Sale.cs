@@ -16,7 +16,7 @@ namespace CeramicaCanelas.Domain.Entities
         public DateOnly Date { get; set; }
 
         // Cabeçalho
-        public int NoteNumber { get; set; }                 // Nº da nota/talão
+        public int NoteNumber { get; private set; }
         public string City { get; set; } = string.Empty;    // Cidade
         public string State { get; set; } = string.Empty;   // UF
         public string? CustomerName { get; set; }
@@ -77,6 +77,13 @@ namespace CeramicaCanelas.Domain.Entities
                 Status = SaleStatus.Pending;
         }
 
+        public void SetNoteNumber(int nextNumber)
+        {
+            if (nextNumber <= 0)
+                throw new InvalidOperationException("O número da nota deve ser maior que zero.");
+
+            NoteNumber = nextNumber;
+        }
 
 
 
