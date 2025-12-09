@@ -330,8 +330,8 @@ function renderHistoryTable(items) {
             <td data-field="remainingBalance">${formattedBalance}</td>
             <td data-field="status">${statusText}</td>
             <td class="actions-cell" data-field="actions">
-                <button type="button" class="btn-action btn-edit">Editar</button>
                 <button type="button" class="btn-action btn-receipt">Recibo</button>
+                <button type="button" class="btn-action btn-edit">Editar</button>
                 <button type="button" class="btn-action btn-delete">Excluir</button>
             </td>
         `;
