@@ -78,20 +78,11 @@ namespace CeramicaCanelas.WebApi.Controllers
         [Authorize(Roles = "Financial,Admin")]
         [HttpGet("history")]
         public async Task<IActionResult> GetDailyHistory(
-        [FromQuery] DateOnly? startDate,
-        [FromQuery] DateOnly? endDate,
-        [FromQuery] LaunchType? type)
-            {
-                var result = await _mediator.Send(new GetDailyLaunchHistoryQuery
-                {
-                    StartDate = startDate,
-                    EndDate = endDate,
-                    Type = type
-                });
-
-                return Ok(result);
-            }
-
+            [FromQuery] GetDailyLaunchHistoryQuery query)
+        {
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
 
     }
 }

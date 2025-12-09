@@ -1,8 +1,8 @@
 ﻿using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
+using CeramicaCanelas.Application.Features.Almoxarifado.Product.Queries.Pages;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.GetDailyLaunchHistory
 {
     public class GetDailyLaunchHistoryHandler
-         : IRequestHandler<GetDailyLaunchHistoryQuery, List<LaunchHistoryItem>>
+        : IRequestHandler<GetDailyLaunchHistoryQuery, PagedResult<LaunchHistoryItem>>
     {
         private readonly ILaunchRepository _launchRepository;
 
@@ -19,7 +19,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
             _launchRepository = launchRepository;
         }
 
-        public async Task<List<LaunchHistoryItem>> Handle(
+        public async Task<PagedResult<LaunchHistoryItem>> Handle(
             GetDailyLaunchHistoryQuery req,
             CancellationToken ct)
         {
@@ -38,8 +38,8 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
                 if (endDate < startDate)
                     (startDate, endDate) = (endDate, startDate);
 
-                var startDateTime = DateTime.SpecifyKind(startDate.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-                var endDateTime = DateTime.SpecifyKind(endDate.ToDateTime(TimeOnly.MaxValue), DateTimeKind.Utc);
+                var startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
+                var endDateTime = endDate.ToDateTime(TimeOnly.MaxValue);
 
                 query = query.Where(l =>
                     (l.CreatedOn >= startDateTime && l.CreatedOn <= endDateTime) ||
@@ -47,9 +47,15 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
                 );
             }
 
-            var result = await query
+            // 🔹 Total antes da paginação
+            var totalItems = await query.CountAsync(ct);
+
+            // 🔹 Ordenação + paginação
+            var items = await query
                 .OrderByDescending(l => l.CreatedOn)
                 .ThenByDescending(l => l.ModifiedOn)
+                .Skip((req.Page - 1) * req.PageSize)
+                .Take(req.PageSize)
                 .Select(l => new LaunchHistoryItem
                 {
                     Id = l.Id,
@@ -69,7 +75,13 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
                 })
                 .ToListAsync(ct);
 
-            return result;
+            return new PagedResult<LaunchHistoryItem>
+            {
+                TotalItems = totalItems,
+                Page = req.Page,
+                PageSize = req.PageSize,
+                Items = items
+            };
         }
     }
 }

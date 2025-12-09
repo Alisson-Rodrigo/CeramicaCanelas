@@ -11,6 +11,8 @@ function initDynamicForm() {
     initializeImageProofModal();
     initializeHistoryFilters();
     fetchAndRenderHistory(1);
+    initializeDailyHistoryFilters();
+
 }
 
 // =======================================================
@@ -927,6 +929,129 @@ window.cancelLaunchEdit = (launchId) => {
 // =======================================================
 // FUNÇÕES AUXILIARES DE LIMPEZA
 // =======================================================
+
+async function fetchDailyHistory(page = 1) {
+    const tableBody = document.getElementById('daily-history-body');
+    const paginationDiv = document.getElementById('daily-history-pagination');
+
+    tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Carregando...</td></tr>`;
+    paginationDiv.innerHTML = "";
+
+    try {
+        const accessToken = localStorage.getItem('accessToken');
+
+        const startDate = document.getElementById('dailyStartDate').value;
+        const endDate = document.getElementById('dailyEndDate').value;
+        const type = document.getElementById('dailyType').value;
+
+        const params = new URLSearchParams();
+        params.append("Page", page);
+        params.append("PageSize", 10); // 🔹 fixo = 10 por página
+
+        if (startDate) params.append('StartDate', startDate);
+        if (endDate) params.append('EndDate', endDate);
+        if (type) params.append('Type', type);
+
+        const response = await fetch(`${API_BASE_URL}/financial/launch/history?${params.toString()}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+
+        if (!response.ok) throw new Error(`Erro: ${response.status}`);
+
+        const paged = await response.json();
+
+        renderDailyHistoryTable(paged.items);
+        renderDailyHistoryPagination(paged);
+
+    } catch (error) {
+        tableBody.innerHTML = `<tr><td colspan="8" style="color:red;text-align:center">${error.message}</td></tr>`;
+    }
+}
+
+function renderDailyHistoryPagination(paged) {
+    const container = document.getElementById("daily-history-pagination");
+    container.innerHTML = "";
+
+    if (paged.totalPages <= 1) return;
+
+    const prevDisabled = paged.page === 1 ? "disabled" : "";
+    const nextDisabled = paged.page === paged.totalPages ? "disabled" : "";
+
+    container.innerHTML = `
+        <button class="pagination-btn" ${prevDisabled} onclick="fetchDailyHistory(${paged.page - 1})">
+            ⬅ Anterior
+        </button>
+
+        <span class="pagination-info">
+            Página ${paged.page} de ${paged.totalPages}
+        </span>
+
+        <button class="pagination-btn" ${nextDisabled} onclick="fetchDailyHistory(${paged.page + 1})">
+            Próxima ➡
+        </button>
+    `;
+}
+
+
+
+
+function renderDailyHistoryTable(items) {
+    const tableBody = document.getElementById('daily-history-body');
+    tableBody.innerHTML = '';
+
+    if (!items || items.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Nenhum lançamento encontrado.</td></tr>`;
+        return;
+    }
+
+    items.forEach(item => {
+        const formattedAmount = item.amount.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+
+        const formattedDate = item.date;
+
+        tableBody.innerHTML += `
+            <tr>
+                <td>${item.type === 1 ? 'Entrada' : 'Saída'}</td>
+                <td>${item.description}</td>
+                <td>${formattedAmount}</td>
+                <td>${formattedDate}</td>
+                <td>${item.categoryName || 'Sem categoria'}</td>
+                <td>${item.customerName || 'Sem cliente'}</td>
+                <td>${item.paymentMethod}</td>
+                <td>${item.changeType}</td>
+            </tr>
+        `;
+    });
+}
+
+
+
+function initializeDailyHistoryFilters() {
+    const btn = document.getElementById('dailyFilterBtn');
+    const btnClear = document.getElementById('dailyClearBtn');
+
+    btn.onclick = () => fetchDailyHistory(1);
+
+    btnClear.onclick = () => {
+        document.getElementById('dailyStartDate').value = '';
+        document.getElementById('dailyEndDate').value = '';
+        document.getElementById('dailyType').value = '';
+        fetchDailyHistory(1);
+    };
+
+
+    // 🔹 Ao carregar a página, já mostra o histórico do dia
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dailyStartDate').value = today;
+    document.getElementById('dailyEndDate').value = today;
+
+    fetchDailyHistory();
+}
+
+
 function resetFormCompletely() {
     const form = document.getElementById('launchForm');
     if(form) form.reset();
