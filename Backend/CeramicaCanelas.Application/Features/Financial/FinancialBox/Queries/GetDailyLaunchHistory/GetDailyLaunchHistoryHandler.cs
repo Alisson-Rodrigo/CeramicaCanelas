@@ -38,16 +38,22 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Ge
                 if (endDate < startDate)
                     (startDate, endDate) = (endDate, startDate);
 
-                // ✔️ CORREÇÃO: sempre enviar valores UTC para o PostgreSQL
-                var startDateTime = DateTime.SpecifyKind(
-                    startDate.ToDateTime(TimeOnly.MinValue),
+                var startDateTime = new DateTime(
+                    startDate.Year,
+                    startDate.Month,
+                    startDate.Day,
+                    0, 0, 0,
                     DateTimeKind.Utc
                 );
 
-                var endDateTime = DateTime.SpecifyKind(
-                    endDate.ToDateTime(TimeOnly.MaxValue),
+                var endDateTime = new DateTime(
+                    endDate.Year,
+                    endDate.Month,
+                    endDate.Day,
+                    23, 59, 59,
                     DateTimeKind.Utc
                 );
+
 
                 query = query.Where(l =>
                     (l.CreatedOn >= startDateTime && l.CreatedOn <= endDateTime) ||
