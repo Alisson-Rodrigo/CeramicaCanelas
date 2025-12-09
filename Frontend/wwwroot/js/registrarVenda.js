@@ -316,6 +316,7 @@ function renderHistoryTable(items) {
         
         saleRow.innerHTML = `
             <td><button class="expand-btn">+</button></td>
+            <td data-field="noteNumber">${item.noteNumber}</td>
             <td data-field="customerName">${item.customerName}</td>
             <td data-field="customerPhone">${item.customerPhone || 'N/A'}</td>
             <td data-field="city">${item.city || 'N/A'}</td>
@@ -545,6 +546,7 @@ window.editSale = (saleId) => {
 
     // --- Edição da Linha Principal ---
     const saleDateStr = (item.saleDate || item.date).split('T')[0];
+    row.querySelector('[data-field="noteNumber"]').textContent = item.noteNumber;
     row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="CustomerName" class="form-input" value="${escapeAttr(item.customerName)}">`;
     row.querySelector('[data-field="customerPhone"]').innerHTML = `<input type="text" name="CustomerPhone" class="form-input" value="${escapeAttr(item.customerPhone)}">`;
     row.querySelector('[data-field="city"]').innerHTML = `<input type="text" name="City" class="form-input" value="${escapeAttr(item.city)}">`;
