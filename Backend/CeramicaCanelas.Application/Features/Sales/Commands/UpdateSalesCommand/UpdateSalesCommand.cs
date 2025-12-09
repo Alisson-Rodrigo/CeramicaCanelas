@@ -12,7 +12,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
         public Guid Id { get; set; }
 
         // --- Cabeçalho ---
-        public int NoteNumber { get; set; }
         public string City { get; set; } = string.Empty;
         public string State { get; set; } = string.Empty;
         public string? CustomerName { get; set; }

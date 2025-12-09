@@ -1,4 +1,5 @@
-﻿using CeramicaCanelas.Domain.Enums.Financial;
+﻿using CeramicaCanelas.Application.Features.Almoxarifado.Product.Queries.Pages;
+using CeramicaCanelas.Domain.Enums.Financial;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -8,10 +9,14 @@ using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.GetDailyLaunchHistory
 {
-    public class GetDailyLaunchHistoryQuery : IRequest<List<LaunchHistoryItem>>
+    public class GetDailyLaunchHistoryQuery : IRequest<PagedResult<LaunchHistoryItem>>
     {
-        public DateOnly? StartDate { get; set; } // Data inicial do histórico
-        public DateOnly? EndDate { get; set; }   // Data final do histórico
-        public LaunchType? Type { get; set; }    // Opcional: filtrar por tipo (entrada / saída)
-    }   
+        public DateOnly? StartDate { get; set; }
+        public DateOnly? EndDate { get; set; }
+        public LaunchType? Type { get; set; }
+
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+    }
+
 }

@@ -9,7 +9,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
     public class CreatedSalesCommand : IRequest<Guid>
     {
         // Cabeçalho
-        public int NoteNumber { get; set; }
         public string City { get; set; } = string.Empty;
         public string State { get; set; } = string.Empty;
         public string? CustomerName { get; set; }
@@ -36,7 +35,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
         {
             var sale = new Sale
             {
-                NoteNumber = NoteNumber,
                 Date = Date,
                 City = City,
                 State = State,

@@ -20,7 +20,7 @@ namespace CeramicaCanelas.Application.Contracts.Persistance.Repositories
 
         public Task<Sale?> GetByIdAsyncUpdate(Guid? id);
 
-
+        Task<int> GetNextNoteNumberAsync(CancellationToken cancellationToken);
 
     }
 }
