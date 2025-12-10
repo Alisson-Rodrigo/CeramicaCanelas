@@ -140,22 +140,36 @@ function updateFormVisibility(type) {
     const launchForm = document.getElementById('launchForm');
     const categoryGroup = document.getElementById('group-categoryId');
     const customerGroup = document.getElementById('group-customerId');
-
-    if (launchForm) launchForm.style.display = 'block';
-    resetFormOnTypeChange();
-
     const categoryLabel = document.querySelector('#group-categoryId label');
 
-    // ✅ ALTERAÇÃO: Categoria agora é sempre visível e obrigatória para ambos os tipos.
-    if (categoryGroup) categoryGroup.style.display = 'block';
-    if (categoryLabel) categoryLabel.innerHTML = "Categoria <span style='color:red'>*</span>";
+    if (launchForm) {
+        launchForm.style.display = 'block';
+    }
 
-    if (type === '1') { // Entrada
+    // Reseta campos (valores / selects / inputs), mas não mexe nos "groups"
+    resetFormOnTypeChange();
+
+    if (type === '1') {
+        // 🔹 ENTRADA
+        // Categoria NÃO aparece
+        if (categoryGroup) categoryGroup.style.display = 'none';
+        if (categoryLabel) categoryLabel.textContent = 'Categoria';
+
+        // Cliente aparece
         if (customerGroup) customerGroup.style.display = 'block';
-    } else if (type === '2') { // Saída
+    } else if (type === '2') {
+        // 🔹 SAÍDA
+        // Categoria aparece e é obrigatória
+        if (categoryGroup) categoryGroup.style.display = 'block';
+        if (categoryLabel) {
+            categoryLabel.innerHTML = "Categoria <span style='color:red'>*</span>";
+        }
+
+        // Cliente não se aplica
         if (customerGroup) customerGroup.style.display = 'none';
     }
 }
+
 
 function populateEnumSelects() {
     const paymentSelect = document.getElementById('paymentMethod');
@@ -182,6 +196,7 @@ async function handleLaunchSubmit(event) {
     event.preventDefault();
     const form = event.target;
     const selectedType = document.querySelector('input[name="Type"]:checked');
+
     if (!selectedType) {
         showErrorModal({ title: "Validação Falhou", detail: "Selecione o tipo: Entrada ou Saída." });
         return;
@@ -198,17 +213,20 @@ async function handleLaunchSubmit(event) {
 
     const formData = new FormData(form);
     formData.set('Type', selectedType.value);
-    
+
+    // Trata os arquivos de comprovante
     formData.delete('ImageProofs');
     if (launchFiles.length > 0) {
         launchFiles.forEach(file => {
             formData.append('ImageProofs', file);
         });
     }
-    
-    // ✅ ALTERAÇÃO: Validação de categoria agora é feita para ambos os tipos.
-    if (!formData.get('CategoryId')) {
-        showErrorModal({ title: "Validação Falhou", detail: "A Categoria é obrigatória." });
+
+    const isExpense = selectedType.value === '2';
+
+    // ✅ Categoria OBRIGATÓRIA somente para SAÍDA
+    if (isExpense && !formData.get('CategoryId')) {
+        showErrorModal({ title: "Validação Falhou", detail: "A Categoria é obrigatória para saídas." });
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
@@ -217,14 +235,20 @@ async function handleLaunchSubmit(event) {
         return;
     }
 
-    if (selectedType.value === '1') { // Entrada
+    if (selectedType.value === '1') {
+        // 🔹 ENTRADA
+        // Cliente opcional
         if (!formData.get('CustomerId')) formData.delete('CustomerId');
-        // A linha formData.delete('CategoryId') foi removida daqui.
-    } else if (selectedType.value === '2') { // Saída
+        // Categoria não deve ser enviada para Entrada
+        formData.delete('CategoryId');
+    } else if (selectedType.value === '2') {
+        // 🔹 SAÍDA
+        // Cliente nunca vai em saída
         formData.delete('CustomerId');
+        // CategoryId já está no formData e foi validado acima
     }
 
-    // ✅ CORREÇÃO: Garante que o campo DueDate não seja enviado se estiver vazio.
+    // Garante que DueDate só vai se tiver valor
     const dueDateValue = formData.get('DueDate');
     if (!dueDateValue) {
         formData.delete('DueDate');
@@ -262,6 +286,7 @@ async function handleLaunchSubmit(event) {
         }
     }
 }
+
 
 
 // =======================================================
