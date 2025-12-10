@@ -178,3 +178,55 @@
 
 
 </div> <!-- container -->
+<!-- Modal de Busca de Categorias -->
+<div id="categorySearchModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close-btn">&times;</span>
+        <h3>Buscar Categoria</h3>
+
+        <div class="modal-filters">
+            <div class="modal-filter-group">
+                <label for="modalCategorySearchInput">Nome da categoria</label>
+                <input type="text" id="modalCategorySearchInput" placeholder="Digite parte do nome">
+            </div>
+            <button type="button" id="modalCategoryFilterBtn" class="modal-search-btn">
+                Buscar
+            </button>
+        </div>
+
+        <div id="modalCategoryResultsContainer"></div>
+
+        <div id="modalCategoryPaginationControls" class="pagination-controls"></div>
+    </div>
+</div>
+
+<!-- Modal de Busca de Clientes -->
+<div id="customerSearchModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close-btn">&times;</span>
+        <h3>Buscar Cliente</h3>
+
+        <div class="modal-filters">
+            <div class="modal-filter-group">
+                <label for="modalCustomerSearchInput">Nome / Documento</label>
+                <input type="text"
+                       id="modalCustomerSearchInput"
+                       placeholder="Digite o nome ou documento do cliente">
+            </div>
+
+            <button type="button"
+                    id="modalCustomerFilterBtn"
+                    class="modal-search-btn">
+                Buscar
+            </button>
+        </div>
+
+        <!-- Aqui a tabela de clientes é renderizada via JS -->
+        <div id="modalCustomerResultsContainer"></div>
+
+        <!-- Paginação da modal -->
+        <div id="modalCustomerPaginationControls" class="pagination-controls"></div>
+    </div>
+</div>
+
+
