@@ -20,8 +20,8 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Pa
         }
 
         public async Task<PagedResultCashFlowReport> Handle(
-            PagedRequestCashFlowReport request,
-            CancellationToken ct)
+    PagedRequestCashFlowReport request,
+    CancellationToken ct)
         {
             var page = request.Page <= 0 ? 1 : request.Page;
             var size = request.PageSize <= 0 ? 10 : request.PageSize;
@@ -43,7 +43,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Pa
                 var s = request.Search.Trim().ToLowerInvariant();
 
                 baseQuery = baseQuery.Where(l =>
-                    (l.Description ?? string.Empty).ToLower()  // traduz para LOWER(...) no PostgreSQL
+                    (l.Description ?? string.Empty).ToLower()
                         .Contains(s));
             }
 
@@ -55,20 +55,25 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Pa
                     (l.Category.Name ?? string.Empty).ToLower().Contains(search));
             }
 
-
-            // Filtro por tipo (para a lista/contagem)
-            var filteredQuery = baseQuery;
-            if (request.type == LaunchType.Income)
-                filteredQuery = filteredQuery.Where(l => l.Type == LaunchType.Income);
-            else if (request.type == LaunchType.Expense)
-                filteredQuery = filteredQuery.Where(l => l.Type == LaunchType.Expense);
-
-            // Filtro por método de pagamento
+            // ✅ Filtro por método de pagamento (aplica em TUDO)
             if (request.PaymentMethod.HasValue)
             {
                 var method = request.PaymentMethod.Value;
                 baseQuery = baseQuery.Where(l => l.PaymentMethod == method);
             }
+
+            // ✅ filteredQuery herda todos os filtros anteriores
+            var filteredQuery = baseQuery;
+
+            // ✅ Filtro por tipo agora funciona, pois 'type' é nullable
+            if (request.type.HasValue)
+            {
+                if (request.type.Value == LaunchType.Income)
+                    filteredQuery = filteredQuery.Where(l => l.Type == LaunchType.Income);
+                else if (request.type.Value == LaunchType.Expense)
+                    filteredQuery = filteredQuery.Where(l => l.Type == LaunchType.Expense);
+            }
+
 
 
             // ===== Totais (sem DISTINCT/GroupBy; base não duplica) =====
@@ -113,5 +118,6 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Pa
                 Items = items
             };
         }
+
     }
 }
