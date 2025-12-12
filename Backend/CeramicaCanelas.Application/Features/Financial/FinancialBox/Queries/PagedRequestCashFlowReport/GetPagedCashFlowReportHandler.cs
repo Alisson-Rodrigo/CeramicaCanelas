@@ -63,6 +63,14 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Pa
             else if (request.type == LaunchType.Expense)
                 filteredQuery = filteredQuery.Where(l => l.Type == LaunchType.Expense);
 
+            // Filtro por método de pagamento
+            if (request.PaymentMethod.HasValue)
+            {
+                var method = request.PaymentMethod.Value;
+                baseQuery = baseQuery.Where(l => l.PaymentMethod == method);
+            }
+
+
             // ===== Totais (sem DISTINCT/GroupBy; base não duplica) =====
             var totalEntradas = (await baseQuery
                 .Where(l => l.Type == LaunchType.Income)
