@@ -11,9 +11,11 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Pa
     public class PagedRequestCashFlowReport : IRequest<PagedResultCashFlowReport>
     {
         public string Search { get; set; } = string.Empty; // Descrição do lançamento
-
         public string SearchCategoryOrCustomer { get; set; } = string.Empty; // Busca por categoria ou cliente
-        public LaunchType type { get; set; } // Tipo de lançamento (Entrada, Saída ou Todos)
+
+        // ✅ AGORA NULLABLE, para permitir "Todos"
+        public LaunchType? type { get; set; }
+
         public DateOnly? StartDate { get; set; } // Período inicial
         public DateOnly? EndDate { get; set; }   // Período final
         public int Page { get; set; } = 1;
