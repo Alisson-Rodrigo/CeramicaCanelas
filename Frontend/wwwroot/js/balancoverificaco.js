@@ -57,42 +57,73 @@ function clearFilters() {
 async function fetchAndPopulateGroups() {
     try {
         const accessToken = localStorage.getItem('accessToken');
-        const url = `${API_BASE_URL}/financial/launch-category-groups/paged`;
-        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+
+        // 🔹 força a API a retornar muitos registros de uma vez
+        const url = `${API_BASE_URL}/financial/launch-category-groups/paged?Page=1&PageSize=9999`;
+
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
         if (!response.ok) throw new Error('Falha ao buscar grupos');
+
         const data = await response.json();
-        const groupsMap = data.items.reduce((map, group) => {
+
+        // opcional: cache global, se quiser reaproveitar
+        groupsCache = data.items || [];
+
+        const groupsMap = groupsCache.reduce((map, group) => {
             map[group.id] = group.name;
             return map;
         }, {});
-        populateSelect(document.getElementById('group-filter'), groupsMap, 'Todos os Grupos');
+
+        populateSelect(
+            document.getElementById('group-filter'),
+            groupsMap,
+            'Todos os Grupos'
+        );
     } catch (error) {
         console.error("Erro ao buscar grupos para filtro:", error);
     }
 }
 
+
 async function fetchAndPopulateCategories(groupId = null) {
     try {
         const accessToken = localStorage.getItem('accessToken');
-        let url = `${API_BASE_URL}/financial/launch-categories/paged`;
-        
-        // Se houver groupId, filtra as categorias por grupo
+
+        // 🔹 já entra paginado “grande”
+        let url = `${API_BASE_URL}/financial/launch-categories/paged?Page=1&PageSize=9999`;
+
+        // Se houver groupId, adiciona no querystring
         if (groupId) {
-            url += `?GroupId=${groupId}`;
+            url += `&GroupId=${encodeURIComponent(groupId)}`;
         }
-        
-        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
         if (!response.ok) throw new Error('Falha ao buscar categorias');
+
         const data = await response.json();
-        const categoriesMap = data.items.reduce((map, cat) => {
+
+        // opcional: cache global
+        categoriesCache = data.items || [];
+
+        const categoriesMap = categoriesCache.reduce((map, cat) => {
             map[cat.id] = cat.name;
             return map;
         }, {});
-        populateSelect(document.getElementById('category-filter'), categoriesMap, 'Todas as Categorias');
+
+        populateSelect(
+            document.getElementById('category-filter'),
+            categoriesMap,
+            'Todas as Categorias'
+        );
     } catch (error) {
         console.error("Erro ao buscar categorias para filtro:", error);
     }
 }
+
 
 // =======================================================
 // LÓGICA DO DASHBOARD
