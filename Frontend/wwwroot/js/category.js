@@ -94,8 +94,7 @@ async function fetchAndRenderCategories() {
         }
 
     } catch (error) {
-        showErrorModal({ title: "Erro ao Listar", detail: error.message });
-        tableBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Erro: ${error.message}</td></tr>`;
     }
 }
 

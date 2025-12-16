@@ -240,8 +240,7 @@ async function fetchAndRenderHistory(page = 1) {
         renderPagination(paginatedData);
 
     } catch (error) {
-        showErrorModal({ title: "Erro ao Listar", detail: error.message });
-        tableBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">${error.message}</td></tr>`;
+       
     }
 }
 
