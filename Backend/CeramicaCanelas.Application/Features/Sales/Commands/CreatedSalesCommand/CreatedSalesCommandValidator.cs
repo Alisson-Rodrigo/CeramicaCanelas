@@ -11,8 +11,6 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
     {
         public CreatedSalesCommandValidator()
         {
-            RuleFor(x => x.NoteNumber)
-                .GreaterThan(0).WithMessage("O número da nota deve ser maior que zero.");
 
             RuleFor(x => x.City)
                 .NotEmpty().WithMessage("Cidade é obrigatória.")

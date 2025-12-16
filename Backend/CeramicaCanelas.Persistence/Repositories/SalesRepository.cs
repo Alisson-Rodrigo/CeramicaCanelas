@@ -34,6 +34,16 @@ namespace CeramicaCanelas.Persistence.Repositories
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
+        public async Task<int> GetNextNoteNumberAsync(CancellationToken cancellationToken)
+        {
+            int last = await Context.Sales
+                .Where(x => x.IsActive)
+                .MaxAsync(x => (int?)x.NoteNumber, cancellationToken) ?? 0;
+
+            return last + 1;
+        }
+
+
         public IQueryable<Sale> QueryAllWithIncludes(bool includeInactive = false)
         {
             var q = Context.Sales

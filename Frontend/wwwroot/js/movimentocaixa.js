@@ -13,26 +13,40 @@ function initDynamicForm() {
 function initializeFilters() {
     document.getElementById('searchButton')?.addEventListener('click', () => fetchReportData(1));
     document.getElementById('clearButton')?.addEventListener('click', clearFilters);
-    
+
     const typeSelect = document.getElementById('type-filter');
-    
+    const paymentMethodSelect = document.getElementById('type-filterMethod'); // ⬅️ novo
+
     if (typeSelect) typeSelect.innerHTML = '<option value="">Todos os Tipos</option>';
-    
+    if (paymentMethodSelect) paymentMethodSelect.innerHTML = '<option value="">Todos os Métodos</option>'; // ⬅️ novo
+
     if (typeof launchTypeMap !== 'undefined' && typeSelect) {
         for (const [key, value] of Object.entries(launchTypeMap)) {
             typeSelect.appendChild(new Option(value, key));
         }
     }
+
+    // ⬇️ usa o paymentMethodMap global que já está no main.js
+    if (typeof paymentMethodMap !== 'undefined' && paymentMethodSelect) {
+        for (const [key, value] of Object.entries(paymentMethodMap)) {
+            paymentMethodSelect.appendChild(new Option(value, key));
+        }
+    }
 }
+
+
 
 function clearFilters() {
     document.getElementById('search-input').value = '';
-    document.getElementById('search-category-or-customer').value = ''; // NOVO
+    document.getElementById('search-category-or-customer').value = '';
     document.getElementById('type-filter').value = '';
+    document.getElementById('type-filterMethod').value = ''; // ⬅️ novo
     document.getElementById('start-date').value = '';
     document.getElementById('end-date').value = '';
     fetchReportData(1);
 }
+
+
 
 
 // =======================================================
@@ -56,19 +70,24 @@ async function fetchReportData(page = 1) {
         const type = document.getElementById('type-filter')?.value;
         const startDate = document.getElementById('start-date')?.value;
         const endDate = document.getElementById('end-date')?.value;
-
-        // NOVO CAMPO
         const searchCategoryOrCustomer = document.getElementById('search-category-or-customer')?.value;
+        const paymentMethod = document.getElementById('type-filterMethod')?.value; // NOVO
+
 
         if (search) params.append('Search', search);
         if (type) params.append('Type', type);
         if (startDate) params.append('StartDate', startDate);
         if (endDate) params.append('EndDate', endDate);
 
-        // Envia apenas se houver valor
         if (searchCategoryOrCustomer) {
             params.append('SearchCategoryOrCustomer', searchCategoryOrCustomer);
         }
+
+        // 🔹 NOVO: filtro por método de pagamento
+        if (paymentMethod) {
+            params.append('PaymentMethod', paymentMethod);
+        }
+
 
         const url = `${API_BASE_URL}/financial/dashboard-financial/flow-report?${params.toString()}`;
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });

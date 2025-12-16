@@ -28,23 +28,23 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
 
         public async Task<Guid> Handle(CreatedSalesCommand request, CancellationToken cancellationToken)
         {
-            // 🔹 1) Autenticação
             var user = await _logged.UserLogged();
             if (user == null)
                 throw new UnauthorizedAccessException("Usuário não autenticado.");
 
-            // 🔹 2) Verifica duplicidade de número de nota
-            if (await _salesRepository.ExistsActiveNoteNumberAsync(request.NoteNumber, cancellationToken))
-                throw new BadRequestException($"Já existe uma venda ativa com o número {request.NoteNumber}.");
-
-            // 🔹 3) Validação
+            // Validação (sem NoteNumber)
             var validator = new CreatedSalesCommandValidator();
             var validation = await validator.ValidateAsync(request, cancellationToken);
             if (!validation.IsValid)
                 throw new BadRequestException(validation);
 
-            // 🔹 4) Cria a venda (ainda sem totais)
+            // Cria a venda
             var sale = request.AssignToSale();
+
+            // 🔥 Gera automaticamente o número da nota
+            int nextNoteNumber = await _salesRepository.GetNextNoteNumberAsync(cancellationToken);
+            sale.SetNoteNumber(nextNoteNumber);
+
             await _salesRepository.CreateAsync(sale, cancellationToken);
 
             // 🔹 5) Cria os itens vinculando o SaleId

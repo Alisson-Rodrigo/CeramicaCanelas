@@ -125,7 +125,6 @@ async function handleSaleSubmit(event) {
             const selectedStatus = parseInt(document.getElementById('saleStatus').value, 10);
             
             const salePayload = {
-                noteNumber: parseInt(document.getElementById('noteNumber').value, 10),
                 customerName: document.getElementById('customerName').value,
                 customerAddress: document.getElementById('customerAddress').value,
                 city: document.getElementById('city').value,
@@ -330,8 +329,8 @@ function renderHistoryTable(items) {
             <td data-field="remainingBalance">${formattedBalance}</td>
             <td data-field="status">${statusText}</td>
             <td class="actions-cell" data-field="actions">
-                <button type="button" class="btn-action btn-edit">Editar</button>
                 <button type="button" class="btn-action btn-receipt">Recibo</button>
+                <button type="button" class="btn-action btn-edit">Editar</button>
                 <button type="button" class="btn-action btn-delete">Excluir</button>
             </td>
         `;
@@ -547,7 +546,7 @@ window.editSale = (saleId) => {
 
     // --- Edição da Linha Principal ---
     const saleDateStr = (item.saleDate || item.date).split('T')[0];
-    row.querySelector('[data-field="noteNumber"]').innerHTML = `<input type="number" name="NoteNumber" class="form-input" value="${escapeAttr(item.noteNumber)}">`;
+    row.querySelector('[data-field="noteNumber"]').textContent = item.noteNumber;
     row.querySelector('[data-field="customerName"]').innerHTML = `<input type="text" name="CustomerName" class="form-input" value="${escapeAttr(item.customerName)}">`;
     row.querySelector('[data-field="customerPhone"]').innerHTML = `<input type="text" name="CustomerPhone" class="form-input" value="${escapeAttr(item.customerPhone)}">`;
     row.querySelector('[data-field="city"]').innerHTML = `<input type="text" name="City" class="form-input" value="${escapeAttr(item.city)}">`;
@@ -665,7 +664,6 @@ window.saveSaleChanges = async (saleId) => {
         // --- Montagem do Payload Final ---
         const saleData = {
             id: saleId,
-            noteNumber: parseInt(row.querySelector('[name="NoteNumber"]').value, 10),
             customerName: row.querySelector('[name="CustomerName"]').value,
             customerPhone: row.querySelector('[name="CustomerPhone"]').value,
             city: row.querySelector('[name="City"]').value,

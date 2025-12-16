@@ -1,4 +1,4 @@
-    <div class="container">
+<div class="container">
     <h2 class="form-title">Novo Lançamento Financeiro</h2>
     <div class="form-container">
         <div class="form-group" id="type-selection-group">
@@ -16,6 +16,7 @@
                 <label class="form-label" for="description">Descrição</label>
                 <textarea id="description" name="Description" class="form-input" rows="3" required></textarea>
             </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="amount">Valor (R$)</label>
@@ -60,7 +61,7 @@
                 <label class="form-label" for="dueDate">Data de Vencimento (Opcional)</label>
                 <input type="date" id="dueDate" name="DueDate" class="form-input">
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label" for="imageProofs">Comprovantes (Opcional)</label>
                 <input type="file" id="imageProofs" class="form-input" accept="image/*">
@@ -122,47 +123,110 @@
             <tbody id="launch-history-body"></tbody>
         </table>
     </div>
+
     <div id="pagination-controls" class="pagination-controls"></div>
-</div>
 
-<div id="customerSearchModal" class="modal">
-    <div class="modal-content">
-        <span class="modal-close-btn">&times;</span>
-        <h3>Selecione um Cliente</h3>
-        <div class="filter-bar modal-filter-bar">
-            <div class="filter-group large"><label for="modalCustomerSearchInput">Buscar por Nome/Documento:</label><input type="text" id="modalCustomerSearchInput" class="form-input"></div>
-            <div class="filter-group-buttons"><button type="button" id="modalCustomerFilterBtn" class="search-btn">Buscar</button></div>
+    <!-- 🔥 HISTÓRICO DO DIA AGORA DENTRO DO CONTAINER -->
+    <hr class="section-divider">
+
+    <h2>Histórico do Dia</h2>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label for="dailyStartDate">Data Inicial:</label>
+            <input type="date" id="dailyStartDate" class="form-input">
         </div>
-        <div id="modalCustomerResultsContainer" class="table-container"></div>
-        <div id="modalCustomerPaginationControls" class="pagination-controls"></div>
-    </div>
-</div>
+        <div class="filter-group">
+            <label for="dailyEndDate">Data Final:</label>
+            <input type="date" id="dailyEndDate" class="form-input">
+        </div>
 
+        <div class="filter-group">
+            <label for="dailyType">Tipo:</label>
+            <select id="dailyType" class="form-input">
+                <option value="">Todos</option>
+                <option value="1">Entrada</option>
+                <option value="2">Saída</option>
+            </select>
+        </div>
+
+        <div class="filter-group-buttons">
+            <button type="button" id="dailyFilterBtn" class="search-btn">Filtrar</button>
+            <button type="button" id="dailyClearBtn" class="btn-cancel">Limpar</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Data Lanç.</th>
+                    <th>Categoria</th>
+                    <th>Cliente</th>
+                    <th>Método Pag.</th>
+                    <th>Status da Alteração</th>
+                </tr>
+            </thead>
+            <tbody id="daily-history-body"></tbody>
+        </table>
+    </div>
+
+    <div id="daily-history-pagination" class="pagination-controls"></div>
+
+
+</div> <!-- container -->
+<!-- Modal de Busca de Categorias -->
 <div id="categorySearchModal" class="modal">
     <div class="modal-content">
         <span class="modal-close-btn">&times;</span>
-        <h3>Selecione uma Categoria</h3>
-        <div class="filter-bar modal-filter-bar">
-            <div class="filter-group large">
-                <label for="modalCategorySearchInput">Buscar por Nome:</label>
-                <input type="text" id="modalCategorySearchInput" class="form-input">
+        <h3>Buscar Categoria</h3>
+
+        <div class="modal-filters">
+            <div class="modal-filter-group">
+                <label for="modalCategorySearchInput">Nome da categoria</label>
+                <input type="text" id="modalCategorySearchInput" placeholder="Digite parte do nome">
             </div>
-            <div class="filter-group-buttons">
-                <button type="button" id="modalCategoryFilterBtn" class="search-btn">Buscar</button>
-            </div>
+            <button type="button" id="modalCategoryFilterBtn" class="modal-search-btn">
+                Buscar
+            </button>
         </div>
-        <div id="modalCategoryResultsContainer" class="table-container"></div>
+
+        <div id="modalCategoryResultsContainer"></div>
+
         <div id="modalCategoryPaginationControls" class="pagination-controls"></div>
     </div>
 </div>
 
-<div id="imageProofModal" class="modal">
+<!-- Modal de Busca de Clientes -->
+<div id="customerSearchModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3>Comprovantes do Lançamento</h3>
-            <span class="modal-close-btn" id="closeImageProofModalBtn">&times;</span>
-        </div>
-        <div id="imageProofContainer" class="image-proof-container">
+        <span class="modal-close-btn">&times;</span>
+        <h3>Buscar Cliente</h3>
+
+        <div class="modal-filters">
+            <div class="modal-filter-group">
+                <label for="modalCustomerSearchInput">Nome / Documento</label>
+                <input type="text"
+                       id="modalCustomerSearchInput"
+                       placeholder="Digite o nome ou documento do cliente">
             </div>
+
+            <button type="button"
+                    id="modalCustomerFilterBtn"
+                    class="modal-search-btn">
+                Buscar
+            </button>
+        </div>
+
+        <!-- Aqui a tabela de clientes é renderizada via JS -->
+        <div id="modalCustomerResultsContainer"></div>
+
+        <!-- Paginação da modal -->
+        <div id="modalCustomerPaginationControls" class="pagination-controls"></div>
     </div>
 </div>
+
+

@@ -3,7 +3,9 @@ using CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.Comma
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.Commands.MarkLaunchAsPaidCommand;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.Commands.UpdateLaunchCommand;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Launches.Queries.GetPagedLaunchesQueries;
+using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.GetDailyLaunchHistory;
 using CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.GetTrialBalanceReportPdfQuery;
+using CeramicaCanelas.Domain.Enums.Financial;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -73,6 +75,14 @@ namespace CeramicaCanelas.WebApi.Controllers
 
         }
 
+        [Authorize(Roles = "Financial,Admin")]
+        [HttpGet("history")]
+        public async Task<IActionResult> GetDailyHistory(
+            [FromQuery] GetDailyLaunchHistoryQuery query)
+        {
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
 
     }
 }

@@ -9,8 +9,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.UpdateSalesCommand
             RuleFor(x => x.Id)
                 .NotEmpty().WithMessage("O ID da venda é obrigatório.");
 
-            RuleFor(x => x.NoteNumber)
-                .GreaterThan(0).WithMessage("O número da nota deve ser maior que zero.");
+
 
             RuleFor(x => x.City)
                 .NotEmpty().WithMessage("Cidade é obrigatória.")
