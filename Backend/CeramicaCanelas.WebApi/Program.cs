@@ -85,7 +85,8 @@ public class Program
         {
             options.AddPolicy("AllowSpecificOrigin", policy =>
             {
-                policy.WithOrigins("http://localhost:3001", "http://localhost:5236", "https://localhost:7018", "https://ceramicacanelas.shop", "https://www.ceramicacanelas.shop", "http://ceramicacanelas.shop")
+                policy.WithOrigins("http://localhost:3001", "http://localhost:5236", "https://localhost:7018", "https://ceramicacanelas.shop", "https://www.ceramicacanelas.shop", "http://ceramicacanelas.shop", "https://ceramisys.shop",
+        "https://www.ceramisys.shop")
                       .AllowAnyMethod()
                       .AllowAnyHeader()
                       .AllowCredentials();  // Permite cookies/autenticação
