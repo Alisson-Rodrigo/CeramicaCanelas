@@ -86,9 +86,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
 
             // 🔹 Ajuste das colunas (evita corte)
             table.AddColumn(PdfUnit.FromMillimeter(20)); // Produto
-            table.AddColumn(PdfUnit.FromMillimeter(10)); // Qtd
-            table.AddColumn(PdfUnit.FromMillimeter(12)); // Unit
-            table.AddColumn(PdfUnit.FromMillimeter(12)); // Total
+            table.AddColumn(PdfUnit.FromMillimeter(13)); // Qtd
+            table.AddColumn(PdfUnit.FromMillimeter(13)); // Unit
+            table.AddColumn(PdfUnit.FromMillimeter(14)); // Total
 
             var headerRow = table.AddRow();
             headerRow.Format.Font.Bold = true;
@@ -118,7 +118,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 row.Cells[0].Format.Font.Size = 8;
 
                 // 🔹 Exibir quantidade em milheiros (10 = 10.000)
-                var qtdDisplay = item.Quantity * 1000;
+                var qtdDisplay = item.Quantity;
                 var totalItem = item.UnitPrice * item.Quantity; // cálculo normal, pois já é milheiro
 
                 row.Cells[1].AddParagraph(qtdDisplay.ToString("N0", culture)).Format.Alignment = ParagraphAlignment.Left;
