@@ -121,7 +121,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 var qtdDisplay = item.Quantity;
                 var totalItem = item.UnitPrice * item.Quantity; // cálculo normal, pois já é milheiro
 
-                row.Cells[1].AddParagraph(qtdDisplay.ToString("N0", culture)).Format.Alignment = ParagraphAlignment.Left;
+                row.Cells[1]
+                   .AddParagraph(item.Quantity.ToString("0.##", culture))
+                   .Format.Alignment = ParagraphAlignment.Left;
                 row.Cells[2].AddParagraph(item.UnitPrice.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Left;
                 row.Cells[3].AddParagraph(totalItem.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Left;
 
