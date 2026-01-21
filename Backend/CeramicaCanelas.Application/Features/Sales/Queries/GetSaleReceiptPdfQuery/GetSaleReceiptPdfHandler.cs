@@ -135,11 +135,12 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 row.Cells[1].AddParagraph(item.Quantity.ToString("0.##", culture))
                     .Format.Alignment = ParagraphAlignment.Right;
                 
-                row.Cells[2].AddParagraph(item.UnitPrice.ToString("N2", culture))
+                row.Cells[2].AddParagraph(item.UnitPrice.ToString("F2", culture))
                     .Format.Alignment = ParagraphAlignment.Right;
                 
-                row.Cells[3].AddParagraph(totalItem.ToString("N2", culture))
+                row.Cells[3].AddParagraph(totalItem.ToString("F2", culture))
                     .Format.Alignment = ParagraphAlignment.Right;
+
                 
 
             }
