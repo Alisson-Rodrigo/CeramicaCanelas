@@ -66,8 +66,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
         public class CreatedSalesPayment
         {
             public DateOnly? PaymentDate { get; set; }
-            public decimal Amount { get; set; }
-            public PaymentMethod PaymentMethod { get; set; }
+            public decimal? Amount { get; set; }
+            public PaymentMethod? PaymentMethod { get; set; }
         }
+
     }
 }
