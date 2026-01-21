@@ -70,33 +70,30 @@ namespace CeramicaCanelas.Application.Features.Sales.Commands.CreatedSalesComman
             await _salesRepository.Update(sale);
 
 
-                        // 🔹 7) Cria os pagamentos vinculando o SaleId
-            bool hasValidPayment = false;
-            
+            // 🔹 7) Cria os pagamentos vinculando o SaleId
             if (request.Payments?.Any() == true)
             {
                 foreach (var p in request.Payments)
                 {
-                    if (p.Amount <= 0m) continue;
-            
-                    hasValidPayment = true;
+                    // ✅ ignora item vazio/incompleto
+                    if (p.Amount is null || p.Amount <= 0m) continue;
+                    if (p.PaymentMethod is null) continue;
             
                     var payment = new SalePayment
                     {
                         SaleId = sale.Id,
                         PaymentDate = p.PaymentDate,
-                        Amount = p.Amount,
-                        PaymentMethod = p.PaymentMethod
+                        Amount = p.Amount.Value,
+                        PaymentMethod = p.PaymentMethod.Value
                     };
             
+                    // Usa a lógica de domínio (atualiza status internamente)
                     sale.AddPayment(payment);
+            
+                    // Persiste o pagamento
                     await _salesPaymentsRepository.CreateAsync(payment, cancellationToken);
                 }
             }
-            
-            // 🔄 Atualiza status e timestamps da venda após todos os pagamentos
-            if (hasValidPayment)
-                await _salesRepository.Update(sale);
 
 
             // 🔄 Atualiza status e timestamps da venda após todos os pagamentos
