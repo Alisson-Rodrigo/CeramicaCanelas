@@ -84,11 +84,16 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             var table = section.AddTable();
             table.Borders.Width = 0;
 
-            // 🔹 Ajuste das colunas (evita corte)
-            table.AddColumn(PdfUnit.FromMillimeter(20)); // Produto
-            table.AddColumn(PdfUnit.FromMillimeter(13)); // Qtd
-            table.AddColumn(PdfUnit.FromMillimeter(13)); // Unit
-            table.AddColumn(PdfUnit.FromMillimeter(14)); // Total
+            table.LeftPadding  = PdfUnit.FromMillimeter(0.6);
+            table.RightPadding = PdfUnit.FromMillimeter(0.6);
+
+
+                        // 🔹 Ajuste das colunas (evita corte)
+            table.AddColumn(PdfUnit.FromMillimeter(24)); // Produto
+            table.AddColumn(PdfUnit.FromMillimeter(8));  // Qtd
+            table.AddColumn(PdfUnit.FromMillimeter(14)); // Unid
+            table.AddColumn(PdfUnit.FromMillimeter(16)); // Total
+
 
             var headerRow = table.AddRow();
             headerRow.Format.Font.Bold = true;
@@ -96,8 +101,14 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             headerRow.Format.Font.Size = 8;
             headerRow.Cells[0].AddParagraph("Prod");
             headerRow.Cells[1].AddParagraph("Qtd");
-            headerRow.Cells[2].AddParagraph("ValorUnid");
+            headerRow.Cells[2].AddParagraph("Unit");
             headerRow.Cells[3].AddParagraph("Total");
+
+            headerRow.Cells[0].Format.Alignment = ParagraphAlignment.Left;
+            headerRow.Cells[1].Format.Alignment = ParagraphAlignment.Right;
+            headerRow.Cells[2].Format.Alignment = ParagraphAlignment.Right;
+            headerRow.Cells[3].Format.Alignment = ParagraphAlignment.Right;
+
 
             // 🔹 Linhas dinâmicas com quebra automática
             foreach (var item in sale.Items)
@@ -121,11 +132,15 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 var qtdDisplay = item.Quantity;
                 var totalItem = item.UnitPrice * item.Quantity; // cálculo normal, pois já é milheiro
 
-                row.Cells[1]
-                   .AddParagraph(item.Quantity.ToString("0.##", culture))
-                   .Format.Alignment = ParagraphAlignment.Left;
-                row.Cells[2].AddParagraph(item.UnitPrice.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Left;
-                row.Cells[3].AddParagraph(totalItem.ToString("N2", culture)).Format.Alignment = ParagraphAlignment.Left;
+                row.Cells[1].AddParagraph(item.Quantity.ToString("0.##", culture))
+                    .Format.Alignment = ParagraphAlignment.Right;
+                
+                row.Cells[2].AddParagraph(item.UnitPrice.ToString("N2", culture))
+                    .Format.Alignment = ParagraphAlignment.Right;
+                
+                row.Cells[3].AddParagraph(totalItem.ToString("N2", culture))
+                    .Format.Alignment = ParagraphAlignment.Right;
+                
 
             }
 
