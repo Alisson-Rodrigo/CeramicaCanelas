@@ -32,6 +32,26 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             return $"{quantity.ToString("0.##", culture)} mi";
         }
 
+        private static void AddSeparatorRow(Table table)
+        {
+            var sep = table.AddRow();
+            sep.TopPadding = 0;
+            sep.BottomPadding = 0;
+        
+            // Junta as 4 colunas em uma só célula
+            sep.Cells[0].MergeRight = 3;
+        
+            // Linha horizontal (tipo "----") dentro da célula
+            var p = sep.Cells[0].AddParagraph(new string('-', 40));
+            p.Format.Alignment = ParagraphAlignment.Center;
+            p.Format.SpaceBefore = PdfUnit.FromPoint(1);
+            p.Format.SpaceAfter = PdfUnit.FromPoint(1);
+        
+            // Opcional: diminuir um pouco a fonte da linha
+            p.Format.Font.Size = 7;
+        }
+
+
 
         public async Task<byte[]> Handle(GetSaleReceiptPdfQuery req, CancellationToken ct)
         {
@@ -125,41 +145,39 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             headerRow.Cells[3].Format.Alignment = ParagraphAlignment.Right;
 
 
-            // 🔹 Linhas dinâmicas com quebra automática
-            foreach (var item in sale.Items)
+            for (int i = 0; i < sale.Items.Count; i++)
             {
+                var item = sale.Items[i];
+            
                 var row = table.AddRow();
                 row.Format.Font.Size = 8;
-
-                // ✅ Usa descrição do enum (GetDescription)
+            
                 var productName = (item.Product as Enum)?.GetDescription() ?? item.Product.ToString();
-
+            
                 var p = row.Cells[0].AddParagraph(productName);
                 p.Format.Alignment = ParagraphAlignment.Left;
                 p.Format.Font.Size = 8;
                 row.Cells[0].VerticalAlignment = VerticalAlignment.Top;
-
-                // 🔸 Quebra automática de linha
+            
                 row.Cells[0].Format.Alignment = ParagraphAlignment.Left;
                 row.Cells[0].Format.Font.Size = 8;
-
-                // 🔹 Exibir quantidade em milheiros (10 = 10.000)
-                var qtdDisplay = item.Quantity;
-                var totalItem = item.UnitPrice * item.Quantity; // cálculo normal, pois já é milheiro
-
+            
+                var totalItem = item.UnitPrice * item.Quantity;
+            
                 row.Cells[1].AddParagraph(FormatQtdMilheiro(item.Quantity, culture))
                     .Format.Alignment = ParagraphAlignment.Right;
-
-                
+            
                 row.Cells[2].AddParagraph(item.UnitPrice.ToString("F2", culture))
                     .Format.Alignment = ParagraphAlignment.Right;
-                
+            
                 row.Cells[3].AddParagraph(totalItem.ToString("F2", culture))
                     .Format.Alignment = ParagraphAlignment.Right;
-
-                
-
+            
+                // ✅ adiciona separador entre produtos (mas não depois do último)
+                if (i < sale.Items.Count - 1)
+                    AddSeparatorRow(table);
             }
+
 
             section.AddParagraph().Format.SpaceAfter = PdfUnit.FromPoint(4);
 
