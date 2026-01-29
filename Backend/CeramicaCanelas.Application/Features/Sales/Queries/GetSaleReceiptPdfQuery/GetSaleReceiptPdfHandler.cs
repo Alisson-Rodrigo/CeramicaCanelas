@@ -19,19 +19,19 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
 
         }
 
-                    private static string FormatQtdMilheiro(decimal quantity, CultureInfo culture)
+        private static string FormatQtdMilheiro(decimal quantity, CultureInfo culture)
+        {
+            // Menor que 1 milheiro -> mostrar em unidades
+            if (quantity > 0m && quantity < 1m)
             {
-                // Menor que 1 milheiro -> mostrar em peças (0,5 => 500)
-                if (quantity > 0m && quantity < 1m)
-                {
-                    // arredonda para evitar 0,05 virar 49,999...
-                    var pieces = Math.Round(quantity * 1000m, 0, MidpointRounding.AwayFromZero);
-                    return pieces.ToString("0", culture);
-                }
-            
-                // 1 milheiro ou mais -> mostrar como milheiro normal (ex.: 1,5)
-                return quantity.ToString("0.##", culture);
+                var pieces = Math.Round(quantity * 1000m, 0, MidpointRounding.AwayFromZero);
+                return $"{pieces.ToString("0", culture)} un";
             }
+        
+            // 1 milheiro ou mais -> mostrar em milheiro
+            return $"{quantity.ToString("0.##", culture)} mi";
+        }
+
 
         public async Task<byte[]> Handle(GetSaleReceiptPdfQuery req, CancellationToken ct)
         {
