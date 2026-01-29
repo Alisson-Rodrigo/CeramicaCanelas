@@ -43,16 +43,13 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             // Junta as 4 colunas em uma só célula
             sep.Cells[0].MergeRight = 3;
         
-            // Linha horizontal (tipo "----") dentro da célula
-            var p = sep.Cells[0].AddParagraph(new string('-', 40));
-            p.Format.Alignment = ParagraphAlignment.Center;
-            p.Format.SpaceBefore = PdfUnit.FromPoint(1);
-            p.Format.SpaceAfter = PdfUnit.FromPoint(1);
+            // Linha real ocupando toda a largura da tabela
+            sep.Cells[0].Borders.Bottom.Width = 0.5;
         
-            // Opcional: diminuir um pouco a fonte da linha
-            p.Format.Font.Size = 7;
+            // Espaço pra não colar na linha do produto
+            sep.Height = PdfUnit.FromPoint(3);
         }
-
+        
 
 
         public async Task<byte[]> Handle(GetSaleReceiptPdfQuery req, CancellationToken ct)
