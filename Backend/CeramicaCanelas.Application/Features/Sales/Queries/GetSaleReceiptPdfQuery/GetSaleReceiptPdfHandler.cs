@@ -16,7 +16,22 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
         public GetSaleReceiptPdfHandler(ISalesRepository salesRepository)
         {
             _salesRepository = salesRepository;
+
         }
+
+                    private static string FormatQtdMilheiro(decimal quantity, CultureInfo culture)
+            {
+                // Menor que 1 milheiro -> mostrar em peças (0,5 => 500)
+                if (quantity > 0m && quantity < 1m)
+                {
+                    // arredonda para evitar 0,05 virar 49,999...
+                    var pieces = Math.Round(quantity * 1000m, 0, MidpointRounding.AwayFromZero);
+                    return pieces.ToString("0", culture);
+                }
+            
+                // 1 milheiro ou mais -> mostrar como milheiro normal (ex.: 1,5)
+                return quantity.ToString("0.##", culture);
+            }
 
         public async Task<byte[]> Handle(GetSaleReceiptPdfQuery req, CancellationToken ct)
         {
@@ -132,8 +147,9 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 var qtdDisplay = item.Quantity;
                 var totalItem = item.UnitPrice * item.Quantity; // cálculo normal, pois já é milheiro
 
-                row.Cells[1].AddParagraph(item.Quantity.ToString("0.##", culture))
+                row.Cells[1].AddParagraph(FormatQtdMilheiro(item.Quantity, culture))
                     .Format.Alignment = ParagraphAlignment.Right;
+
                 
                 row.Cells[2].AddParagraph(item.UnitPrice.ToString("F2", culture))
                     .Format.Alignment = ParagraphAlignment.Right;
