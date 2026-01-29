@@ -6,6 +6,8 @@ using MigraDocCore.DocumentObjectModel.Tables;
 using MigraDocCore.Rendering;
 using System.Globalization;
 using PdfUnit = MigraDocCore.DocumentObjectModel.Unit;
+using System.Linq;
+
 
 namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQuery
 {
@@ -144,10 +146,12 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             headerRow.Cells[2].Format.Alignment = ParagraphAlignment.Right;
             headerRow.Cells[3].Format.Alignment = ParagraphAlignment.Right;
 
+            var items = sale.Items?.ToList() ?? new();
 
-            for (int i = 0; i < sale.Items.Count; i++)
+
+            for (int i = 0; i < items.Count; i++)
             {
-                var item = sale.Items[i];
+                var item = items[i];
             
                 var row = table.AddRow();
                 row.Format.Font.Size = 8;
@@ -173,10 +177,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 row.Cells[3].AddParagraph(totalItem.ToString("F2", culture))
                     .Format.Alignment = ParagraphAlignment.Right;
             
-                // ✅ adiciona separador entre produtos (mas não depois do último)
-                if (i < sale.Items.Count - 1)
+                // ✅ separador entre produtos
+                if (i < items.Count - 1)
                     AddSeparatorRow(table);
             }
+
 
 
             section.AddParagraph().Format.SpaceAfter = PdfUnit.FromPoint(4);
@@ -184,7 +189,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             // ==============================
             // 🔸 Totais
             // ==============================
-            var subtotal = sale.Items.Sum(i => i.UnitPrice * i.Quantity);
+            var subtotal = items.Sum(i => i.UnitPrice * i.Quantity);
             var totalP = section.AddParagraph($"Subtotal: R$ {subtotal:N2}");
             totalP.Format.Alignment = ParagraphAlignment.Right;
 
@@ -226,7 +231,7 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
                 }
 
                 var totalPago = sale.Payments.Sum(p => p.Amount);
-                var restante = sale.Items.Sum(i => i.UnitPrice * i.Quantity) - sale.Discount - totalPago;
+                var restante = items.Sum(i => i.UnitPrice * i.Quantity) - sale.Discount - totalPago;
 
                 section.AddParagraph().Format.SpaceAfter = PdfUnit.FromPoint(3);
 
