@@ -1,12 +1,7 @@
-﻿using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
+using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Domain.Enums.Financial;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.TrialBalanceWithExtractRequest
 {
@@ -29,14 +24,8 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             CancellationToken ct)
         {
             // =====================================
-            // 🔹 1️⃣ ENTRADAS (EXTRATOS + LANÇAMENTOS)
+            // 🔹 1️⃣ EXTRATOS (APENAS LISTAGEM / VISUALIZAÇÃO)
             // =====================================
-
-            // =====================================
-            // 🔹 1️⃣ ENTRADAS (EXTRATOS + LANÇAMENTOS)
-            // =====================================
-
-            // Extratos bancários ativos (positivos)
             var extracts = _extractRepository.QueryAll()
                 .Where(e => e.IsActive);
 
@@ -58,22 +47,12 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
                 .OrderByDescending(e => e.Date)
                 .ToListAsync(ct);
 
-            // ✅ Total geral dos extratos (entradas + saídas)
+            // ✅ Total geral dos extratos (entradas + saídas) — SOMENTE PARA O TOTAL DE EXTRATOS
             var totalExtractOverall = extractDetails.Sum(e => e.Value);
 
-
-            // Somar apenas os valores positivos dos extratos
-            var extractIncomes = extractDetails
-                .Where(e => e.Value > 0)
-                .GroupBy(e => e.AccountName)
-                .Select(g => new AccountIncomeSummary
-                {
-                    AccountName = g.Key,
-                    TotalIncome = g.Sum(x => x.Value)
-                })
-                .ToList();
-
-            // Lançamentos de entrada (LaunchType.Income)
+            // =====================================
+            // 🔹 2️⃣ ENTRADAS (SOMENTE LANÇAMENTOS)
+            // =====================================
             var incomeLaunches = _launchRepository.QueryAllWithIncludes()
                 .Where(l => l.Status == PaymentStatus.Paid && l.Type == LaunchType.Income);
 
@@ -84,32 +63,20 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             if (request.PaymentMethod.HasValue)
                 incomeLaunches = incomeLaunches.Where(l => l.PaymentMethod == request.PaymentMethod.Value);
 
-            // Soma de lançamentos de entrada
-            var launchIncomes = await incomeLaunches
+            var incomeAccounts = await incomeLaunches
                 .GroupBy(l => l.PaymentMethod)
                 .Select(g => new AccountIncomeSummary
                 {
                     AccountName = g.Key.ToString(),
                     TotalIncome = g.Sum(x => x.Amount)
                 })
+                .OrderByDescending(a => a.TotalIncome)
                 .ToListAsync(ct);
 
-            // Combina entradas de extratos + lançamentos
-            var combinedIncomes = extractIncomes
-                .Concat(launchIncomes)
-                .GroupBy(a => a.AccountName)
-                .Select(g => new AccountIncomeSummary
-                {
-                    AccountName = g.Key,
-                    TotalIncome = g.Sum(x => x.TotalIncome)
-                })
-                .OrderByDescending(a => a.TotalIncome)
-                .ToList();
-
-            var totalIncomeOverall = combinedIncomes.Sum(a => a.TotalIncome);
+            var totalIncomeOverall = incomeAccounts.Sum(a => a.TotalIncome);
 
             // =====================================
-            // 🔹 2️⃣ LANÇAMENTOS (SAÍDAS)
+            // 🔹 3️⃣ LANÇAMENTOS (SAÍDAS)
             // =====================================
             var launches = _launchRepository.QueryAllWithIncludes()
                 .Include(l => l.Category)!.ThenInclude(c => c.Group)
@@ -125,6 +92,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
                 launches = launches.Where(l => l.CategoryId == request.CategoryId.Value);
             if (request.PaymentMethod.HasValue)
                 launches = launches.Where(l => l.PaymentMethod == request.PaymentMethod.Value);
+
             if (!string.IsNullOrWhiteSpace(request.Search))
             {
                 var s = request.Search.ToLower();
@@ -167,7 +135,7 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             var totalExpenseOverall = groups.Sum(g => g.GroupExpense);
 
             // =====================================
-            // 🔹 3️⃣ FINALIZA RESULTADO
+            // 🔹 4️⃣ FINALIZA RESULTADO
             // =====================================
             var minDate = request.StartDate ?? await launches.MinAsync(l => (DateOnly?)l.LaunchDate, ct);
             var maxDate = request.EndDate ?? await launches.MaxAsync(l => (DateOnly?)l.LaunchDate, ct);
@@ -176,15 +144,13 @@ namespace CeramicaCanelas.Application.Features.Financial.FinancialBox.Queries.Tr
             {
                 StartDate = minDate,
                 EndDate = maxDate,
-                Accounts = combinedIncomes,
+                Accounts = incomeAccounts,          // ✅ SOMENTE LANÇAMENTOS
                 Groups = groups,
-                Extracts = extractDetails,
+                Extracts = extractDetails,          // ✅ APENAS LISTAGEM
                 TotalIncomeOverall = totalIncomeOverall,
                 TotalExpenseOverall = totalExpenseOverall,
-                TotalExtractOverall = totalExtractOverall // ✅ novo campo retornado
+                TotalExtractOverall = totalExtractOverall
             };
-
-
         }
     }
 }
