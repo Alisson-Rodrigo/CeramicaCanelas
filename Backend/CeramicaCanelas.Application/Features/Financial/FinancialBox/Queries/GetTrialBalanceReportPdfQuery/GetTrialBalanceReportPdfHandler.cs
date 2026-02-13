@@ -1,6 +1,7 @@
 using CeramicaCanelas.Application.Contracts.Application.Services;
 using CeramicaCanelas.Application.Contracts.Persistance.Repositories;
 using CeramicaCanelas.Domain.Enums.Financial;
+using CeramicaCanelas.Application.Services.Reports;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static CeramicaCanelas.Application.Contracts.Application.Services.IPdfReportService;
