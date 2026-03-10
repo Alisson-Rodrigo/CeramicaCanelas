@@ -85,7 +85,7 @@ public class Program
 {
     options.AddPolicy("AllowSpecificOrigin", policy =>
     {
-        var allowedOrigins = new[]
+        var allowedOrigins = new HashSet<string>
         {
             "http://localhost:3001",
             "http://localhost:5236",
@@ -99,15 +99,10 @@ public class Program
             "https://www.cjmcanelas.shop"
         };
 
-        policy.WithOrigins(allowedOrigins)
+        policy.SetIsOriginAllowed(origin => allowedOrigins.Contains(origin.TrimEnd('.')))
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials()
-              .SetIsOriginAllowed(origin =>
-              {
-                  var normalized = origin.TrimEnd('.');
-                  return allowedOrigins.Contains(normalized);
-              });
+              .AllowCredentials();
     });
 });
 
