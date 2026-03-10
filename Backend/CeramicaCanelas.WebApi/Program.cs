@@ -81,19 +81,35 @@ public class Program
 
 
         //Adicionando Cors para integrações
-        builder.Services.AddCors(options =>
+  builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        var allowedOrigins = new[]
         {
-            options.AddPolicy("AllowSpecificOrigin", policy =>
-            {
-                policy.WithOrigins("http://localhost:3001", "http://localhost:5236", "https://localhost:7018", "https://ceramicacanelas.shop", "https://www.ceramicacanelas.shop", "http://ceramicacanelas.shop", "https://ceramisys.shop",
-        "https://www.ceramisys.shop", "https://cjmcanelas.shop", "https://www.cjmcanelas.shop","https://cjmcanelas.shop.",
-        "https://www.cjmcanelas.shop.")
-                      .AllowAnyMethod()
-                      .AllowAnyHeader()
-                      .AllowCredentials();  // Permite cookies/autenticação
-            });
-        });
+            "http://localhost:3001",
+            "http://localhost:5236",
+            "https://localhost:7018",
+            "https://ceramicacanelas.shop",
+            "https://www.ceramicacanelas.shop",
+            "http://ceramicacanelas.shop",
+            "https://ceramisys.shop",
+            "https://www.ceramisys.shop",
+            "https://cjmcanelas.shop",
+            "https://www.cjmcanelas.shop"
+        };
 
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials()
+              .SetIsOriginAllowed(origin =>
+              {
+                  var normalized = origin.TrimEnd('.');
+                  return allowedOrigins.Contains(normalized);
+              });
+    });
+});
 
         // JWT Configuration
         var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
