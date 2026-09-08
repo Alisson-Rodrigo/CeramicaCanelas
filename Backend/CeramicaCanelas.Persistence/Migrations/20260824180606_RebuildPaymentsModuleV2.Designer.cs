@@ -3,6 +3,7 @@ using System;
 using CeramicaCanelas.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CeramicaCanelas.Persistence.Migrations
 {
     [DbContext(typeof(DefaultContext))]
-    partial class DefaultContextModelSnapshot : ModelSnapshot
+    [Migration("20260824180606_RebuildPaymentsModuleV2")]
+    partial class RebuildPaymentsModuleV2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -489,6 +492,66 @@ namespace CeramicaCanelas.Persistence.Migrations
                     b.ToTable("ProofImages");
                 });
 
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentBaseValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("MonthlyValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPersonId", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("PaymentBaseValues", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentBonusValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPersonId", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("PaymentBonusValues", (string)null);
+                });
+
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -647,10 +710,6 @@ namespace CeramicaCanelas.Persistence.Migrations
 
                     b.Property<DateTime>("ModifiedOn")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("MonthlyValue")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1307,6 +1366,28 @@ namespace CeramicaCanelas.Persistence.Migrations
                     b.Navigation("Launch");
                 });
 
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentBaseValue", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", "PaymentPerson")
+                        .WithMany("BaseValues")
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentPerson");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentBonusValue", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", "PaymentPerson")
+                        .WithMany("BonusValues")
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentPerson");
+                });
+
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", b =>
                 {
                     b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", "PaymentPerson")
@@ -1469,6 +1550,10 @@ namespace CeramicaCanelas.Persistence.Migrations
 
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", b =>
                 {
+                    b.Navigation("BaseValues");
+
+                    b.Navigation("BonusValues");
+
                     b.Navigation("Calculations");
 
                     b.Navigation("Vouchers");

@@ -1,0 +1,84 @@
+INTEGRACAO DO FRONTEND - MODULO DE PAGAMENTOS
+=============================================
+
+Base: /api/payments
+Autorizacao: Bearer token com perfil Financial ou Admin.
+Respostas JSON usam camelCase e enums numericos.
+
+Todos os POST e PATCH recebem multipart/form-data. Use FormData e NAO defina Content-Type manualmente.
+Os campos decimais aceitam 1615.60 e 1615,60.
+
+ENUMS
+EmploymentType: 1 funcionario, 2 prestador.
+Fortnight: 1 primeira, 2 segunda quinzena.
+VoucherStatus: 1 ativo, 2 quitado, 3 pausado, 4 cancelado.
+VoucherPeriodicity: 1 mensal, 2 alternado, 3 a cada X meses, 4 unico, 5 personalizado.
+
+ENDPOINTS
+
+GET /api/payments/people
+Lista pessoas com o salario atual. Bonificacao nao faz parte do cadastro.
+
+POST /api/payments/people
+FormData: Name, EmploymentType, MonthlyValue, EmployeeId opcional.
+
+PATCH /api/payments/people/{personId}/salary
+FormData: MonthlyValue. Substitui o salario atual usado nos proximos calculos.
+
+PATCH /api/payments/people/{personId}/status
+FormData: IsActive.
+
+GET /api/payments/rules
+Lista regras versionadas.
+
+POST /api/payments/rules
+FormData: EffectiveFrom, EmployeeFirstFortnightPercent, ContractorFirstFortnightPercent, FullAbsenceValue, HalfAbsenceValue, MonthlyWorkMinutes opcional, PositiveHourMultiplier opcional, NegativeHourMultiplier opcional, NightHourMultiplier opcional.
+
+GET /api/payments/vouchers?personId={GUID}
+Lista vales. personId e opcional.
+
+POST /api/payments/vouchers
+FormData: PaymentPersonId, Description, TotalValue opcional, InstallmentValue, Date, StartYear, StartMonth, Periodicity, IntervalMonths, InstallmentCount opcional, CompetencesJson opcional.
+CompetencesJson: [{"year":2026,"month":8,"skip":false}]
+
+PATCH /api/payments/vouchers/{voucherId}/status
+FormData: Status.
+
+POST /api/payments/calculations/preview
+Simula sem salvar.
+
+POST /api/payments/calculations
+Calcula e salva.
+
+Os dois endpoints de calculo usam:
+PaymentPersonId, CompetenceYear, CompetenceMonth, Fortnight, BonusValue, FullAbsences, HalfAbsences, PositiveMinutes, NegativeMinutes, NightMinutes, ExcludedVoucherIdsJson, AdditionsJson, DeductionsJson.
+
+ExcludedVoucherIdsJson: ["GUID-DO-VALE"]
+AdditionsJson: [{"description":"Comissao","amount":100.00}]
+DeductionsJson: [{"description":"Desconto manual","amount":50.00}]
+
+Esses tres campos sao strings criadas com JSON.stringify. BonusValue e informado manualmente em cada calculo; nao o repita em AdditionsJson.
+
+GET /api/payments/calculations?personId={GUID}&year=2026&month=8
+Lista historico. Todos os filtros sao opcionais.
+
+GET /api/payments/calculations/export?personId={GUID}&year=2026&month=8
+Baixa PDF formatado dos pagamentos, com nome, salario, bonificacao, descontos, faltas, vales, horas e liquido. Todos os filtros sao opcionais; sem filtros exporta tudo.
+
+GET /api/payments/calculations/bonuses/export?personId={GUID}&year=2026&month=8
+Baixa PDF somente das bonificacoes, com valor bruto, desconto por faltas e valor liquido. Todos os filtros sao opcionais.
+
+Para os dois exports, leia a resposta como Blob, nao como JSON. O Content-Type retornado e application/pdf.
+
+PATCH /api/payments/calculations/{calculationId}/paid
+FormData: PaidAt em ISO 8601.
+
+REGRAS
+- Primeira quinzena deve ser confirmada antes da segunda.
+- O bonus informado manualmente entra na segunda quinzena.
+- Falta inteira desconta um dia do salario: salario / 30 / 8 * 8.
+- Meia falta desconta meio dia do salario: salario / 30 / 8 * 4.
+- Da bonificacao, falta inteira desconta R$ 100 e meia falta R$ 50, sem ultrapassar o bonus informado.
+- Duas meias faltas viram uma falta inteira.
+- Vales entram somente na segunda quinzena.
+- O frontend deve exibir os valores devolvidos pela previa, sem recalcular.

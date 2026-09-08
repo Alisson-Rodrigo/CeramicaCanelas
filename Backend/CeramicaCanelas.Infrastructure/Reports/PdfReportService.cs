@@ -10,7 +10,7 @@ using static CeramicaCanelas.Application.Contracts.Application.Services.IPdfRepo
 
 namespace CeramicaCanelas.Infrastructure.Reports
 {
-    public class PdfReportService : IPdfReportService
+    public partial class PdfReportService : IPdfReportService
     {
         public byte[] BuildProductItemsReportPdf(
             CompanyProfile company,

@@ -2,6 +2,7 @@
 using CeramicaCanelas.Domain.Entities.Almoxarifado;
 using CeramicaCanelas.Domain.Entities.Financial;
 using CeramicaCanelas.Domain.Entities.Sales;
+using CeramicaCanelas.Domain.Entities.Payments;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +32,12 @@ public class DefaultContext : IdentityDbContext<User>
     public DbSet<SalePayment> SalePayments { get; set; } = null!;
     public DbSet<Sale> Sales { get; set; } = null!;
     public DbSet<SaleItem> SaleItems { get; set; } = null!;
+    public DbSet<PaymentPerson> PaymentPeople { get; set; } = null!;
+    public DbSet<PaymentRuleConfiguration> PaymentRuleConfigurations { get; set; } = null!;
+    public DbSet<Voucher> PaymentVouchers { get; set; } = null!;
+    public DbSet<VoucherCompetence> PaymentVoucherCompetences { get; set; } = null!;
+    public DbSet<PaymentCalculation> PaymentCalculations { get; set; } = null!;
+    public DbSet<PaymentCalculationItem> PaymentCalculationItems { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -29,6 +29,10 @@
     <Folder Include="wwwroot\financial\launch\proof\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Assets\logo-cjm.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<Folder Include="wwwroot\base\" />
 	</ItemGroup>

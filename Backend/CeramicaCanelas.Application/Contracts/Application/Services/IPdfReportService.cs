@@ -24,6 +24,13 @@ namespace CeramicaCanelas.Application.Contracts.Application.Services
             IEnumerable<AppliedFilter>? filters = null
         );
 
+        byte[] BuildPaymentsReportPdf(
+            IEnumerable<CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation> calculations,
+            bool bonusesOnly,
+            int? year = null,
+            int? month = null,
+            string? logoPath = null);
+
         // ======================================================
         // 🔹 RELATÓRIO DE BALANCETE DE VERIFICAÇÃO
         // ======================================================
