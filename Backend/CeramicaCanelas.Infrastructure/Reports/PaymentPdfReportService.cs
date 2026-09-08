@@ -24,13 +24,15 @@ public partial class PdfReportService
         bool bonusesOnly,
         int? year = null,
         int? month = null,
+        Fortnight? fortnight = null,
         string? logoPath = null)
     {
         var source = calculations.ToList();
         ImageSource.ImageSourceImpl ??= new ImageSharpImageSource<Rgba32>();
+        var filtered = fortnight.HasValue ? source.Where(x => x.Fortnight == fortnight.Value).ToList() : source;
         var rows = bonusesOnly
-            ? source.Where(x => SumItems(x, PaymentItemKind.Bonus) > 0m).ToList()
-            : source;
+            ? filtered.Where(x => SumItems(x, PaymentItemKind.Bonus) > 0m).OrderBy(x => x.PersonName).ToList()
+            : filtered.OrderBy(x => x.PersonName).ToList();
 
         var document = new Document();
         document.Info.Title = bonusesOnly ? "Relatório de bonificações" : "Relatório de pagamentos";
@@ -47,7 +49,7 @@ public partial class PdfReportService
         normal.Font.Color = PaymentBrown;
 
         var section = document.AddSection();
-        AddPaymentHeader(section, bonusesOnly, year, month, logoPath);
+        AddPaymentHeader(section, bonusesOnly, year, month, fortnight, logoPath);
         AddPaymentTotals(section, rows, bonusesOnly);
 
         if (rows.Count == 0)
@@ -60,8 +62,13 @@ public partial class PdfReportService
         }
         else
         {
-            foreach (var calculation in rows)
-                AddPaymentBlock(section, calculation, bonusesOnly);
+            for (var index = 0; index < rows.Count; index++)
+            {
+                if (index > 0)
+                    section.AddPageBreak();
+
+                AddPaymentBlock(section, rows[index], bonusesOnly);
+            }
         }
 
         AddPaymentFooter(section);
@@ -73,7 +80,7 @@ public partial class PdfReportService
         return stream.ToArray();
     }
 
-    private static void AddPaymentHeader(Section section, bool bonusesOnly, int? year, int? month, string? logoPath)
+    private static void AddPaymentHeader(Section section, bool bonusesOnly, int? year, int? month, Fortnight? fortnight, string? logoPath)
     {
         var header = section.AddTable();
         header.Borders.Width = 0;
@@ -110,7 +117,7 @@ public partial class PdfReportService
         title.Format.Font.Bold = true;
         title.Format.Font.Color = Colors.White;
 
-        var period = titleCell.AddParagraph(PeriodLabel(year, month));
+        var period = titleCell.AddParagraph(PeriodLabel(year, month, fortnight));
         period.Format.Font.Size = 9;
         period.Format.Font.Color = Colors.White;
         period.Format.SpaceBefore = Unit.FromPoint(5);
@@ -358,7 +365,11 @@ public partial class PdfReportService
     private static string FortnightName(Fortnight value) => value == Fortnight.First ? "1ª" : "2ª";
     private static string EmploymentTypeName(EmploymentType value) => value == EmploymentType.Employee ? "Funcionário" : "Prestador";
     private static string StatusName(PaymentCalculationStatus value) => value switch { PaymentCalculationStatus.Paid => "Pago", PaymentCalculationStatus.Calculated => "Calculado", PaymentCalculationStatus.Cancelled => "Cancelado", _ => "Rascunho" };
-    private static string PeriodLabel(int? year, int? month) => year.HasValue && month.HasValue ? $"Competência: {month:00}/{year}" : year.HasValue ? $"Ano: {year}" : month.HasValue ? $"Mês: {month:00}" : "Todos os pagamentos calculados";
+    private static string PeriodLabel(int? year, int? month, Fortnight? fortnight)
+    {
+        var period = year.HasValue && month.HasValue ? $"Competência: {month:00}/{year}" : year.HasValue ? $"Ano: {year}" : month.HasValue ? $"Mês: {month:00}" : "Todos os pagamentos calculados";
+        return fortnight.HasValue ? $"{period}  |  {FortnightName(fortnight.Value)} quinzena" : period;
+    }
 
     private static string ItemTypeName(PaymentItemKind kind) => kind switch
     {

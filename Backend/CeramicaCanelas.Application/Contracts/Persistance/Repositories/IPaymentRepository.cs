@@ -16,7 +16,7 @@ public interface IPaymentRepository
     Task AddVoucherAsync(Voucher voucher, CancellationToken cancellationToken);
     Task<PaymentCalculation?> GetCalculationAsync(Guid id, CancellationToken cancellationToken);
     Task<PaymentCalculation?> GetCalculationAsync(Guid personId, int year, int month, Fortnight fortnight, CancellationToken cancellationToken);
-    Task<List<PaymentCalculation>> GetHistoryAsync(Guid? personId, int? year, int? month, CancellationToken cancellationToken);
+    Task<List<PaymentCalculation>> GetHistoryAsync(Guid? personId, int? year, int? month, Fortnight? fortnight, CancellationToken cancellationToken);
     Task AddCalculationAsync(PaymentCalculation calculation, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

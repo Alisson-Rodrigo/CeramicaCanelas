@@ -15,8 +15,8 @@ public interface IPaymentApplicationService
     Task UpdateVoucherStatusAsync(Guid voucherId, VoucherStatus status, CancellationToken cancellationToken);
     Task<PaymentPreviewDto> PreviewAsync(CalculatePaymentRequest request, CancellationToken cancellationToken);
     Task<PaymentHistoryDto> ConfirmAsync(CalculatePaymentRequest request, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<PaymentHistoryDto>> GetHistoryAsync(Guid? personId, int? year, int? month, CancellationToken cancellationToken);
-    Task<PaymentExportFileDto> ExportPaymentsAsync(Guid? personId, int? year, int? month, CancellationToken cancellationToken);
-    Task<PaymentExportFileDto> ExportBonusesAsync(Guid? personId, int? year, int? month, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<PaymentHistoryDto>> GetHistoryAsync(Guid? personId, int? year, int? month, Fortnight? fortnight, CancellationToken cancellationToken);
+    Task<PaymentExportFileDto> ExportPaymentsAsync(Guid? personId, int? year, int? month, Fortnight? fortnight, CancellationToken cancellationToken);
+    Task<PaymentExportFileDto> ExportBonusesAsync(Guid? personId, int? year, int? month, Fortnight? fortnight, CancellationToken cancellationToken);
     Task MarkPaidAsync(Guid calculationId, DateTime paidAt, CancellationToken cancellationToken);
 }

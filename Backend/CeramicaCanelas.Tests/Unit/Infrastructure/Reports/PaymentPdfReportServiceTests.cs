@@ -2,6 +2,7 @@ using CeramicaCanelas.Domain.Entities.Payments;
 using CeramicaCanelas.Domain.Enums.Payments;
 using CeramicaCanelas.Infrastructure.Reports;
 using FluentAssertions;
+using PdfSharpCore.Pdf.IO;
 
 namespace CeramicaCanelas.Tests.Unit.Infrastructure.Reports;
 
@@ -15,11 +16,30 @@ public sealed class PaymentPdfReportServiceTests
         var logoPath = Path.Combine(AppContext.BaseDirectory, "Assets", "logo-cjm.png");
         var service = new PdfReportService();
 
-        var pdf = service.BuildPaymentsReportPdf([Calculation()], bonusesOnly, 2026, 8, logoPath);
+        var pdf = service.BuildPaymentsReportPdf([Calculation()], bonusesOnly, 2026, 8, Fortnight.Second, logoPath);
 
         File.Exists(logoPath).Should().BeTrue();
         pdf.Should().HaveCountGreaterThan(10_000);
         pdf.Take(5).Should().Equal("%PDF-"u8.ToArray());
+    }
+
+    [Fact]
+    public void ReportFiltersCalculationsByFortnight()
+    {
+        var service = new PdfReportService();
+        var first = Calculation();
+        first.Fortnight = Fortnight.First;
+        var second = Calculation();
+        second.Fortnight = Fortnight.Second;
+
+        var filteredPdf = service.BuildPaymentsReportPdf([first, second], false, 2026, 8, Fortnight.First);
+        var completePdf = service.BuildPaymentsReportPdf([first, second], false, 2026, 8);
+
+        filteredPdf.Take(5).Should().Equal("%PDF-"u8.ToArray());
+        using var filteredDocument = PdfReader.Open(new MemoryStream(filteredPdf), PdfDocumentOpenMode.ReadOnly);
+        using var completeDocument = PdfReader.Open(new MemoryStream(completePdf), PdfDocumentOpenMode.ReadOnly);
+        filteredDocument.PageCount.Should().Be(1);
+        completeDocument.PageCount.Should().Be(2);
     }
 
     private static PaymentCalculation Calculation()

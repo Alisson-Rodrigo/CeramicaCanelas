@@ -96,10 +96,12 @@ O vale deve aparecer em `GET /api/payments/vouchers?personId=ID` e ser descontad
 Depois de confirmar os calculos, execute:
 
 ```http
-GET /api/payments/calculations/export?year=2026&month=8
+GET /api/payments/calculations/export?year=2026&month=8&fortnight=1
 ```
 
-O Swagger deve baixar `pagamentos-2026-08.pdf`. Confira a logo, as cores da empresa e os blocos por pessoa com salario, bonificacao, descontos, liquido, faltas, vales e horas positivas, negativas ou noturnas.
+O Swagger deve baixar `pagamentos-2026-08-1a-quinzena.pdf`. Confira que aparecem somente calculos da primeira quinzena, com um funcionario por pagina, numeracao `Pagina X de Y`, logo, cores da empresa, salario, descontos, liquido, faltas e horas.
+
+Repita com `fortnight=2`. O arquivo deve se chamar `pagamentos-2026-08-2a-quinzena.pdf` e conter somente a segunda quinzena.
 
 Para exportar tudo, deixe `personId`, `year` e `month` vazios.
 
@@ -108,10 +110,10 @@ Para exportar tudo, deixe `personId`, `year` e `month` vazios.
 Execute:
 
 ```http
-GET /api/payments/calculations/bonuses/export?year=2026&month=8
+GET /api/payments/calculations/bonuses/export?year=2026&month=8&fortnight=2
 ```
 
-O Swagger deve baixar `bonificacoes-2026-08.pdf`. Ele deve mostrar somente calculos com bonificacao e apresentar `Bonificacao bruta`, `Desconto por faltas` e `Bonificacao liquida`.
+O Swagger deve baixar `bonificacoes-2026-08-2a-quinzena.pdf`. Ele deve mostrar somente calculos com bonificacao da segunda quinzena e apresentar `Bonificacao bruta`, `Desconto por faltas` e `Bonificacao liquida`.
 
 Tambem e possivel filtrar os dois arquivos por `personId`.
 

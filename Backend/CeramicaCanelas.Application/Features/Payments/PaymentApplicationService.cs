@@ -155,21 +155,23 @@ public sealed class PaymentApplicationService(IPaymentRepository repository, IPd
         return MapHistory(entity);
     }
 
-    public async Task<IReadOnlyCollection<PaymentHistoryDto>> GetHistoryAsync(Guid? personId, int? year, int? month, CancellationToken cancellationToken) =>
-        (await repository.GetHistoryAsync(personId, year, month, cancellationToken)).Select(MapHistory).ToList();
+    public async Task<IReadOnlyCollection<PaymentHistoryDto>> GetHistoryAsync(Guid? personId, int? year, int? month, Fortnight? fortnight, CancellationToken cancellationToken) =>
+        (await repository.GetHistoryAsync(personId, year, month, fortnight, cancellationToken)).Select(MapHistory).ToList();
 
-    public async Task<PaymentExportFileDto> ExportPaymentsAsync(Guid? personId, int? year, int? month, CancellationToken cancellationToken)
+    public async Task<PaymentExportFileDto> ExportPaymentsAsync(Guid? personId, int? year, int? month, Fortnight? fortnight, CancellationToken cancellationToken)
     {
-        var calculations = await repository.GetHistoryAsync(personId, year, month, cancellationToken);
-        var content = pdfReportService.BuildPaymentsReportPdf(calculations, false, year, month, PaymentLogoPath());
-        return new(content, "application/pdf", ExportFileName("pagamentos", year, month));
+        ValidateFortnight(fortnight);
+        var calculations = await repository.GetHistoryAsync(personId, year, month, fortnight, cancellationToken);
+        var content = pdfReportService.BuildPaymentsReportPdf(calculations, false, year, month, fortnight, PaymentLogoPath());
+        return new(content, "application/pdf", ExportFileName("pagamentos", year, month, fortnight));
     }
 
-    public async Task<PaymentExportFileDto> ExportBonusesAsync(Guid? personId, int? year, int? month, CancellationToken cancellationToken)
+    public async Task<PaymentExportFileDto> ExportBonusesAsync(Guid? personId, int? year, int? month, Fortnight? fortnight, CancellationToken cancellationToken)
     {
-        var calculations = await repository.GetHistoryAsync(personId, year, month, cancellationToken);
-        var content = pdfReportService.BuildPaymentsReportPdf(calculations, true, year, month, PaymentLogoPath());
-        return new(content, "application/pdf", ExportFileName("bonificacoes", year, month));
+        ValidateFortnight(fortnight);
+        var calculations = await repository.GetHistoryAsync(personId, year, month, fortnight, cancellationToken);
+        var content = pdfReportService.BuildPaymentsReportPdf(calculations, true, year, month, fortnight, PaymentLogoPath());
+        return new(content, "application/pdf", ExportFileName("bonificacoes", year, month, fortnight));
     }
 
     public async Task MarkPaidAsync(Guid calculationId, DateTime paidAt, CancellationToken cancellationToken)
@@ -224,9 +226,15 @@ public sealed class PaymentApplicationService(IPaymentRepository repository, IPd
     private static IReadOnlyCollection<PaymentEntry> MapEntries(IReadOnlyCollection<ManualPaymentEntryRequest>? entries) => entries is null ? Array.Empty<PaymentEntry>() : entries.Select(x => new PaymentEntry(x.Description.Trim(), x.Amount)).ToList();
     private static void ValidateManualEntries(IReadOnlyCollection<ManualPaymentEntryRequest>? entries) { if (entries?.Any(x => string.IsNullOrWhiteSpace(x.Description)) == true) throw new InvalidOperationException("Informe a descricao dos ajustes manuais."); }
     private static void ValidateCompetence(int year, int month) { if (year < 2000 || year > 9999 || month is < 1 or > 12) throw new InvalidOperationException("Competencia invalida."); }
+    private static void ValidateFortnight(Fortnight? fortnight) { if (fortnight.HasValue && !Enum.IsDefined(fortnight.Value)) throw new InvalidOperationException("Quinzena invalida. Use 1 para a primeira ou 2 para a segunda."); }
     private static PaymentPersonDto MapPerson(PaymentPerson person) => new(person.Id, person.Name, person.EmploymentType, person.IsActive, person.MonthlyValue);
     private static string PaymentLogoPath() => Path.Combine(AppContext.BaseDirectory, "Assets", "logo-cjm.png");
-    private static string ExportFileName(string prefix, int? year, int? month) => year.HasValue && month.HasValue ? $"{prefix}-{year}-{month:00}.pdf" : year.HasValue ? $"{prefix}-{year}.pdf" : $"{prefix}-{DateTime.UtcNow:yyyyMMdd}.pdf";
+    private static string ExportFileName(string prefix, int? year, int? month, Fortnight? fortnight)
+    {
+        var period = year.HasValue && month.HasValue ? $"{year}-{month:00}" : year.HasValue ? year.Value.ToString() : DateTime.UtcNow.ToString("yyyyMMdd");
+        var fortnightSuffix = fortnight.HasValue ? $"-{(int)fortnight.Value}a-quinzena" : string.Empty;
+        return $"{prefix}-{period}{fortnightSuffix}.pdf";
+    }
     private static PaymentRulesDto MapRules(PaymentRuleConfiguration x) => new(x.Id, x.EffectiveFrom, x.EmployeeFirstFortnightPercent, x.ContractorFirstFortnightPercent, x.FullAbsenceValue, x.HalfAbsenceValue, x.MonthlyWorkMinutes, x.PositiveHourMultiplier, x.NegativeHourMultiplier, x.NightHourMultiplier);
     private static VoucherDto MapVoucher(Voucher x) => new(x.Id, x.PaymentPersonId, x.PaymentPerson?.Name ?? string.Empty, x.Description, x.TotalValue, x.InstallmentValue, x.RemainingBalance, x.StartYear, x.StartMonth, x.Periodicity, x.IntervalMonths, x.InstallmentCount, x.AppliedInstallments, x.Status);
     private static PaymentHistoryDto MapHistory(PaymentCalculation x) => new(x.Id, x.PaymentPersonId, x.PersonName, x.EmploymentType, x.CompetenceYear, x.CompetenceMonth, x.Fortnight, x.BaseValue, x.NetValue, x.FirstFortnightValue, x.SecondFortnightValue, x.MonthlyTotalValue, x.Status, x.CalculatedAt, x.PaidAt, x.Items.Select(i => new PaymentItemDto(i.Kind, i.Description, i.Amount, i.QuantityMinutes, i.Quantity, i.VoucherId)).ToList());

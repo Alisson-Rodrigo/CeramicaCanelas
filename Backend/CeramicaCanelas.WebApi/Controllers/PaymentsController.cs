@@ -1,4 +1,5 @@
 using CeramicaCanelas.Application.Features.Payments;
+using CeramicaCanelas.Domain.Enums.Payments;
 using CeramicaCanelas.WebApi.Models.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,8 +22,8 @@ public sealed class PaymentsController(IPaymentApplicationService service) : Con
     [HttpPatch("vouchers/{voucherId:guid}/status"), Consumes("multipart/form-data")] public async Task<IActionResult> UpdateVoucherStatus(Guid voucherId, [FromForm] UpdateVoucherStatusForm form, CancellationToken ct) { await service.UpdateVoucherStatusAsync(voucherId, form.Status, ct); return NoContent(); }
     [HttpPost("calculations/preview"), Consumes("multipart/form-data")] public async Task<IActionResult> Preview([FromForm] CalculatePaymentForm form, CancellationToken ct) => Ok(await service.PreviewAsync(form.ToRequest(), ct));
     [HttpPost("calculations"), Consumes("multipart/form-data")] public async Task<IActionResult> Confirm([FromForm] CalculatePaymentForm form, CancellationToken ct) { var result = await service.ConfirmAsync(form.ToRequest(), ct); return Created($"api/payments/calculations/{result.Id}", result); }
-    [HttpGet("calculations")] public async Task<IActionResult> GetHistory([FromQuery] Guid? personId, [FromQuery] int? year, [FromQuery] int? month, CancellationToken ct) => Ok(await service.GetHistoryAsync(personId, year, month, ct));
-    [HttpGet("calculations/export"), Produces("application/pdf")] public async Task<IActionResult> ExportPayments([FromQuery] Guid? personId, [FromQuery] int? year, [FromQuery] int? month, CancellationToken ct) { var export = await service.ExportPaymentsAsync(personId, year, month, ct); return File(export.Content, export.ContentType, export.FileName); }
-    [HttpGet("calculations/bonuses/export"), Produces("application/pdf")] public async Task<IActionResult> ExportBonuses([FromQuery] Guid? personId, [FromQuery] int? year, [FromQuery] int? month, CancellationToken ct) { var export = await service.ExportBonusesAsync(personId, year, month, ct); return File(export.Content, export.ContentType, export.FileName); }
+    [HttpGet("calculations")] public async Task<IActionResult> GetHistory([FromQuery] Guid? personId, [FromQuery] int? year, [FromQuery] int? month, [FromQuery] Fortnight? fortnight, CancellationToken ct) => Ok(await service.GetHistoryAsync(personId, year, month, fortnight, ct));
+    [HttpGet("calculations/export"), Produces("application/pdf")] public async Task<IActionResult> ExportPayments([FromQuery] Guid? personId, [FromQuery] int? year, [FromQuery] int? month, [FromQuery] Fortnight? fortnight, CancellationToken ct) { var export = await service.ExportPaymentsAsync(personId, year, month, fortnight, ct); return File(export.Content, export.ContentType, export.FileName); }
+    [HttpGet("calculations/bonuses/export"), Produces("application/pdf")] public async Task<IActionResult> ExportBonuses([FromQuery] Guid? personId, [FromQuery] int? year, [FromQuery] int? month, [FromQuery] Fortnight? fortnight, CancellationToken ct) { var export = await service.ExportBonusesAsync(personId, year, month, fortnight, ct); return File(export.Content, export.ContentType, export.FileName); }
     [HttpPatch("calculations/{calculationId:guid}/paid"), Consumes("multipart/form-data")] public async Task<IActionResult> MarkPaid(Guid calculationId, [FromForm] MarkPaymentPaidForm form, CancellationToken ct) { await service.MarkPaidAsync(calculationId, form.PaidAt, ct); return NoContent(); }
 }

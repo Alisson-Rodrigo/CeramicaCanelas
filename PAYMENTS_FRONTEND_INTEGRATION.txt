@@ -59,14 +59,14 @@ DeductionsJson: [{"description":"Desconto manual","amount":50.00}]
 
 Esses tres campos sao strings criadas com JSON.stringify. BonusValue e informado manualmente em cada calculo; nao o repita em AdditionsJson.
 
-GET /api/payments/calculations?personId={GUID}&year=2026&month=8
-Lista historico. Todos os filtros sao opcionais.
+GET /api/payments/calculations?personId={GUID}&year=2026&month=8&fortnight=1
+Lista historico. Todos os filtros sao opcionais. Fortnight aceita 1 para primeira quinzena ou 2 para segunda.
 
-GET /api/payments/calculations/export?personId={GUID}&year=2026&month=8
-Baixa PDF formatado dos pagamentos, com nome, salario, bonificacao, descontos, faltas, vales, horas e liquido. Todos os filtros sao opcionais; sem filtros exporta tudo.
+GET /api/payments/calculations/export?personId={GUID}&year=2026&month=8&fortnight=1
+Baixa PDF formatado somente da primeira quinzena. Para a segunda, use fortnight=2. O documento apresenta um funcionario por pagina, com nome, salario, bonificacao, descontos, faltas, vales, horas e liquido.
 
-GET /api/payments/calculations/bonuses/export?personId={GUID}&year=2026&month=8
-Baixa PDF somente das bonificacoes, com valor bruto, desconto por faltas e valor liquido. Todos os filtros sao opcionais.
+GET /api/payments/calculations/bonuses/export?personId={GUID}&year=2026&month=8&fortnight=2
+Baixa PDF somente das bonificacoes da segunda quinzena, com valor bruto, desconto por faltas e valor liquido. Todos os filtros sao opcionais.
 
 Para os dois exports, leia a resposta como Blob, nao como JSON. O Content-Type retornado e application/pdf.
 

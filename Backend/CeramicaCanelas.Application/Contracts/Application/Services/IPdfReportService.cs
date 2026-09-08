@@ -29,6 +29,7 @@ namespace CeramicaCanelas.Application.Contracts.Application.Services
             bool bonusesOnly,
             int? year = null,
             int? month = null,
+            CeramicaCanelas.Domain.Enums.Payments.Fortnight? fortnight = null,
             string? logoPath = null);
 
         // ======================================================

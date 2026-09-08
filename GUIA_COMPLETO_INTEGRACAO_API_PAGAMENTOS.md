@@ -618,10 +618,10 @@ O backend:
 
 ```http
 GET /api/payments/calculations
-GET /api/payments/calculations?personId={GUID}&year=2026&month=8
+GET /api/payments/calculations?personId={GUID}&year=2026&month=8&fortnight=1
 ```
 
-Todos os filtros sao opcionais.
+Todos os filtros sao opcionais. `fortnight=1` seleciona a primeira quinzena e `fortnight=2` seleciona a segunda.
 
 ```javascript
 async function getHistory(filters = {}) {
@@ -641,17 +641,17 @@ async function getHistory(filters = {}) {
 
 ```http
 GET /api/payments/calculations/export
-GET /api/payments/calculations/export?personId={GUID}&year=2026&month=8
+GET /api/payments/calculations/export?personId={GUID}&year=2026&month=8&fortnight=1
 ```
 
 ### Exportar bonificacoes em PDF
 
 ```http
 GET /api/payments/calculations/bonuses/export
-GET /api/payments/calculations/bonuses/export?personId={GUID}&year=2026&month=8
+GET /api/payments/calculations/bonuses/export?personId={GUID}&year=2026&month=8&fortnight=2
 ```
 
-Todos os filtros sao opcionais. Sem filtros, o arquivo possui todo o historico. O PDF de pagamentos mostra nome, competencia, quinzena, salario, bonificacao, descontos, valor liquido, faltas, vales e horas positivas, negativas ou noturnas. O PDF de bonificacoes inclui somente calculos que possuem bonificacao e apresenta valor bruto, desconto por faltas e valor liquido.
+Todos os filtros sao opcionais. Use `fortnight=1` para gerar somente a primeira quinzena ou `fortnight=2` para gerar somente a segunda. Cada funcionario com calculo confirmado ocupa uma pagina, numerada no formato `Pagina X de Y`. O PDF de pagamentos mostra nome, competencia, quinzena, salario, bonificacao, descontos, valor liquido, faltas, vales e horas positivas, negativas ou noturnas. O PDF de bonificacoes inclui somente calculos que possuem bonificacao e apresenta valor bruto, desconto por faltas e valor liquido.
 
 Exemplo de download no navegador:
 
@@ -670,8 +670,8 @@ async function downloadPaymentPdf(path, fileName) {
     URL.revokeObjectURL(url);
 }
 
-downloadPaymentPdf('/calculations/export?year=2026&month=8', 'pagamentos-2026-08.pdf');
-downloadPaymentPdf('/calculations/bonuses/export?year=2026&month=8', 'bonificacoes-2026-08.pdf');
+downloadPaymentPdf('/calculations/export?year=2026&month=8&fortnight=1', 'pagamentos-2026-08-1a-quinzena.pdf');
+downloadPaymentPdf('/calculations/bonuses/export?year=2026&month=8&fortnight=2', 'bonificacoes-2026-08-2a-quinzena.pdf');
 ```
 
 Os arquivos usam a identidade visual da Ceramica Canelas e incluem a logo da empresa.
