@@ -49,7 +49,21 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             // Espaço pra não colar na linha do produto
             sep.Height = PdfUnit.FromPoint(3);
         }
-        
+
+        private static DateTime ConvertUtcToBrazilTime(DateTime dateTime)
+            {
+                var utcDate = dateTime.Kind == DateTimeKind.Utc
+                    ? dateTime
+                    : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+            
+                var timeZoneId = OperatingSystem.IsWindows()
+                    ? "E. South America Standard Time"
+                    : "America/Fortaleza";
+            
+                var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            
+                return TimeZoneInfo.ConvertTimeFromUtc(utcDate, timeZone);
+            }
 
 
         public async Task<byte[]> Handle(GetSaleReceiptPdfQuery req, CancellationToken ct)
@@ -104,8 +118,11 @@ namespace CeramicaCanelas.Application.Features.Sales.Queries.GetSaleReceiptPdfQu
             // 🔸 Dados do cliente e venda
             // ==============================
             var info = section.AddParagraph();
+            var saleCreatedAt = ConvertUtcToBrazilTime(sale.CreatedOn);
+            
             info.AddFormattedText($"VENDA Nº {sale.NoteNumber}\n", TextFormat.Bold);
             info.AddText($"Data: {sale.Date:dd/MM/yyyy}\n");
+            info.AddText($"Hora: {saleCreatedAt:HH:mm}\n");
             info.AddText($"Cliente: {sale.CustomerName}\n");
             info.AddText($"Endereço: {sale.CustomerAddress}\n");
             info.AddText($"Cidade/UF: {sale.City}-{sale.State}\n");
