@@ -1,7 +1,8 @@
-﻿using CeramicaCanelas.Domain.Entities;
+using CeramicaCanelas.Domain.Entities;
 using CeramicaCanelas.Domain.Entities.Almoxarifado;
 using CeramicaCanelas.Domain.Entities.Financial;
 using CeramicaCanelas.Domain.Entities.Sales;
+using CeramicaCanelas.Domain.Entities.Payments;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,13 +25,19 @@ public class DefaultContext : IdentityDbContext<User>
     public DbSet<LaunchCategory> LaunchCategories { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Extract> Extracts { get; set; } = null!;
-    public DbSet<ProofImage> ProofImages { get; set; } = null!; // 👈 ADICIONE ESTA LINHA
+    public DbSet<ProofImage> ProofImages { get; set; } = null!; // ?? ADICIONE ESTA LINHA
 
 
     // Vendas
     public DbSet<SalePayment> SalePayments { get; set; } = null!;
     public DbSet<Sale> Sales { get; set; } = null!;
     public DbSet<SaleItem> SaleItems { get; set; } = null!;
+    public DbSet<PaymentPerson> PaymentPeople { get; set; } = null!;
+    public DbSet<PaymentRuleConfiguration> PaymentRuleConfigurations { get; set; } = null!;
+    public DbSet<Voucher> PaymentVouchers { get; set; } = null!;
+    public DbSet<VoucherCompetence> PaymentVoucherCompetences { get; set; } = null!;
+    public DbSet<PaymentCalculation> PaymentCalculations { get; set; } = null!;
+    public DbSet<PaymentCalculationItem> PaymentCalculationItems { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -121,15 +128,15 @@ public class DefaultContext : IdentityDbContext<User>
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Id).HasDefaultValueSql("uuid_generate_v4()");
 
-            // Garante que a URL e o nome do arquivo sejam obrigatórios
+            // Garante que a URL e o nome do arquivo sejam obrigat�rios
             entity.Property(p => p.FileUrl).IsRequired();
             entity.Property(p => p.OriginalFileName).IsRequired();
 
             // Define o relacionamento com Launch
             entity.HasOne(p => p.Launch)              // Um ProofImage tem um Launch
-                  .WithMany(l => l.ImageProofs)       // Um Launch tem muitos ImageProofs (a coleção na classe Launch)
-                  .HasForeignKey(p => p.LaunchId)     // A chave estrangeira é LaunchId em ProofImage
-                  .OnDelete(DeleteBehavior.Cascade);  // Se o Launch for deletado, seus comprovantes também são
+                  .WithMany(l => l.ImageProofs)       // Um Launch tem muitos ImageProofs (a cole��o na classe Launch)
+                  .HasForeignKey(p => p.LaunchId)     // A chave estrangeira � LaunchId em ProofImage
+                  .OnDelete(DeleteBehavior.Cascade);  // Se o Launch for deletado, seus comprovantes tamb�m s�o
         });
 
         builder.Entity<LaunchCategory>(entity =>
@@ -177,7 +184,7 @@ public class DefaultContext : IdentityDbContext<User>
             entity.Property(s => s.Discount).HasPrecision(18, 2);
 
             entity.HasMany(s => s.Items)
-                  .WithOne(i => i.Sale) // 🔹 define a navegação inversa
+                  .WithOne(i => i.Sale) // ?? define a navega��o inversa
                   .HasForeignKey(i => i.SaleId)
                   .OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(s => s.Payments).WithOne(p => p.Sale).HasForeignKey(p => p.SaleId).OnDelete(DeleteBehavior.Cascade);
@@ -195,13 +202,13 @@ public class DefaultContext : IdentityDbContext<User>
             entity.Property(i => i.Product).HasConversion<int>();
             entity.HasIndex(i => i.SaleId);
 
-            // 🔹 Define a relação corretamente
+            // ?? Define a rela��o corretamente
             entity.HasOne(i => i.Sale)
                   .WithMany(s => s.Items)
                   .HasForeignKey(i => i.SaleId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            // 🔹 Adiciona filtro alinhado com o filtro global de Sale
+            // ?? Adiciona filtro alinhado com o filtro global de Sale
             entity.HasQueryFilter(i => i.Sale.IsActive);
         });
 
@@ -225,10 +232,15 @@ public class DefaultContext : IdentityDbContext<User>
                   .HasForeignKey(p => p.SaleId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            // 🔹 Alinhado com filtro de Sale para evitar warning
+            // ?? Alinhado com filtro de Sale para evitar warning
             entity.HasQueryFilter(p => p.Sale.IsActive);
         });
 
         base.OnModelCreating(builder);
+        // Preserve the Identity key lengths already used by the database migrations.
+        builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserLogin<string>>().Property(x => x.LoginProvider).HasMaxLength(128);
+        builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserLogin<string>>().Property(x => x.ProviderKey).HasMaxLength(128);
+        builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserToken<string>>().Property(x => x.LoginProvider).HasMaxLength(128);
+        builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserToken<string>>().Property(x => x.Name).HasMaxLength(128);
     }
 }

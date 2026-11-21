@@ -489,6 +489,823 @@ namespace CeramicaCanelas.Persistence.Migrations
                     b.ToTable("ProofImages");
                 });
 
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.EmployeeAccountantSubmission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RecordedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("SummaryJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPersonId", "Year", "Month");
+
+                    b.ToTable("EmployeeAccountantSubmissions", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.EmployeeBonusSettlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DeductionValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("FullAbsenceDeduction")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("FullAbsences")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("HalfAbsenceDeduction")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("HalfAbsences")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("NetValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("OriginalValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("PaymentCalculationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PersonName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceAbsenceIds")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentCalculationId")
+                        .IsUnique();
+
+                    b.HasIndex("PaymentPersonId", "Year", "Month")
+                        .IsUnique()
+                        .HasFilter("\"IsCancelled\" = FALSE");
+
+                    b.ToTable("EmployeeBonusSettlements", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.EmployeeTimeEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("NegativeMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PositiveMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RecordedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPersonId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeTimeEntries", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentAbsence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("EmploymentType")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsHalf")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReviewed")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RecordedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPersonId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("PaymentAbsences", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentAdjustment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentCalculationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentCalculationId", "Reference")
+                        .IsUnique();
+
+                    b.ToTable("PaymentAdjustments", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("After")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Before")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("SubjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPersonId", "CreatedOn");
+
+                    b.ToTable("PaymentAudits", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AdditionValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("BaseValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CalculatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CompetenceMonth")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CompetenceYear")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DeductionValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal?>("EmployeeAccountantAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("EmployeeAccountantAmountMode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EmployeeAccountantNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("EmployeeAccountantReference")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<decimal?>("EmployeeFirstGrossValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("EmployeeFirstPaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("EmployeePaymentFlowVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("EmployeeSystemNetValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal?>("EmployeeSystemSalaryValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("EmploymentType")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("FirstFortnightPaid")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("FirstFortnightValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Fortnight")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("FortnightPercent")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("numeric(8,4)");
+
+                    b.Property<decimal>("GrossValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("MonthlyTotalValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("NetValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PaymentRuleConfigurationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PersonName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("SecondFortnightValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentRuleConfigurationId");
+
+                    b.HasIndex("PaymentPersonId", "CompetenceYear", "CompetenceMonth", "Fortnight")
+                        .IsUnique()
+                        .HasFilter("\"Status\" <> 4");
+
+                    b.ToTable("PaymentCalculations", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculationItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AbsenceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<DateOnly?>("DsrWeekStart")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentCalculationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<int?>("QuantityMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("VoucherId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentCalculationId");
+
+                    b.ToTable("PaymentCalculationItems", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentDsrCharge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AbsenceIds")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentCalculationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("WeekStart")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentCalculationId");
+
+                    b.HasIndex("PaymentPersonId", "WeekStart")
+                        .IsUnique()
+                        .HasFilter("\"IsCancelled\" = FALSE");
+
+                    b.ToTable("PaymentDsrCharges", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("AdmissionDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("ContractualDsrAuthorized")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EmploymentType")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("MonthlyBonus")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("MonthlyValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentPeople", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentPreparation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Fortnight")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RequestJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPersonId", "Year", "Month", "Fortnight")
+                        .IsUnique();
+
+                    b.ToTable("PaymentPreparations", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentRuleConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ContractorAbsenceDailyValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal?>("ContractorDsrValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("ContractorFirstFortnightPercent")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("numeric(8,4)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("EmployeeFirstFortnightPercent")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("numeric(8,4)");
+
+                    b.Property<decimal>("FullAbsenceValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("HalfAbsenceGeneratesDsr")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("HalfAbsenceValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("MonthlyWorkMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("NegativeHourMultiplier")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("numeric(8,4)");
+
+                    b.Property<decimal?>("NightHourMultiplier")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("numeric(8,4)");
+
+                    b.Property<decimal?>("PositiveHourMultiplier")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("numeric(8,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("PaymentRuleConfigurations", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6d118ff0-cdc6-49cc-a862-e46e4d30c3e0"),
+                            ContractorFirstFortnightPercent = 50m,
+                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EffectiveFrom = new DateOnly(2000, 1, 1),
+                            EmployeeFirstFortnightPercent = 40m,
+                            FullAbsenceValue = 100m,
+                            HalfAbsenceGeneratesDsr = false,
+                            HalfAbsenceValue = 50m,
+                            ModifiedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.Voucher", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AllowPartialDiscount")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("AppliedInstallments")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("InstallmentCount")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("InstallmentValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("IntervalMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Periodicity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("RemainingBalance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StartMonth")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StartYear")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("TotalValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentPersonId");
+
+                    b.ToTable("PaymentVouchers", (string)null);
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.VoucherCompetence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Skip")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("VoucherId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VoucherId", "Year", "Month")
+                        .IsUnique();
+
+                    b.ToTable("PaymentVoucherCompetences", (string)null);
+                });
+
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Sale", b =>
                 {
                     b.Property<Guid>("Id")
@@ -968,6 +1785,142 @@ namespace CeramicaCanelas.Persistence.Migrations
                     b.Navigation("Launch");
                 });
 
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.EmployeeAccountantSubmission", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.EmployeeBonusSettlement", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentCalculationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.EmployeeTimeEntry", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentAbsence", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentAdjustment", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentCalculationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentAudit", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", "PaymentPerson")
+                        .WithMany("Calculations")
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentRuleConfiguration", "PaymentRuleConfiguration")
+                        .WithMany()
+                        .HasForeignKey("PaymentRuleConfigurationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PaymentPerson");
+
+                    b.Navigation("PaymentRuleConfiguration");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculationItem", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", "PaymentCalculation")
+                        .WithMany("Items")
+                        .HasForeignKey("PaymentCalculationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentCalculation");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentDsrCharge", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentCalculationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentPreparation", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.Voucher", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", "PaymentPerson")
+                        .WithMany("Vouchers")
+                        .HasForeignKey("PaymentPersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentPerson");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.VoucherCompetence", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Payments.Voucher", "Voucher")
+                        .WithMany("Competences")
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Voucher");
+                });
+
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.SaleItem", b =>
                 {
                     b.HasOne("CeramicaCanelas.Domain.Entities.Sale", "Sale")
@@ -1059,6 +2012,23 @@ namespace CeramicaCanelas.Persistence.Migrations
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Financial.LaunchCategoryGroup", b =>
                 {
                     b.Navigation("Categories");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentPerson", b =>
+                {
+                    b.Navigation("Calculations");
+
+                    b.Navigation("Vouchers");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.Voucher", b =>
+                {
+                    b.Navigation("Competences");
                 });
 
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Sale", b =>

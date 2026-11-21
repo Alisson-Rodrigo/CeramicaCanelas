@@ -1,4 +1,4 @@
-﻿using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.GetProductItemsReportPdfQuery;
+using CeramicaCanelas.Application.Features.Sales.Queries.GetProductItemsReport.GetProductItemsReportPdfQuery;
 using CeramicaCanelas.Application.Services.Reports;
 using System;
 using System.Collections.Generic;
@@ -23,6 +23,16 @@ namespace CeramicaCanelas.Application.Contracts.Application.Services
             string? logoPath = null,
             IEnumerable<AppliedFilter>? filters = null
         );
+
+        byte[] BuildEmployeeAccountantReportPdf(IEnumerable<CeramicaCanelas.Application.Features.Payments.AccountantSummaryDto> reports, int year, int month, string? logoPath = null);
+        byte[] BuildEmployeeBonusReportPdf(IEnumerable<CeramicaCanelas.Application.Features.Payments.EmployeeBonusReportDto> reports, int year, int month, string? logoPath = null);
+        byte[] BuildPaymentsReportPdf(
+            IEnumerable<CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation> calculations,
+            bool bonusesOnly,
+            int? year = null,
+            int? month = null,
+            CeramicaCanelas.Domain.Enums.Payments.Fortnight? fortnight = null,
+            string? logoPath = null);
 
         // ======================================================
         // 🔹 RELATÓRIO DE BALANCETE DE VERIFICAÇÃO

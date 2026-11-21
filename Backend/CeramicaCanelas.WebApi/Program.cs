@@ -87,7 +87,7 @@ public class Program
     {
         var allowedOrigins = new HashSet<string>
         {
-            "http://localhost:3001",
+            "http://localhost:3000",
             "http://localhost:5236",
             "https://localhost:7018",
             "https://ceramicacanelas.shop",

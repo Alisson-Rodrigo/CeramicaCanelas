@@ -1,0 +1,195 @@
+﻿PROMPT PARA INTEGRAÇÃO DO FRONTEND — CERÂMICA CANELAS — FUNCIONÁRIOS
+Referência: implementação do backend revisada em 16/11/2026.
+
+OBJETIVO E ESCOPO
+Integre exclusivamente o módulo de funcionários no repositório real do frontend Next.js/React. O frontend não foi analisado neste workspace: a aplicação Blazor eventualmente encontrada ao lado do backend NÃO é o frontend a integrar. Antes de implementar, examine o Next/React, seu design system, cliente HTTP, autenticação, permissões, hooks, formulários e testes. Reutilize seus padrões.
+Não implemente ou altere prestadores de serviços. Mantenha páginas separadas. Não altere contratos do backend nem invente endpoints. Não reproduza fórmulas financeiras no frontend: apresente a prévia do servidor e os relatórios retornados.
+Este texto substitui orientações anteriores sobre 40% automáticos, salário restante, bonificação incorporada ao líquido ou envio de vales ao contador.
+
+ARQUITETURA E FONTES REAIS NO BACKEND
+.NET 8 / ASP.NET Core, EF Core / PostgreSQL (Npgsql), serviços Application e calculadores Domain; relatórios PDF MigraDocCore/PdfSharpCore. Caminhos relativos à raiz Backend:
+- CeramicaCanelas.WebApi/Controllers/EmployeePaymentsController.cs: API dedicada a funcionários.
+- CeramicaCanelas.WebApi/Controllers/PaymentsController.cs: API compartilhada legada; não usar como base da nova página nem mudar regras dos prestadores.
+- CeramicaCanelas.WebApi/Models/Payments/EmployeePaymentFormModels.cs: campos multipart reais.
+- CeramicaCanelas.WebApi/Models/Payments/PaymentFormModels.cs: formulários compartilhados de status e pagamento.
+- CeramicaCanelas.Application/Features/Payments/PaymentDtos.cs e EmployeePaymentDtos.cs: contratos.
+- CeramicaCanelas.Application/Features/Payments/PaymentApplicationService.cs: confirmação, histórico e baixa.
+- CeramicaCanelas.Application/Features/Payments/EmployeePaymentApplicationService.cs: vales explícitos, valores manuais, snapshots do contador.
+- CeramicaCanelas.Application/Features/Payments/EmployeeMonthlyControlsService.cs: horas, bonificação separada, CSV e PDFs.
+- CeramicaCanelas.Application/Features/Payments/PaymentOccurrencesService.cs: faltas e resumo estrito do contador.
+- CeramicaCanelas.Application/Features/Payments/PaymentWorkflowService.cs e PaymentDeletionService.cs: fluxos e cancelamentos auditáveis existentes.
+- CeramicaCanelas.Domain/Services/Payments/EmployeePaymentCalculator.cs: somente valor manual menos vales.
+- CeramicaCanelas.Domain/Entities/Payments/PaymentEntities.cs: entidades e históricos.
+- CeramicaCanelas.Persistence/Configurations/Payments e Repositories/PaymentRepository.cs: restrições, concorrência e persistência.
+- CeramicaCanelas.Infrastructure/Reports/EmployeeControlPdfReportService.cs: relatórios exclusivos, separados.
+- CeramicaCanelas.WebApi/Middleware/CustomExceptionMiddleware.cs: erros.
+
+REGRAS CONFIRMADAS — NÃO REINTRODUZIR REGRAS ANTIGAS
+1. O contador define manualmente os valores DAS DUAS quinzenas. AccountantAmount é obrigatório para uma nova prévia/confirmação. Não há cálculo de 40%/60%, complemento de salário, encargos ou tributos no fluxo de funcionários. MonthlyValue é cadastro informativo e não substitui AccountantAmount.
+2. O único cálculo do líquido da quinzena nova é AccountantAmount menos a soma dos vales explicitamente selecionados. Sem seleção, líquido = valor manual. Bonificação não entra nesse líquido.
+3. Vales finitos, com valor e saldo: permitem desconto parcial ou integral, inclusive quando um registro antigo tinha AllowPartialDiscount=false. Não há seleção automática. O mesmo vale pode ter parcelas em quinzenas diferentes até consumir seu saldo. Repetir o ID na mesma seleção, extrapolar saldo, selecionar vale de outra pessoa, indisponível ou superar o pagamento é erro.
+4. Preview não baixa saldo. POST calculations confirma a apuração, reserva/baixa os valores escolhidos e grava itens individualizados. PATCH paid registra pagamento; não desconta o vale novamente. Não existe confirmação duplicada por pessoa/ano/mês/quinzena. Recarregue saldos após confirmar/cancelar.
+5. Para confirmar a segunda quinzena, a primeira precisa existir e estar PAGA. A prévia da segunda exige primeira fechada (Calculated ou Paid). Não subtraia a primeira novamente do valor manual da segunda.
+6. Primeira quinzena não tem relatório para contador. O relatório do contador é mensal, operacionalmente da segunda quinzena, e contém exclusivamente nome/identificador do funcionário, competência, contagens e datas de faltas, minutos positivos, negativos e saldo com formatação de horas. Não contém valores de pagamento, primeira quinzena, salário, vales, bonificação ou observações internas.
+7. Faltas são centralizadas por pessoa/data, inteiras ou meias, canceláveis e auditáveis; canceladas não contam. Horas são lançadas por pessoa/data em PositiveMinutes e NegativeMinutes, ambos magnitudes não negativas. Saldo = positivos - negativos. Sem conversão em dinheiro nem desconto salarial por faltas.
+8. Bonificação mensal é controle INTERNO separado: original cadastrada; redução de R$100 por falta inteira e R$50 por meia, mês inteiro; final mínimo zero. Esses valores são fixos nesta versão dos funcionários; não modifique a configuração compartilhada para alterá-los. No relatório, descontos brutos podem exceder a bonificação, AppliedDeduction limita o desconto efetivo e FinalBonus nunca é negativo.
+9. Antes de fechar a segunda quinzena, relatório de bonificação é prévia (IsClosed=false); confirmar a segunda cria snapshot separado (EmployeeBonusSettlement). Alterações posteriores de cadastro/faltas não reescrevem o fechamento. Não há endpoint separado de pagamento da bonificação nesta versão: não invente botão de baixa ou agregação ao salário.
+10. Históricos legados preservam seus valores originais. EmployeeSettlement.IsLegacyCalculation identifica fluxo anterior. Bonificação antiga já incorporada à folha é identificada por IncludedInLegacyPayroll=true; não gere pagamento duplicado nem reconstrua contagens desconhecidas (podem ser null).
+11. Exclusões são lógicas/cancelamentos auditados, com motivo. Pagamento pago não é apagado/alterado silenciosamente. Ajustes existentes preservam original; não construir funcionalidades adicionais além do fluxo solicitado.
+12. Removido o campo de vínculo operacional dos contratos de cadastro financeiro. Não exibir seletor, carregar opções ou enviar EmployeeId. Dependências de estoque e registros antigos são preservados; não excluir entidades de outros módulos.
+
+BASE, SEGURANÇA E SERIALIZAÇÃO
+Base de TODAS as rotas abaixo: /api/employee-payments
+Todas exigem autenticação e role Financial OU Admin, pelo padrão de token já usado no projeto. O ator vem do NameIdentifier autenticado; não enviar ID de usuário no corpo para substituir o ator.
+IDs são GUID. Datas DateOnly: YYYY-MM-DD. Competência: ano entre 2000 e 9999; mês entre 1 e 12. Fortnight: 1 primeira, 2 segunda.
+JSON usa as propriedades camelCase da API; formulários abaixo usam nomes das propriedades C#. Enums são numéricos.
+Valores monetários aceitos com até duas casas; prefira representação decimal textual com ponto no FormData. Não definir Content-Type manualmente ao enviar FormData; o navegador inclui boundary.
+Query de listagem de vales: year, month e fortnight obrigatórios.
+Query de resumos/horas/relatórios: year e month obrigatórios; relatórios coletivos aceitam personId opcional.
+Query de histórico/exportação de pagamentos: personId, year, month e fortnight opcionais.
+Não confundir personId da query com PaymentPersonId do formulário.
+
+INVENTÁRIO COMPLETO DA API DEDICADA (41 OPERAÇÕES)
+As rotas são relativas à base acima. As respostas JSON não têm envelope de paginação neste controller.
+01 GET /people -> 200 PaymentPersonDto[]. Somente funcionários não excluídos.
+02 POST /people -> multipart, 201 PaymentPersonDto.
+03 PATCH /people/{personId}/salary -> multipart, 204.
+04 PATCH /people/{personId}/status -> multipart IsActive, 204.
+05 DELETE /people/{personId} -> JSON DeletePaymentEntryRequest, 204; exclusão lógica.
+06 GET /people/{personId}/vouchers?year=&month=&fortnight= -> 200 EmployeeVoucherDto[].
+07 POST /people/{personId}/vouchers -> multipart EmployeeVoucherForm, 201 VoucherDto.
+08 PATCH /vouchers/{id}/status -> multipart Status, 204.
+09 DELETE /vouchers/{id} -> JSON DeletePaymentEntryRequest, 204; não apaga descontos históricos.
+10 GET /people/{personId}/absences?year=&month= -> 200 AbsenceDto[].
+11 POST /people/{personId}/absences -> JSON AbsenceRequest, 200 AbsenceDto.
+12 PUT /people/{personId}/absences/{id} -> JSON AbsenceRequest, 200 AbsenceDto.
+13 DELETE /people/{personId}/absences/{id} -> JSON DeletePaymentEntryRequest, 204.
+14 PATCH /people/{personId}/absences/{id}/review -> JSON ReviewEmployeeAbsenceRequest, 204.
+15 GET /people/{personId}/accountant-summary?year=&month= -> 200 AccountantSummaryDto estrito.
+16 POST /people/{personId}/accountant-submissions -> JSON {year,month,reference,notes?}, 200 EmployeeAccountantSubmissionDto; registra snapshot mensal e referência, NÃO envia e-mail/arquivo a terceiros e NÃO representa relatório de primeira quinzena.
+17 GET /people/{personId}/accountant-submissions?year=&month= -> 200 EmployeeAccountantSubmissionDto[].
+18 GET /people/{personId}/monthly-summary?year=&month= -> 200 MonthlyPaymentSummaryDto INTERNO.
+19 GET /people/{personId}/audit -> 200 PaymentAudit[]. Interno; não encaminhar ao contador.
+20 POST /calculations/preview -> multipart EmployeeCalculationForm, 200 PaymentPreviewDto. Se já existir fechamento, devolve snapshot original, sem recalcular valores com novos campos.
+21 POST /calculations -> multipart mesmo formulário, 201 PaymentHistoryDto; confirmação efetiva dos descontos.
+22 GET /calculations?personId=&year=&month=&fortnight= -> 200 PaymentHistoryDto[].
+23 PATCH /calculations/{id}/paid -> multipart PaidAt (data/hora com fuso), 204.
+24 DELETE /calculations/{id} -> JSON DeletePaymentEntryRequest, 204; cancela fechamento não pago, estorna descontos e cancela snapshot separado de bonificação quando existente; proteções preservam pagamentos e ajustes.
+25 POST /preparations -> JSON PreparationRequest, 200 PaymentPreparation; rascunho/conferência existentes, sem baixar vale.
+26 GET /preparations?personId=&year=&month=&fortnight= -> PaymentPreparation ou ausência; query completa obrigatória. Não é o fechamento definitivo.
+27 DELETE /preparations/{id} -> JSON DeletePaymentEntryRequest, 204.
+28 GET /calculations/{id}/adjustments -> 200 PaymentAdjustment[].
+29 POST /calculations/{id}/adjustments -> JSON {reference,amount,reason}, 200 PaymentAdjustment.
+30 PATCH /calculations/{id}/adjustments/paid -> JSON {reference,paidAt}, 204.
+31 GET /calculations/export?personId=&year=&month=&fortnight= -> application/pdf de pagamentos INTERNOS.
+32 GET /calculations/bonuses/export?personId=&year=&month=&fortnight= -> application/pdf interno de bonificação; ano/mês obrigatórios, primeira quinzena rejeitada; alias de compatibilidade.
+33 GET /rules -> 200 EmployeeBonusRuleDto[] (id,effectiveFrom,fullAbsenceValue=100,halfAbsenceValue=50). Somente leitura; não usar percentual nem alterar regras dos prestadores.
+34 GET /people/{personId}/hours?year=&month= -> 200 EmployeeHoursSummaryDto.
+35 POST /people/{personId}/hours -> JSON EmployeeTimeEntryRequest, 200 EmployeeTimeEntryDto.
+36 PUT /people/{personId}/hours/{id} -> JSON EmployeeTimeEntryRequest, 200 EmployeeTimeEntryDto. Para cancelar, isCancelled=true com revisão; não existe DELETE de horas.
+37 GET /reports/accountant/export?year=&month=&personId= -> application/pdf mensal EXCLUSIVO do contador.
+38 GET /reports/vouchers?year=&month=&personId= -> 200 EmployeeVoucherSheetRow[]. INTERNO.
+39 GET /reports/vouchers/export?year=&month=&personId= -> text/csv; charset=utf-8, BOM UTF-8, delimitador ponto e vírgula. Planilha INTERNA, não XLSX.
+40 GET /reports/bonuses?year=&month=&personId= -> 200 EmployeeBonusReportDto[]. INTERNO.
+41 GET /reports/bonuses/export?year=&month=&personId= -> application/pdf INTERNO.
+Rotas 25-30 são preservadas por compatibilidade/histórico; não exigem criar novas telas complexas nesta integração.
+
+CONTRATOS DE CADASTRO E VALES
+POST people, FormData:
+Name obrigatório, não vazio, máximo150.
+MonthlyValue obrigatório >0, até2casas; apenas cadastro, NÃO fonte do pagamento.
+MonthlyBonus opcional padrão0, >=0 até2casas.
+AdmissionDate opcional YYYY-MM-DD.
+EmploymentType é fixado como Employee pelo backend. Não enviar EmployeeId ou autorização de DSR.
+Resposta PaymentPersonDto: id,name,employmentType=1,isActive,monthlyValue,monthlyBonus,admissionDate?,contractualDsrAuthorized (campo compartilhado legado; não criar controle disso na página de funcionários).
+PATCH salary: MonthlyValue obrigatório >0, MonthlyBonus opcional preserva se ausente, AdmissionDate opcional preserva se ausente. Não há endpoint dedicado para renomear a pessoa.
+POST voucher, FormData: Description obrigatório; Value positivo até2casas; Date válido; ReferenceYear e ReferenceMonth válidos. Vale simples finito; saldo inicial=Value. Não precisa configurar parcelamento periódico nem AllowPartialDiscount.
+VoucherDto de criação: id,paymentPersonId,personName,description,totalValue?,installmentValue,remainingBalance?,startYear,startMonth,periodicity,intervalMonths,installmentCount?,appliedInstallments,status.
+EmployeeVoucherDto de consulta: id,paymentPersonId,description,date,referenceYear,referenceMonth,totalValue?,deductedValue?,pendingBalance?,allowPartialDiscount,availableForDiscount,status,discounts[].
+Discounts: calculationId,year,month,fortnight,amount,status,calculatedAt,paidAt?. Inclui histórico cancelado; não somar indiscriminadamente para reconstruir saldo. Consumir pendingBalance do backend.
+availableForDiscount exige pessoa ativa/não excluída, vale ativo, saldo finito positivo e data/concessão não posterior ao fim do período selecionado. Vales antigos pendentes continuam selecionáveis em competências posteriores.
+Enums VoucherStatus: Active1,PaidOff2,Paused3,Cancelled4. Status de apuração: Draft1,Calculated2,Paid3,Cancelled4,InReview5.
+
+FORMULÁRIO REAL DAS DUAS QUINZENAS
+POST preview e POST calculations recebem FormData:
+PaymentPersonId (GUID), CompetenceYear, CompetenceMonth, Fortnight (1/2), AccountantAmount obrigatório >=0 até2casas.
+VoucherSelectionsJson opcional: JSON de [{"voucherId":"GUID_REAL","amount":150.00}]. Ausente/vazio/[] = nenhum desconto.
+AccountantReference opcional até150; AccountantNotes opcional até2000, INTERNOS. Não fazem parte do relatório do contador.
+AdditionsJson/DeductionsJson ainda existem no binding por compatibilidade, mas entradas não vazias são rejeitadas no fluxo de funcionários. Não exibir campos para adicionais, descontos salariais, horas monetizadas, DSR ou modo alternativo FinalNet.
+Exemplo de FormData sem calcular salário:
+PaymentPersonId=<id selecionado>
+CompetenceYear=2026
+CompetenceMonth=11
+Fortnight=1
+AccountantAmount=800.00
+VoucherSelectionsJson=[{"voucherId":"<id real>","amount":150.00}]
+Resultado esperado: grossValue=800,deductionValue=150,netValue=650; original do contador permanece800.
+PaymentPreviewDto: paymentPersonId,personName,employmentType,competenceYear,competenceMonth,fortnight,baseValue,fortnightPercent,firstFortnightPaid,grossValue,additionValue,deductionValue,netValue,items[],employeeSettlement; propriedades derivadas installmentBase,originalBonus,bonusDeduction,finalBonus,absenceDeduction,dsrWeeks,dsrDeduction permanecem do contrato compartilhado. Para novos funcionários, bônus/descontos salariais/DSR nesses campos são zero; bonificação deve vir do relatório separado.
+fortnightPercent=0 é marcador de valor manual, não porcentagem para exibir ao usuário. baseValue é cadastro informativo; não calcular líquido por ele.
+PaymentItemDto: kind,description,amount,quantityMinutes?,quantity?,voucherId?,absenceId?,dsrWeekStart?. Novos funcionários: kind1 base manual, kind8 vale; outras rubricas podem aparecer em históricos antigos e devem ser preservadas.
+EmployeeSettlementDto: accountantProvidedAmount?,internalVoucherDeduction,netPayable,firstFortnightAccountantAmount?,firstFortnightNet,firstFortnightPaidAt?,accountantReference?,accountantNotes?,isLegacyCalculation.
+PaymentHistoryDto: id,paymentPersonId,personName,employmentType,competenceYear,competenceMonth,fortnight,baseValue,netValue,firstFortnightValue,secondFortnightValue,monthlyTotalValue,status,calculatedAt,paidAt?,items[],employeeSettlement.
+Ao pagar, PATCH paid com FormData PaidAt=2026-11-16T12:00:00Z (exemplo). Nunca repetir para contornar estado pago; backend bloqueia.
+
+FALTAS E HORAS
+AbsenceRequest JSON: {"date":"2026-11-10","isHalf":false,"observation":"Registro de falta","isCancelled":false,"revision":0,"correctClosedPeriod":false}.
+AbsenceDto: id,paymentPersonId,employmentType,date,isHalf,isCancelled,observation,recordedBy,revision,year,month,fortnight,employeeReview{isReviewed,reviewedAt?,reviewedBy?}.
+Não registrar a mesma data novamente para corrigir; PUT com revisão atual. Observação até2000. Correções em períodos fechados exigem correctClosedPeriod e motivo; não reescrevem snapshots. Uma ocorrência cancelada continua no histórico e usa o mesmo registro para eventual correção.
+Review JSON: {"isReviewed":true,"revision":1,"notes":"Conferido"}; notes opcional até2000.
+EmployeeTimeEntryRequest: {"date":"2026-11-10","positiveMinutes":330,"negativeMinutes":135,"notes":"Conferência do dia","isCancelled":false,"revision":0,"correctClosedPeriod":false}.
+Ambos campos de minutos são inteiros >=0 e pelo menos um deve ser >0. Um registro por pessoa/data; pode representar ambos movimentos. Não enviar -135 em negativeMinutes. Alterações exigem revision atual; correção após fechamento exige flag e motivo. Notes até2000.
+EmployeeTimeEntryDto: id,date,positiveMinutes,negativeMinutes,notes,isCancelled,revision,recordedBy.
+EmployeeHoursSummaryDto: positiveMinutes,negativeMinutes,balanceMinutes,occurrences[]. Ocorrências canceladas ficam listadas, mas não entram nos totais.
+AccountantSummaryDto EXATO, exemplo:
+{"person":{"id":"<id real>","name":"Funcionário de exemplo"},"year":2026,"month":11,"fullAbsences":1,"halfAbsences":1,"occurrences":[{"date":"2026-11-10","isHalf":false},{"date":"2026-11-12","isHalf":true}],"hours":{"positiveMinutes":330,"negativeMinutes":135,"balanceMinutes":195,"positiveHours":"+05:30","negativeHours":"-02:15","balanceHours":"+03:15"}}
+A estrutura não inclui dados cadastrais salariais, IDs/auditoria de ocorrências, vales, bônus, notas internas ou pagamentos. A exportação mensal coletiva segue essa mesma separação. Usar somente esse endpoint/PDF para a ação Relatório para contador.
+Registro opcional de snapshot: POST accountant-submissions {year:2026,month:11,reference:"Conferência mensal 2026-11"}; reference obrigatório até150. Notes ainda é campo compatível do request, mas não é acrescentado ao resumo. Resposta: id,paymentPersonId,year,month,reference,recordedAt,recordedBy,summary (contrato estrito acima). O fechamento da segunda impede novo registro de submission. Isso não dispara envio real nem representa uma etapa obrigatória do pagamento da primeira.
+
+RELATÓRIOS INTERNOS SEPARADOS
+Bonificação JSON EmployeeBonusReportDto:
+settlementId? (null pré-fechamento),paymentPersonId,personName,year,month,originalBonus,fullAbsences?,halfAbsences?,fullAbsenceDeduction?,halfAbsenceDeduction?,absenceDeduction,appliedDeduction,finalBonus,isClosed,isCancelled,includedInLegacyPayroll.
+Exemplo original400,2faltas inteiras,1meia: fullAbsenceDeduction200,halfAbsenceDeduction50,absenceDeduction250,appliedDeduction250,finalBonus150. Ao excesso: absenceDeduction pode900 mas appliedDeduction400/finalBonus0. Não tratar desconto bruto acima do teto como dívida salarial.
+Diferenciar prévia versus snapshot fechado. Este relatório NÃO compõe o valor manual do contador e não baixa bonificação junto ao salário. Não inventar ação de pagamento específica ausente na API.
+Planilha de vales JSON EmployeeVoucherSheetRow:
+voucherId,paymentPersonId,personName,voucherDate,originalValue?,firstFortnightDiscount,secondFortnightDiscount,discountedInCompetence,totalDiscounted?,pendingBalance?,year,month,paidDiscountsInCompetence,reservedDiscountsInCompetence.
+first/second/discountedInCompetence são da competência consultada; totalDiscounted e pendingBalance são totais/saldos ATUAIS, não reconstrução histórica do fim daquele mês. Reservado = confirmado ainda não pago; pago = apuração marcada paga. Não apresentar reserva como pagamento efetuado. Cancelamentos não entram nos descontos efetivos da planilha.
+CSV contém nome/data/original/primeira/segunda/descontos da competência/total até hoje/saldo atual/competência/pagos/reservados. Usar download do servidor; não recalcular saldo no navegador. Texto protegido contra fórmulas de planilha.
+PDF de pagamentos /calculations/export é interno e pode incluir vales. Nunca reutilizá-lo no botão do contador.
+
+CONTRATOS PRESERVADOS DE HISTÓRICO/CORREÇÃO
+DeletePaymentEntryRequest: {"reason":"Motivo obrigatório","revision":1,"correctClosedPeriod":false}. Reason obrigatório até2000; revision opcional, enviar a revisão disponível. Não prometer exclusão física. Fechamentos pagos e vales com dependências protegidas podem rejeitar exclusão.
+MonthlyPaymentSummaryDto: paymentPersonId,year,month,periods[],adjustments[],originalNetTotal,adjustmentTotal,isClosed. É INTERNO; totais salariais não incluem bonificação separada nova.
+PreparationRequest: {calculation:CalculatePaymentRequest,inReview:boolean,revision:inteiro}; calculation é JSON completo compartilhado, não FormData. Para funcionário incluir paymentPersonId,competenceYear,competenceMonth,fortnight,accountantAmount,voucherSelections; campos antigos bonusValue,fullAbsences,halfAbsences,positiveMinutes,negativeMinutes,nightMinutes devem ser0, excludedVoucherIds/additions/deductions ausentes ou vazios, accountantAmountMode ausente/padrão1. Valor manual obrigatório mesmo no rascunho validado. Consumir o modelo real se usar rascunhos; não introduzir outra fórmula.
+Preparation retorna entidade com id,paymentPersonId,year,month,fortnight,status,requestJson,revision e metadados. Não confundir RequestJson com resposta de cálculo.
+AdjustmentRequest: reference obrigatório/único no fechamento até100,amount nãozero até2casas,reason obrigatório até2000. AdjustmentPaidRequest: reference e paidAt. Entidades PaymentAdjustment/PaymentAudit são internas; consultar arquivos reais antes de tipar campos adicionais, não expor JSON bruto de auditoria como relatório do contador.
+
+ERROS E CONSISTÊNCIA
+200 para consultas/prévias/muitos registros JSON,201 para criação de pessoa/vale/fechamento,204 para atualizações/exclusões indicadas.
+400 {"message":"..."}: validações de negócio, saldo insuficiente, valor manual ausente, duplicidade de período, revisão divergente, concorrência, datas/permissões de estado. Binding inválido de ApiController também pode gerar ValidationProblemDetails (errors por campo). Não supor409 para concorrência: o middleware atual usa400.
+404 {"message":"..."}: entidade inexistente ou falta de vínculo com a pessoa selecionada.
+401 sem autenticação,403 sem Financial/Admin. Não substituir restrição por ocultação visual apenas.
+500 mensagem genérica para erro inesperado; não mostrar stack trace ou payload com informações sensíveis.
+Após conflitos, recarregar servidor e pedir conferência; não reenviar pagamento automaticamente. Desabilitar duplo clique ajuda UX, mas o backend garante unicidade, revisão de pessoa/vale e transação de confirmação.
+O cálculo ainda referencia uma configuração de pagamento vigente existente no banco (FK histórica compartilhada), embora seus percentuais/horas NÃO sejam usados na fórmula de funcionários. Se houver “Sem regra vigente”, sinalizar configuração pendente ao responsável; não criar silenciosamente regras financeiras ou mexer em prestadores.
+
+ORIENTAÇÃO DE TELAS E FLUXO
+Use a arquitetura real do Next/React, sem recriar design system. Página exclusiva Funcionários: listagem/cadastro com bônus e situação; detalhes com competência; vales/ocorrências/horas; primeira quinzena; segunda quinzena; relatórios internos.
+Primeira: consultar vales na competência/quinzena1 -> informar valor recebido do contador -> selecionar opcionalmente IDs/valores -> preview -> mostrar original, descontos internos e líquido -> confirmar explicitamente -> registrar pagamento. Não mostrar geração/envio para contador nessa etapa.
+Segunda: consolidar faltas e horas do mês -> conferir/exportar somente resumo do contador -> registrar manualmente valor retornado -> selecionar vales pendentes -> preview -> confirmar (primeira paga) -> conferir bonificação separada congelada -> registrar pagamento salarial. Relatório de bonificação e CSV de vales ficam em ações INTERNAS distintas.
+Cancelar/editar ocorrência exige motivo/revisão conforme contrato. Preservar snapshot histórico na visualização de fechamento; não trocar valores antigos por novo cálculo com cadastro atual.
+Downloads: solicitar blob com autenticação, respeitar Content-Type e Content-Disposition, tratar JSON de erro mesmo no pedido de arquivo, revogar URL temporária. Usar rótulos claros de competência e quinzena. Não exibir controles de DSR, autorização contratual ou fórmulas de prestadores nesta página.
+
+TESTES DE INTEGRAÇÃO DO FRONTEND E CRITÉRIOS DE CONCLUSÃO
+Testar formulário manual obrigatório nas duas quinzenas, inclusive zero permitido, sem preenchimento automático a partir do salário; seleção vazia preserva valor; seleção parcial conserva original e atualiza líquido via preview; confirmar uma vez baixa saldo uma vez; pagar não baixa novamente; demais vales permanecem disponíveis.
+Testar primeira800 sem vale; primeira800 com150 ->650; vale300 com100na primeira e200na segunda; segunda com valor manual sem subtrair primeira; saldo insuficiente/ID repetido/outro funcionário indisponível; primeira não paga impede confirmação da segunda.
+Testar faltas inteiras/meias do mês inteiro, cancelamentos e revisão; horas330/135 ->195/+03:15 e saldo negativo; proibir minutos negativos como magnitude; nenhum cálculo monetário de horas/faltas.
+Testar relatório do contador estrito e PDF sem vales, bônus, salário ou primeira quinzena; snapshot antigo não muda após correção. Testar CSV autenticado e diferença pagos/reservados.
+Testar bônus sem faltas,2inteiras+1meia com400 ->150,excesso->0,prévia não fechada e snapshot imutável após fechar; legado incluído na folha não autoriza nova baixa.
+Testar autenticação/roles,400/404,erro de arquivo,carregamento/vazio,duplo clique,recarga após confirmação e revisão concorrente. Preservar fluxo de prestadores e demais módulos.
+Concluir somente com tipos alinhados ao contrato real, páginas integradas no design system, testes apropriados executados, sem fórmulas financeiras duplicadas, endpoints fictícios ou alterações fora do escopo.
+
+ESTADO DO BACKEND E LIMITES DE VALIDAÇÃO
+115 testes automatizados passaram na revisão de16/11/2026, incluindo calculadores, serviços, APIs em servidor de teste, modelo/migração e geração real de PDF/CSV. Testes de API/serviço usam repositório controlado por harness; não equivalem a homologação concorrente num PostgreSQL de produção.
+Migração gerada: CeramicaCanelas.Persistence/Migrations/20261116185852_EmployeeManualPaymentsAndSeparatedReports.cs (com Designer e snapshot). Cria controles de horas/bonificação e marcador de fluxo; referência operacional antiga é renomeada para coluna histórica não mapeada, sem apagar valores. As migrações não foram executadas contra banco nesta tarefa. Validar cadeia pendente e procedimento de atualização antes de homologar. Não executar migrações pelo frontend.
+Manter relatório do contador separado não constitui confirmação de conformidade contábil/trabalhista. A empresa e o contador devem conciliar adiantamentos/descontos com comprovantes e obrigações aplicáveis, usando a planilha interna quando necessário; não misturar esses dados silenciosamente no relatório de faltas/horas solicitado.
+Não existem envio automático ao contador, folha salarial completa, conversão financeira de horas ou endpoint novo de pagamento separado de bônus. Não inventar essas funcionalidades.
