@@ -2,9 +2,9 @@ using CeramicaCanelas.Domain.Enums.Payments;
 
 namespace CeramicaCanelas.Domain.Services.Payments;
 
-public sealed record PaymentRules(decimal EmployeeFirstFortnightPercent, decimal ContractorFirstFortnightPercent, decimal FullAbsenceValue, decimal HalfAbsenceValue, int? MonthlyWorkMinutes, decimal? PositiveHourMultiplier, decimal? NegativeHourMultiplier, decimal? NightHourMultiplier);
+public sealed record PaymentRules(decimal EmployeeFirstFortnightPercent, decimal ContractorFirstFortnightPercent, decimal FullAbsenceValue, decimal HalfAbsenceValue, int? MonthlyWorkMinutes, decimal? PositiveHourMultiplier, decimal? NegativeHourMultiplier, decimal? NightHourMultiplier, decimal? ContractorAbsenceDailyValue = null);
 public sealed record PaymentEntry(string Description, decimal Amount, Guid? VoucherId = null);
-public sealed record PaymentCalculationInput(EmploymentType EmploymentType, Fortnight Fortnight, decimal MonthlyValue, decimal BonusValue, decimal FirstFortnightPaid, int FullAbsences, int HalfAbsences, int PositiveMinutes, int NegativeMinutes, int NightMinutes, IReadOnlyCollection<PaymentEntry> Vouchers, IReadOnlyCollection<PaymentEntry> Additions, IReadOnlyCollection<PaymentEntry> Deductions);
+public sealed record PaymentCalculationInput(EmploymentType EmploymentType, Fortnight Fortnight, decimal MonthlyValue, decimal BonusValue, decimal FirstFortnightPaid, int FullAbsences, int HalfAbsences, int PositiveMinutes, int NegativeMinutes, int NightMinutes, IReadOnlyCollection<PaymentEntry> Vouchers, IReadOnlyCollection<PaymentEntry> Additions, IReadOnlyCollection<PaymentEntry> Deductions, decimal? AccountantAmount = null, int? MonthlyFullAbsences = null, int? MonthlyHalfAbsences = null, decimal? EmployeeFirstGrossValue = null);
 public sealed record CalculatedPaymentItem(PaymentItemKind Kind, string Description, decimal Amount, int? QuantityMinutes = null, decimal? Quantity = null, Guid? VoucherId = null);
 public sealed record PaymentCalculationResult(decimal FortnightPercent, decimal GrossValue, decimal AdditionValue, decimal DeductionValue, decimal NetValue, IReadOnlyCollection<CalculatedPaymentItem> Items);
 
@@ -12,19 +12,22 @@ public static class PaymentCalculator
 {
     public static PaymentCalculationResult Calculate(PaymentCalculationInput input, PaymentRules rules)
     {
+        if (input.EmploymentType == EmploymentType.Employee) return EmployeePaymentCalculator.Calculate(input, rules);
         Validate(input, rules);
         var firstPercent = input.EmploymentType == EmploymentType.Employee ? rules.EmployeeFirstFortnightPercent : rules.ContractorFirstFortnightPercent;
         var fortnightPercent = input.Fortnight == Fortnight.First ? firstPercent : 100m - firstPercent;
 
         if (input.EmploymentType == EmploymentType.Employee && input.Fortnight == Fortnight.First)
         {
-            var firstValue = Round(input.MonthlyValue * firstPercent / 100m);
+            var firstValue = Round(input.AccountantAmount ?? throw new InvalidOperationException("Informe o valor fornecido pelo contador."));
             return new(firstPercent, firstValue, 0m, 0m, firstValue, [new(PaymentItemKind.FortnightBase, "Primeira quinzena", firstValue)]);
         }
 
         var baseValue = input.EmploymentType == EmploymentType.Employee && input.Fortnight == Fortnight.Second
-            ? Round(input.MonthlyValue - input.FirstFortnightPaid)
-            : Round(input.MonthlyValue * fortnightPercent / 100m);
+            ? Round(input.AccountantAmount ?? throw new InvalidOperationException("Informe o valor fornecido pelo contador."))
+            : input.Fortnight == Fortnight.Second
+                ? Round(input.MonthlyValue - Round(input.MonthlyValue * firstPercent / 100m))
+                : Round(input.MonthlyValue * fortnightPercent / 100m);
         var items = new List<CalculatedPaymentItem> { new(PaymentItemKind.FortnightBase, "Valor-base da quinzena", baseValue) };
         if (input.EmploymentType == EmploymentType.Employee && input.Fortnight == Fortnight.Second)
             items.Add(new(PaymentItemKind.FirstFortnightPaid, "Valor pago na primeira quinzena", input.FirstFortnightPaid));
@@ -39,25 +42,27 @@ public static class PaymentCalculator
 
         decimal additions = 0m;
         decimal deductions = 0m;
-        var fullAbsences = input.FullAbsences + input.HalfAbsences / 2;
-        var halfAbsences = input.HalfAbsences % 2;
-        var absenceHourValue = input.MonthlyValue / 30m / 8m;
-        if (fullAbsences > 0)
+        var fullAbsences = input.FullAbsences;
+        var halfAbsences = input.HalfAbsences;
+        var absenceDailyValue = input.EmploymentType == EmploymentType.Contractor ? rules.ContractorAbsenceDailyValue ?? 0m : 0m;
+        if (fullAbsences > 0 && absenceDailyValue > 0m)
         {
-            var amount = Round(fullAbsences * absenceHourValue * 8m);
+            var amount = fullAbsences * Round(absenceDailyValue);
             deductions += amount;
-            items.Add(new(PaymentItemKind.FullAbsence, "Desconto salarial - falta inteira", amount, Quantity: fullAbsences));
+            items.Add(new(PaymentItemKind.FullAbsence, "Desconto contratual - falta inteira", amount, Quantity: fullAbsences));
         }
-        if (halfAbsences > 0)
+        if (halfAbsences > 0 && absenceDailyValue > 0m)
         {
-            var amount = Round(halfAbsences * absenceHourValue * 4m);
+            var amount = halfAbsences * Round(absenceDailyValue / 2m);
             deductions += amount;
-            items.Add(new(PaymentItemKind.HalfAbsence, "Desconto salarial - meia falta", amount, Quantity: halfAbsences));
+            items.Add(new(PaymentItemKind.HalfAbsence, "Desconto contratual - meia falta", amount, Quantity: halfAbsences));
         }
 
         if (input.Fortnight == Fortnight.Second && input.BonusValue > 0m)
         {
             var remainingBonus = Round(input.BonusValue);
+            fullAbsences = input.MonthlyFullAbsences ?? input.FullAbsences;
+            halfAbsences = input.MonthlyHalfAbsences ?? input.HalfAbsences;
             if (fullAbsences > 0)
             {
                 var amount = Math.Min(remainingBonus, Round(fullAbsences * rules.FullAbsenceValue));
@@ -120,12 +125,17 @@ public static class PaymentCalculator
 
     private static void Validate(PaymentCalculationInput input, PaymentRules rules)
     {
+        if (!Enum.IsDefined(input.EmploymentType) || !Enum.IsDefined(input.Fortnight)) throw new InvalidOperationException("Categoria ou quinzena invalida.");
+        if (input.AccountantAmount is < 0m || rules.ContractorAbsenceDailyValue is < 0m) throw new InvalidOperationException("Valor negativo.");
         if (input.MonthlyValue <= 0m) throw new InvalidOperationException("O valor mensal deve ser maior que zero.");
+        if (input.MonthlyFullAbsences is < 0 || input.MonthlyHalfAbsences is < 0) throw new InvalidOperationException("Faltas mensais negativas.");
+        if (input.EmploymentType == EmploymentType.Employee && (input.PositiveMinutes != 0 || input.NegativeMinutes != 0 || input.NightMinutes != 0)) throw new InvalidOperationException("Horas de funcionarios devem ser apuradas pelo contador.");
+        if (input.EmploymentType == EmploymentType.Employee && input.Fortnight == Fortnight.First && (input.Additions.Count != 0 || input.Deductions.Count != 0 || input.Vouchers.Count != 0)) throw new InvalidOperationException("Informe somente o valor do contador na primeira quinzena.");
         if (input.BonusValue < 0m) throw new InvalidOperationException("A bonificacao nao pode ser negativa.");
         if (input.FullAbsences < 0 || input.HalfAbsences < 0) throw new InvalidOperationException("As quantidades de faltas nao podem ser negativas.");
         if (input.PositiveMinutes < 0 || input.NegativeMinutes < 0 || input.NightMinutes < 0) throw new InvalidOperationException("Os minutos nao podem ser negativos.");
         if (rules.EmployeeFirstFortnightPercent is < 0m or > 100m || rules.ContractorFirstFortnightPercent is < 0m or > 100m) throw new InvalidOperationException("Os percentuais devem estar entre zero e cem.");
-        if (rules.FullAbsenceValue <= 0m || rules.HalfAbsenceValue <= 0m) throw new InvalidOperationException("Os valores de falta devem ser maiores que zero.");
+        if (rules.FullAbsenceValue < 0m || rules.HalfAbsenceValue < 0m) throw new InvalidOperationException("Os valores de falta devem ser maiores que zero.");
         if (input.Vouchers.Any(x => x.Amount <= 0m) || input.Additions.Any(x => x.Amount <= 0m) || input.Deductions.Any(x => x.Amount <= 0m)) throw new InvalidOperationException("Os valores de ajustes e vales devem ser maiores que zero.");
         if (input.PositiveMinutes + input.NegativeMinutes + input.NightMinutes > 0 && (rules.MonthlyWorkMinutes is null or <= 0 || rules.PositiveHourMultiplier is null or <= 0m || rules.NegativeHourMultiplier is null or <= 0m || rules.NightHourMultiplier is null or <= 0m))
             throw new InvalidOperationException("Configure a carga mensal e os multiplicadores antes de informar horas.");

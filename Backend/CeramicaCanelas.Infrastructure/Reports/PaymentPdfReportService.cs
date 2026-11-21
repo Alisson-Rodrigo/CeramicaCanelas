@@ -27,7 +27,7 @@ public partial class PdfReportService
         Fortnight? fortnight = null,
         string? logoPath = null)
     {
-        var source = calculations.ToList();
+        var source = calculations.Where(x => x.Status != PaymentCalculationStatus.Cancelled).ToList();
         ImageSource.ImageSourceImpl ??= new ImageSharpImageSource<Rgba32>();
         var filtered = fortnight.HasValue ? source.Where(x => x.Fortnight == fortnight.Value).ToList() : source;
         var rows = bonusesOnly
@@ -355,7 +355,7 @@ public partial class PdfReportService
         PaymentItemKind.FullAbsence or PaymentItemKind.HalfAbsence or PaymentItemKind.PositiveHours or
         PaymentItemKind.NegativeHours or PaymentItemKind.NightHours or PaymentItemKind.Voucher or
         PaymentItemKind.Addition or PaymentItemKind.Deduction or PaymentItemKind.Bonus or
-        PaymentItemKind.BonusAbsenceDeduction;
+        PaymentItemKind.BonusAbsenceDeduction or PaymentItemKind.Dsr;
 
     private static bool IsAddition(PaymentItemKind kind) => kind is PaymentItemKind.PositiveHours or PaymentItemKind.NightHours or PaymentItemKind.Addition or PaymentItemKind.Bonus;
     private static decimal SumItems(PaymentCalculation calculation, PaymentItemKind kind) => calculation.Items.Where(x => x.Kind == kind).Sum(x => x.Amount);
@@ -381,6 +381,7 @@ public partial class PdfReportService
         PaymentItemKind.Voucher => "Vale",
         PaymentItemKind.Addition => "Acréscimo",
         PaymentItemKind.Deduction => "Desconto",
+        PaymentItemKind.Dsr => "DSR contratual",
         PaymentItemKind.Bonus => "Bonificação",
         PaymentItemKind.BonusAbsenceDeduction => "Desconto do bônus",
         _ => "Ajuste"
