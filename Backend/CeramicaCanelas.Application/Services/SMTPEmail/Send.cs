@@ -26,11 +26,21 @@ namespace CeramicaCanelas.Application.Services.SMTPEmail
         {
             try
             {
-                string host = Environment.GetEnvironmentVariable("SMTP_HOST")!;
-                string displayName = Environment.GetEnvironmentVariable("SMTP_NAME")!;
-                string senderEmail = Environment.GetEnvironmentVariable("SMTP_USERNAME")!;
-                string senderPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD")!;
-                int port = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT")!);
+                string host = GetSetting("SMTP:Host", "SMTP_HOST");
+                string displayName = GetSetting("SMTP:Nome", "SMTP_NAME");
+                string senderEmail = GetSetting("SMTP:UserName", "SMTP_USERNAME");
+                string senderPassword = GetSetting("SMTP:Senha", "SMTP_PASSWORD");
+                string portSetting = GetSetting("SMTP:Porta", "SMTP_PORT");
+
+                if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
+                {
+                    return false;
+                }
+
+                if (!int.TryParse(portSetting, out int port) || port is < 1 or > 65535)
+                {
+                    return false;
+                }
 
                 MailMessage mail = new MailMessage
                 {
@@ -64,6 +74,13 @@ namespace CeramicaCanelas.Application.Services.SMTPEmail
             {
                 return false;
             }
+        }
+
+        private string GetSetting(string configurationKey, string environmentKey)
+        {
+            var configuredValue = _configuration[configurationKey];
+            if (!string.IsNullOrWhiteSpace(configuredValue)) return configuredValue;
+            return Environment.GetEnvironmentVariable(environmentKey) ?? string.Empty;
         }
 
     }

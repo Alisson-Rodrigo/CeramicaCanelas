@@ -12,6 +12,7 @@ import { jwtDecode } from 'jwt-decode';
 // --- IMPORTAÇÕES DOS MÓDULOS ---
 import { Sidebar, GLOBAL_MENU_ITEMS } from '@/components/Sidebar';
 import { HomeOverview } from '@/components/home/HomeOverview';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import styles from '@/components/home/home.module.css';
 
 const overviewFont = localFont({ src: '../auth/login/fonts/geist-latin.woff2', weight: '100 900', display: 'swap' });
@@ -217,11 +218,12 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className={styles.account} aria-label={userName + ' · ' + userRole}>
+            <ThemeToggle />
             <div className={styles.accountDetails}><strong>{userName}</strong><small>{userRole}</small></div>
             <span className={styles.avatar} aria-hidden="true">{userInitials}</span>
           </div>
         </header>
-        <main className={styles.content}>
+        <main className={styles.content + ' app-content-enter'}>
           <HomeOverview role={userRole} onOpen={openFromHome} />
         </main>
       </div>

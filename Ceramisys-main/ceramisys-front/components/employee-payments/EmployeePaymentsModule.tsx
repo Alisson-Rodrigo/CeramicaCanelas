@@ -4,9 +4,10 @@ import Link from 'next/link';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { useRouter } from 'next/navigation';
-import { Banknote, FileText, History, Menu, Settings2, Ticket, UsersRound } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Sidebar } from '@/components/Sidebar';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { EmployeePaymentsSidebar, employeePaymentScreens as screens } from './EmployeePaymentsSidebar';
 import { EmployeePeriod, employeePayments as service } from '@/lib/employee-payments';
 import { money } from '@/lib/payments';
 import { useEmployeeQuery } from './hooks';
@@ -18,16 +19,6 @@ import { EmployeeAbsences } from './EmployeeAbsences';
 import { EmployeeCalculation } from './EmployeeCalculation';
 import { EmployeeHistory } from './EmployeeHistory';
 import { EmployeeReports } from './EmployeeReports';
-const screens = [
-  { id: 'people', label: 'Cadastro', icon: UsersRound },
-  { id: 'calculation', label: 'Apuração', icon: Banknote },
-  { id: 'absences', label: 'Faltas e conferência', icon: FileText },
-  { id: 'hours', label: 'Horas do mês', icon: FileText },
-  { id: 'vouchers', label: 'Vales', icon: Ticket },
-  { id: 'history', label: 'Histórico e ajustes', icon: History },
-  { id: 'reports', label: 'Relatórios e contador', icon: FileText },
-  { id: 'rules', label: 'Parâmetros de bônus', icon: Settings2 },
-];
 export function EmployeePaymentsAccess() {
   const router = useRouter();
   const [access, setAccess] = useState<{ allowed: boolean } | null>(null);
@@ -52,19 +43,38 @@ export function EmployeePaymentsModule() {
   const [scope, setScope] = useState<EmployeePeriod>({ personId: '', year: now.getFullYear(), month: now.getMonth() + 1, fortnight: 1 });
   const [historicalName, setHistoricalName] = useState(''); const [screen, setScreen] = useState('people');
   const [version, setVersion] = useState(0); const refresh = useCallback(() => setVersion(value => value + 1), []);
-  const [open, setOpen] = useState(false);
-  useEffect(() => { const timer = setTimeout(() => setOpen(window.innerWidth >= 768), 0); return () => clearTimeout(timer); }, []);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const savedScreen = localStorage.getItem('employeePaymentsActiveScreen');
+      if (savedScreen && screens.some(item => item.id === savedScreen)) setScreen(savedScreen);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   const people = useEmployeeQuery('employee-people:' + version, signal => service.people(signal));
   const selected = people.data?.find(person => person.id === scope.personId);
-  const select = (id: string, name: string) => { setScope(current => ({ ...current, personId: id })); setHistoricalName(name); setScreen('calculation'); };
+  const select = (id: string, name: string) => { setScope(current => ({ ...current, personId: id })); setHistoricalName(name); setScreen('calculation'); localStorage.setItem('employeePaymentsActiveScreen', 'calculation'); };
   const resourceKey = JSON.stringify(scope);
-  const navigate = (id: string) => { setScreen(id); if (window.innerWidth < 768) setOpen(false); };
-  return <div className='min-h-dvh bg-slate-50 font-sans text-slate-800'>
-    <Sidebar activeSection={screen} onChangeSection={navigate} isOpen={open} toggleSidebar={() => setOpen(value => !value)} customMenuItems={screens} onBack={() => router.push('/dashboard')} />
-    <div className={open ? 'min-w-0 md:ml-64' : 'min-w-0 md:ml-20'}>
-      <header className='flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4'><button type='button' onClick={() => setOpen(value => !value)} className='rounded-lg p-2 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-orange-700' aria-label='Alternar menu de funcionários'><Menu size={22} /></button><span className='font-semibold'>Pagamentos</span></header>
-      <main className='space-y-5 p-3 sm:p-5 lg:p-8'>
-        <nav aria-label='Abas de pagamentos' className='border-b border-slate-200'><Link href='/dashboard/payments' aria-current='page' className='inline-block border-b-2 border-orange-700 px-3 py-3 text-sm font-semibold text-orange-800 focus-visible:outline-2 focus-visible:outline-orange-700'>Funcionários</Link></nav>
+  const navigate = (id: string) => {
+    setScreen(id);
+    localStorage.setItem('employeePaymentsActiveScreen', id);
+    if (window.innerWidth < 768) setIsMobileMenuOpen(false);
+  };
+  return <div className='flex h-dvh min-h-0 overflow-hidden bg-slate-50 font-sans text-slate-800'>
+    {isMobileMenuOpen && <div className='fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden' onClick={() => setIsMobileMenuOpen(false)} />}
+    <div className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} ${isDesktopSidebarOpen ? 'md:w-64' : 'md:w-20'}`}>
+      <div className={`${isDesktopSidebarOpen ? 'md:w-64' : 'md:w-20'} h-full w-64 transition-all duration-300`}>
+        <EmployeePaymentsSidebar currentScreen={screen} onNavigate={navigate} onBackToMain={() => router.push('/dashboard')} onCloseMobile={() => setIsMobileMenuOpen(false)} isCollapsed={!isDesktopSidebarOpen} />
+      </div>
+    </div>
+    <div className='flex min-w-0 flex-1 flex-col overflow-hidden'>
+      <header className='flex h-16 shrink-0 items-center border-b border-slate-200 bg-white px-4'>
+        <button type='button' onClick={() => window.innerWidth < 768 ? setIsMobileMenuOpen(open => !open) : setIsDesktopSidebarOpen(open => !open)} className='rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-orange-700' aria-label='Alternar menu de pagamentos'><Menu size={24} /></button>
+        <span className='ml-4 font-bold text-slate-800'>Pagamentos</span>
+        <div className='ml-auto'><ThemeToggle /></div>
+      </header>
+      <main className='app-content-enter flex-1 space-y-5 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'>
         <div className='flex flex-wrap items-center justify-between gap-3'><h1 className='text-2xl font-semibold'>{screens.find(item => item.id === screen)?.label}</h1><Button variant='outline' disabled={people.loading} onClick={refresh}>Atualizar dados</Button></div>
         <Notice loading={people.loading} error={people.error} />
         <div className='grid gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]'>

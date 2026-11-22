@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { InventorySidebar } from './InventorySidebar';
 import { Menu } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 // --- IMPORTAÇÃO DAS VIEWS ---
 import { DashboardHome } from './views/dashboards/DashboardHome';
@@ -115,10 +116,11 @@ export function InventoryLayout({ onBackToMain }: InventoryLayoutProps) {
             <Menu size={24} />
           </button>
           <span className="ml-4 font-bold text-gray-800">Almoxarifado</span>
+          <div className="ml-auto"><ThemeToggle /></div>
         </header>
 
         {/* Conteúdo com Scroll */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 lg:p-8">
+        <main className="app-content-enter flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 lg:p-8">
           {renderContent()}
         </main>
       </div>
