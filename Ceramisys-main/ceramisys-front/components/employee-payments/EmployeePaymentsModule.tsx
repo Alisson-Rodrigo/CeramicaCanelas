@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { EmployeePaymentsSidebar, employeePaymentScreens as screens } from './EmployeePaymentsSidebar';
 import { EmployeePeriod, employeePayments as service } from '@/lib/employee-payments';
 import { money } from '@/lib/payments';
@@ -72,7 +73,7 @@ export function EmployeePaymentsModule() {
       <header className='flex h-16 shrink-0 items-center border-b border-slate-200 bg-white px-4'>
         <button type='button' onClick={() => window.innerWidth < 768 ? setIsMobileMenuOpen(open => !open) : setIsDesktopSidebarOpen(open => !open)} className='rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-orange-700' aria-label='Alternar menu de pagamentos'><Menu size={24} /></button>
         <span className='ml-4 font-bold text-slate-800'>Pagamentos</span>
-        <div className='ml-auto'><ThemeToggle /></div>
+        <div className='ml-auto flex items-center gap-2'><NotificationBell /><ThemeToggle /></div>
       </header>
       <main className='app-content-enter flex-1 space-y-5 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8'>
         <div className='flex flex-wrap items-center justify-between gap-3'><h1 className='text-2xl font-semibold'>{screens.find(item => item.id === screen)?.label}</h1><Button variant='outline' disabled={people.loading} onClick={refresh}>Atualizar dados</Button></div>

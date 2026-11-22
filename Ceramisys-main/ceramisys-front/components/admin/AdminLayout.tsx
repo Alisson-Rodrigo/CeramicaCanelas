@@ -4,15 +4,16 @@ import React, { useEffect, useState } from 'react';
 import { AdminSidebar } from './AdminSidebar';
 import { Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 // --- IMPORTAÇÃO DAS VIEWS ---
 import { RegisterUser } from './views/RegisterUser';
 import { AdminDashboard } from './views/AdminDashboard'; 
+import { AuditCenter } from './views/AuditCenter';
 
 // --- PLACEHOLDERS (Para as telas que ainda faltam) ---
 const RoleList = () => <div className="p-4"><h1>Permissões e Cargos</h1></div>;
 const SystemSettings = () => <div className="p-4"><h1>Configurações do Sistema</h1></div>;
-const AuditLogs = () => <div className="p-4"><h1>Logs de Auditoria</h1></div>;
 
 interface AdminLayoutProps {
   onBackToMain: () => void;
@@ -51,7 +52,8 @@ export function AdminLayout({ onBackToMain }: AdminLayoutProps) {
       // Outros (Placeholders)
       case 'roles': return <RoleList />;
       case 'settings': return <SystemSettings />;
-      case 'logs': return <AuditLogs />;
+      case 'logs': return <AuditCenter />;
+      case 'notifications': return <AuditCenter mode="notifications" />;
 
       default: return <AdminDashboard />;
     }
@@ -98,7 +100,7 @@ export function AdminLayout({ onBackToMain }: AdminLayoutProps) {
             <Menu size={24} />
           </button>
           <span className="ml-4 font-bold text-gray-800">Administração</span>
-          <div className="ml-auto"><ThemeToggle /></div>
+          <div className="ml-auto flex items-center gap-2"><NotificationBell /><ThemeToggle /></div>
         </header>
 
         {/* Conteúdo Principal */}

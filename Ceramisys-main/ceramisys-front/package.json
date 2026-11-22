@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test:payments": "node --test tests/payments.test.cjs",
     "test:employee-payments": "node --test tests/employee-payments.test.cjs",
+    "test:notifications": "node --test tests/notifications.test.cjs",
     "test:employee-payments:browser": "node tests/employee-payments-browser.cjs"
   },
   "dependencies": {

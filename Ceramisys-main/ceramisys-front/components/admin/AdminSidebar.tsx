@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   LayoutDashboard, Users, ShieldCheck, Settings, FileText, 
-  LogOut, X, Server 
+  LogOut, X, Server, Bell
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -70,6 +70,9 @@ export function AdminSidebar({ currentScreen, onNavigate, onBackToMain, onCloseM
           </button>
           <button onClick={() => onNavigate('logs')} className={getButtonClass('logs')}>
             <FileText size={18} /> <span>Logs de Auditoria</span>
+          </button>
+          <button onClick={() => onNavigate('notifications')} className={getButtonClass('notifications')}>
+            <Bell size={18} /> <span>Notificações</span>
           </button>
           <button onClick={() => onNavigate('database')} className={getButtonClass('database')}>
             <Server size={18} /> <span>Backup & Banco</span>
