@@ -1,0 +1,237 @@
+{
+  "regions": [
+    {
+      "id": "floor-photo",
+      "kind": "image",
+      "note": "Industrial factory, fired bricks and lit kiln",
+      "pixelBox": {
+        "x": 0,
+        "y": 0,
+        "w": 948,
+        "h": 941
+      },
+      "bleed": true
+    },
+    {
+      "id": "brand-mark",
+      "kind": "image",
+      "note": "Round company logo at upper left",
+      "pixelBox": {
+        "x": 62,
+        "y": 58,
+        "w": 160,
+        "h": 160
+      }
+    },
+    {
+      "id": "brand-divider",
+      "kind": "chrome",
+      "note": "Narrow orange vertical brand divider",
+      "pixelBox": {
+        "x": 239,
+        "y": 86,
+        "w": 5,
+        "h": 95
+      }
+    },
+    {
+      "id": "brand-name",
+      "kind": "text",
+      "note": "Two-line Ceramica Canelas brand name",
+      "pixelBox": {
+        "x": 268,
+        "y": 82,
+        "w": 260,
+        "h": 102
+      }
+    },
+    {
+      "id": "institution-title",
+      "kind": "text",
+      "note": "Two-line Sistema Integrado de Gestao headline",
+      "pixelBox": {
+        "x": 92,
+        "y": 375,
+        "w": 530,
+        "h": 115
+      }
+    },
+    {
+      "id": "institution-rule",
+      "kind": "chrome",
+      "note": "Short orange rule under the headline",
+      "pixelBox": {
+        "x": 94,
+        "y": 522,
+        "w": 134,
+        "h": 9
+      }
+    },
+    {
+      "id": "institution-description",
+      "kind": "text",
+      "note": "Two lines about operations in the ceramic industry",
+      "pixelBox": {
+        "x": 93,
+        "y": 565,
+        "w": 425,
+        "h": 61
+      }
+    },
+    {
+      "id": "indicators",
+      "kind": "chrome",
+      "note": "Three labeled line icons with separating rules",
+      "pixelBox": {
+        "x": 98,
+        "y": 710,
+        "w": 570,
+        "h": 46
+      }
+    },
+    {
+      "id": "left-wave",
+      "kind": "chrome",
+      "note": "Orange curved shape at lower left",
+      "pixelBox": {
+        "x": 0,
+        "y": 790,
+        "w": 475,
+        "h": 151
+      }
+    },
+    {
+      "id": "right-outline-top",
+      "kind": "chrome",
+      "note": "Pale angled lines in right upper corner",
+      "pixelBox": {
+        "x": 1399,
+        "y": 0,
+        "w": 273,
+        "h": 226
+      }
+    },
+    {
+      "id": "right-outline-bottom",
+      "kind": "chrome",
+      "note": "Pale tilted lines beside the bottom of the card",
+      "pixelBox": {
+        "x": 852,
+        "y": 704,
+        "w": 182,
+        "h": 237
+      }
+    },
+    {
+      "id": "card",
+      "kind": "chrome",
+      "note": "Warm white rounded form surface",
+      "pixelBox": {
+        "x": 994,
+        "y": 116,
+        "w": 614,
+        "h": 717
+      },
+      "container": true
+    },
+    {
+      "id": "form-lock",
+      "kind": "chrome",
+      "note": "Orange lock and pale square icon tile",
+      "pixelBox": {
+        "x": 1254,
+        "y": 168,
+        "w": 100,
+        "h": 99
+      }
+    },
+    {
+      "id": "form-title",
+      "kind": "text",
+      "note": "Acesse o sistema",
+      "pixelBox": {
+        "x": 1133,
+        "y": 286,
+        "w": 342,
+        "h": 36
+      }
+    },
+    {
+      "id": "form-description",
+      "kind": "text",
+      "note": "Informe suas credenciais para continuar.",
+      "pixelBox": {
+        "x": 1107,
+        "y": 340,
+        "w": 400,
+        "h": 25
+      }
+    },
+    {
+      "id": "username-label",
+      "kind": "text",
+      "note": "Nome de usuario with label icon",
+      "pixelBox": {
+        "x": 1057,
+        "y": 411,
+        "w": 204,
+        "h": 27
+      }
+    },
+    {
+      "id": "username",
+      "kind": "control",
+      "note": "Username input field",
+      "pixelBox": {
+        "x": 1056,
+        "y": 446,
+        "w": 499,
+        "h": 72
+      }
+    },
+    {
+      "id": "password-label",
+      "kind": "text",
+      "note": "Senha with lock label icon",
+      "pixelBox": {
+        "x": 1057,
+        "y": 555,
+        "w": 114,
+        "h": 26
+      }
+    },
+    {
+      "id": "recovery-link",
+      "kind": "control",
+      "note": "Esqueceu a senha recovery link",
+      "pixelBox": {
+        "x": 1390,
+        "y": 557,
+        "w": 165,
+        "h": 24
+      }
+    },
+    {
+      "id": "password",
+      "kind": "control",
+      "note": "Password field with reveal control",
+      "pixelBox": {
+        "x": 1056,
+        "y": 590,
+        "w": 499,
+        "h": 72
+      }
+    },
+    {
+      "id": "submit",
+      "kind": "control",
+      "note": "Orange Entrar no Sistema button with arrow",
+      "pixelBox": {
+        "x": 1056,
+        "y": 700,
+        "w": 499,
+        "h": 83
+      }
+    }
+  ]
+}

@@ -1,7 +1,0 @@
-.main-content {
-    margin-left: 250px; /* Espaço para o menu lateral */
-    padding: 20px;
-    height: 100vh; /* AGORA SIM: Define a altura exata do main-content para 100% do viewport */
-    background-color: #f5f5f5;
-    box-sizing: border-box; /* Garante que o padding não adicione altura extra ao 100vh */
-}

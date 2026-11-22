@@ -1,0 +1,1162 @@
+{
+  "tool": "comp-spec",
+  "version": 1,
+  "createdAt": "2026-11-18T12:37:42.443Z",
+  "comp": "C:\\Users\\jorge\\OneDrive\\Documentos\\GitHub\\Ceramisys\\ceramisys-front\\public\\references\\Login Cerâmica Canelas – Gestão Integrada.png",
+  "warnings": [
+    "region floor-photo: \"bleed\": true set in the regions file (the clipped-artwork refusal is overridden: the page crops it there)",
+    "region brand-mark: the artwork runs off the box on the left and right and top and bottom (its ink reaches the edge over 35% of that side). Widen the region so the box holds the whole shape with a margin; a plate placed with object-fit: cover on this box would be cut there.",
+    "region card: \"container\": true set in the regions file (the region-size refusal is overridden: one undivided element)"
+  ],
+  "uncoveredInkCells": [],
+  "compSize": {
+    "width": 1672,
+    "height": 941
+  },
+  "aspect": 1.7768,
+  "orientation": "landscape",
+  "palette": [
+    {
+      "hex": "#f7f6f5",
+      "coverage": 0.5198
+    },
+    {
+      "hex": "#31180c",
+      "coverage": 0.3045
+    },
+    {
+      "hex": "#4f1d0b",
+      "coverage": 0.0814
+    },
+    {
+      "hex": "#e95108",
+      "coverage": 0.0514
+    },
+    {
+      "hex": "#722d12",
+      "coverage": 0.0428
+    }
+  ],
+  "bands": [
+    {
+      "y": 0.0972,
+      "strength": 0.2461
+    },
+    {
+      "y": 0.3194,
+      "strength": 0.2511
+    },
+    {
+      "y": 0.3472,
+      "strength": 0.2044
+    },
+    {
+      "y": 0.4167,
+      "strength": 0.5005
+    },
+    {
+      "y": 0.4444,
+      "strength": 0.5455
+    },
+    {
+      "y": 0.4861,
+      "strength": 0.3163
+    },
+    {
+      "y": 0.5139,
+      "strength": 0.2613
+    },
+    {
+      "y": 0.6111,
+      "strength": 0.4024
+    },
+    {
+      "y": 0.75,
+      "strength": 0.5372
+    },
+    {
+      "y": 0.8333,
+      "strength": 0.5044
+    }
+  ],
+  "regions": [
+    {
+      "id": "floor-photo",
+      "kind": "image",
+      "note": "Industrial factory, fired bricks and lit kiln",
+      "grid": null,
+      "bleed": true,
+      "box": {
+        "x": 0,
+        "y": 0,
+        "w": 0.567,
+        "h": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 0,
+        "w": 948,
+        "h": 941
+      },
+      "aspect": 1.0074,
+      "palette": [
+        {
+          "hex": "#31180c",
+          "coverage": 0.5908
+        },
+        {
+          "hex": "#4f1d0b",
+          "coverage": 0.1579
+        },
+        {
+          "hex": "#f7f6f6",
+          "coverage": 0.1146
+        },
+        {
+          "hex": "#722d12",
+          "coverage": 0.083
+        },
+        {
+          "hex": "#ec5b09",
+          "coverage": 0.0536
+        }
+      ],
+      "detail": {
+        "energy": 29.8829
+      },
+      "medium": "raster",
+      "plate": "assets/plates/floor-photo.png",
+      "text": null
+    },
+    {
+      "id": "brand-mark",
+      "kind": "image",
+      "note": "Round company logo at upper left",
+      "grid": null,
+      "box": {
+        "x": 0.0371,
+        "y": 0.0616,
+        "w": 0.0957,
+        "h": 0.17
+      },
+      "px": {
+        "x": 62,
+        "y": 58,
+        "w": 160,
+        "h": 160
+      },
+      "aspect": 1,
+      "palette": [
+        {
+          "hex": "#f8f8f7",
+          "coverage": 0.4051
+        },
+        {
+          "hex": "#34190a",
+          "coverage": 0.3918
+        },
+        {
+          "hex": "#e9570b",
+          "coverage": 0.1647
+        },
+        {
+          "hex": "#f5b88f",
+          "coverage": 0.021
+        },
+        {
+          "hex": "#ac3f08",
+          "coverage": 0.0174
+        }
+      ],
+      "detail": {
+        "energy": 23.3093
+      },
+      "medium": "raster",
+      "clipped": [
+        "left",
+        "right",
+        "top",
+        "bottom"
+      ],
+      "plate": "assets/plates/brand-mark.png",
+      "text": null
+    },
+    {
+      "id": "brand-divider",
+      "kind": "chrome",
+      "note": "Narrow orange vertical brand divider",
+      "grid": null,
+      "box": {
+        "x": 0.1429,
+        "y": 0.0914,
+        "w": 0.003,
+        "h": 0.101
+      },
+      "px": {
+        "x": 239,
+        "y": 86,
+        "w": 5,
+        "h": 95
+      },
+      "aspect": 0.0526,
+      "palette": [
+        {
+          "hex": "#712d08",
+          "coverage": 0.4844
+        },
+        {
+          "hex": "#e7660b",
+          "coverage": 0.4688
+        },
+        {
+          "hex": "#280808",
+          "coverage": 0.0313
+        },
+        {
+          "hex": "#482808",
+          "coverage": 0.0156
+        }
+      ],
+      "detail": {
+        "energy": 1.5021
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": true,
+        "rules": true
+      }
+    },
+    {
+      "id": "brand-name",
+      "kind": "text",
+      "note": "Two-line Ceramica Canelas brand name",
+      "grid": null,
+      "box": {
+        "x": 0.1603,
+        "y": 0.0871,
+        "w": 0.1555,
+        "h": 0.1084
+      },
+      "px": {
+        "x": 268,
+        "y": 82,
+        "w": 260,
+        "h": 102
+      },
+      "aspect": 2.549,
+      "palette": [
+        {
+          "hex": "#342114",
+          "coverage": 0.5717
+        },
+        {
+          "hex": "#f66b09",
+          "coverage": 0.2271
+        },
+        {
+          "hex": "#f6f5f5",
+          "coverage": 0.1006
+        },
+        {
+          "hex": "#1a0b08",
+          "coverage": 0.0808
+        },
+        {
+          "hex": "#91400b",
+          "coverage": 0.0198
+        }
+      ],
+      "detail": {
+        "energy": 38.0551
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": true,
+        "rules": false
+      }
+    },
+    {
+      "id": "institution-title",
+      "kind": "text",
+      "note": "Two-line Sistema Integrado de Gestao headline",
+      "grid": null,
+      "box": {
+        "x": 0.055,
+        "y": 0.3985,
+        "w": 0.317,
+        "h": 0.1222
+      },
+      "px": {
+        "x": 92,
+        "y": 375,
+        "w": 530,
+        "h": 115
+      },
+      "aspect": 4.6087,
+      "palette": [
+        {
+          "hex": "#381a0a",
+          "coverage": 0.625
+        },
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.2773
+        },
+        {
+          "hex": "#1f120f",
+          "coverage": 0.0418
+        },
+        {
+          "hex": "#612c10",
+          "coverage": 0.0283
+        },
+        {
+          "hex": "#51392c",
+          "coverage": 0.0276
+        }
+      ],
+      "detail": {
+        "energy": 73.4978
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": true,
+        "rules": false
+      },
+      "type": {
+        "comp": {
+          "lines": 2,
+          "glyphs": 20,
+          "capHeightPx": 42.3,
+          "inkIsDark": false,
+          "allCaps": false,
+          "advance": 0.826,
+          "advTall": 0.8268,
+          "advX": 0.8024,
+          "gap": 0.0472,
+          "xRatio": 0.74,
+          "stemW": 0.2453,
+          "contrast": 1.2386,
+          "serif": 0.9913,
+          "densTall": 0.6085,
+          "densX": 0.6752,
+          "weight": 0.6085
+        },
+        "widthClass": "wide",
+        "weightClass": "bold",
+        "chosen": {
+          "family": "Lexend Exa",
+          "weight": 700,
+          "fontSizePx": 60,
+          "source": "catalog",
+          "estimatedSize": true,
+          "stamp": "df6ace1d3184"
+        }
+      }
+    },
+    {
+      "id": "institution-rule",
+      "kind": "chrome",
+      "note": "Short orange rule under the headline",
+      "grid": null,
+      "box": {
+        "x": 0.0562,
+        "y": 0.5547,
+        "w": 0.0801,
+        "h": 0.0096
+      },
+      "px": {
+        "x": 94,
+        "y": 522,
+        "w": 134,
+        "h": 9
+      },
+      "aspect": 14.8889,
+      "palette": [
+        {
+          "hex": "#f86208",
+          "coverage": 0.637
+        },
+        {
+          "hex": "#481808",
+          "coverage": 0.3185
+        },
+        {
+          "hex": "#c34808",
+          "coverage": 0.0222
+        },
+        {
+          "hex": "#281008",
+          "coverage": 0.0148
+        },
+        {
+          "hex": "#882808",
+          "coverage": 0.0074
+        }
+      ],
+      "detail": {
+        "energy": 22.6243
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": true,
+        "rules": false
+      }
+    },
+    {
+      "id": "institution-description",
+      "kind": "text",
+      "note": "Two lines about operations in the ceramic industry",
+      "grid": null,
+      "box": {
+        "x": 0.0556,
+        "y": 0.6004,
+        "w": 0.2542,
+        "h": 0.0648
+      },
+      "px": {
+        "x": 93,
+        "y": 565,
+        "w": 425,
+        "h": 61
+      },
+      "aspect": 6.9672,
+      "palette": [
+        {
+          "hex": "#2c1409",
+          "coverage": 0.5997
+        },
+        {
+          "hex": "#481809",
+          "coverage": 0.1722
+        },
+        {
+          "hex": "#f0eeee",
+          "coverage": 0.1277
+        },
+        {
+          "hex": "#beb5b1",
+          "coverage": 0.0621
+        },
+        {
+          "hex": "#4c3933",
+          "coverage": 0.0384
+        }
+      ],
+      "detail": {
+        "energy": 101.1057
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": true,
+        "rules": false
+      }
+    },
+    {
+      "id": "indicators",
+      "kind": "chrome",
+      "note": "Three labeled line icons with separating rules",
+      "grid": null,
+      "box": {
+        "x": 0.0586,
+        "y": 0.7545,
+        "w": 0.3409,
+        "h": 0.0489
+      },
+      "px": {
+        "x": 98,
+        "y": 710,
+        "w": 570,
+        "h": 46
+      },
+      "aspect": 12.3913,
+      "palette": [
+        {
+          "hex": "#2e1508",
+          "coverage": 0.642
+        },
+        {
+          "hex": "#571f0a",
+          "coverage": 0.2519
+        },
+        {
+          "hex": "#f2f0ef",
+          "coverage": 0.0424
+        },
+        {
+          "hex": "#f27b4e",
+          "coverage": 0.0354
+        },
+        {
+          "hex": "#473123",
+          "coverage": 0.0284
+        }
+      ],
+      "detail": {
+        "energy": 64.0117
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": true,
+        "rules": false
+      }
+    },
+    {
+      "id": "left-wave",
+      "kind": "chrome",
+      "note": "Orange curved shape at lower left",
+      "grid": null,
+      "box": {
+        "x": 0,
+        "y": 0.8395,
+        "w": 0.2841,
+        "h": 0.1605
+      },
+      "px": {
+        "x": 0,
+        "y": 790,
+        "w": 475,
+        "h": 151
+      },
+      "aspect": 3.1457,
+      "palette": [
+        {
+          "hex": "#361808",
+          "coverage": 0.5601
+        },
+        {
+          "hex": "#e85708",
+          "coverage": 0.288
+        },
+        {
+          "hex": "#b13f08",
+          "coverage": 0.1492
+        },
+        {
+          "hex": "#822808",
+          "coverage": 0.0016
+        },
+        {
+          "hex": "#581808",
+          "coverage": 0.0011
+        }
+      ],
+      "detail": {
+        "energy": 4.0847
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": true,
+        "rules": false
+      }
+    },
+    {
+      "id": "right-outline-top",
+      "kind": "chrome",
+      "note": "Pale angled lines in right upper corner",
+      "grid": null,
+      "box": {
+        "x": 0.8367,
+        "y": 0,
+        "w": 0.1633,
+        "h": 0.2402
+      },
+      "px": {
+        "x": 1399,
+        "y": 0,
+        "w": 273,
+        "h": 226
+      },
+      "aspect": 1.208,
+      "palette": [
+        {
+          "hex": "#f8f8f6",
+          "coverage": 0.9742
+        },
+        {
+          "hex": "#f8dfcd",
+          "coverage": 0.0258
+        }
+      ],
+      "detail": {
+        "energy": 2.0834
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "right-outline-bottom",
+      "kind": "chrome",
+      "note": "Pale tilted lines beside the bottom of the card",
+      "grid": null,
+      "box": {
+        "x": 0.5096,
+        "y": 0.7481,
+        "w": 0.1089,
+        "h": 0.2519
+      },
+      "px": {
+        "x": 852,
+        "y": 704,
+        "w": 182,
+        "h": 237
+      },
+      "aspect": 0.7679,
+      "palette": [
+        {
+          "hex": "#f8f6f3",
+          "coverage": 0.9256
+        },
+        {
+          "hex": "#f8dfcf",
+          "coverage": 0.04
+        },
+        {
+          "hex": "#261008",
+          "coverage": 0.0158
+        },
+        {
+          "hex": "#761e08",
+          "coverage": 0.0097
+        },
+        {
+          "hex": "#eb976e",
+          "coverage": 0.0089
+        }
+      ],
+      "detail": {
+        "energy": 3.8573
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "card",
+      "kind": "chrome",
+      "note": "Warm white rounded form surface",
+      "grid": null,
+      "container": true,
+      "box": {
+        "x": 0.5945,
+        "y": 0.1233,
+        "w": 0.3672,
+        "h": 0.762
+      },
+      "px": {
+        "x": 994,
+        "y": 116,
+        "w": 614,
+        "h": 717
+      },
+      "aspect": 0.8563,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9002
+        },
+        {
+          "hex": "#e84a09",
+          "coverage": 0.0833
+        },
+        {
+          "hex": "#131d2f",
+          "coverage": 0.0095
+        },
+        {
+          "hex": "#b1b1ba",
+          "coverage": 0.0041
+        },
+        {
+          "hex": "#e8a578",
+          "coverage": 0.0029
+        }
+      ],
+      "detail": {
+        "energy": 12.9143
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": true,
+        "rules": false
+      }
+    },
+    {
+      "id": "form-lock",
+      "kind": "chrome",
+      "note": "Orange lock and pale square icon tile",
+      "grid": null,
+      "box": {
+        "x": 0.75,
+        "y": 0.1785,
+        "w": 0.0598,
+        "h": 0.1052
+      },
+      "px": {
+        "x": 1254,
+        "y": 168,
+        "w": 100,
+        "h": 99
+      },
+      "aspect": 1.0101,
+      "palette": [
+        {
+          "hex": "#f8eadb",
+          "coverage": 0.9232
+        },
+        {
+          "hex": "#e75b11",
+          "coverage": 0.0455
+        },
+        {
+          "hex": "#ea7c3d",
+          "coverage": 0.017
+        },
+        {
+          "hex": "#f8c7a6",
+          "coverage": 0.0116
+        },
+        {
+          "hex": "#f8a363",
+          "coverage": 0.0027
+        }
+      ],
+      "detail": {
+        "energy": 4.6168
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "form-title",
+      "kind": "text",
+      "note": "Acesse o sistema",
+      "grid": null,
+      "box": {
+        "x": 0.6776,
+        "y": 0.3039,
+        "w": 0.2045,
+        "h": 0.0383
+      },
+      "px": {
+        "x": 1133,
+        "y": 286,
+        "w": 342,
+        "h": 36
+      },
+      "aspect": 9.5,
+      "palette": [
+        {
+          "hex": "#f6f6f6",
+          "coverage": 0.6166
+        },
+        {
+          "hex": "#131f31",
+          "coverage": 0.3098
+        },
+        {
+          "hex": "#787a88",
+          "coverage": 0.0273
+        },
+        {
+          "hex": "#414b59",
+          "coverage": 0.0235
+        },
+        {
+          "hex": "#cbcdd3",
+          "coverage": 0.0228
+        }
+      ],
+      "detail": {
+        "energy": 100.0905
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "form-description",
+      "kind": "text",
+      "note": "Informe suas credenciais para continuar.",
+      "grid": null,
+      "box": {
+        "x": 0.6621,
+        "y": 0.3613,
+        "w": 0.2392,
+        "h": 0.0266
+      },
+      "px": {
+        "x": 1107,
+        "y": 340,
+        "w": 400,
+        "h": 25
+      },
+      "aspect": 16,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.7604
+        },
+        {
+          "hex": "#7f8491",
+          "coverage": 0.1692
+        },
+        {
+          "hex": "#c3c6cb",
+          "coverage": 0.0456
+        },
+        {
+          "hex": "#a2a4aa",
+          "coverage": 0.0249
+        }
+      ],
+      "detail": {
+        "energy": 61.5077
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "username-label",
+      "kind": "text",
+      "note": "Nome de usuario with label icon",
+      "grid": null,
+      "box": {
+        "x": 0.6322,
+        "y": 0.4368,
+        "w": 0.122,
+        "h": 0.0287
+      },
+      "px": {
+        "x": 1057,
+        "y": 411,
+        "w": 204,
+        "h": 27
+      },
+      "aspect": 7.5556,
+      "palette": [
+        {
+          "hex": "#f8f8f7",
+          "coverage": 0.7851
+        },
+        {
+          "hex": "#1d2838",
+          "coverage": 0.0693
+        },
+        {
+          "hex": "#727887",
+          "coverage": 0.0639
+        },
+        {
+          "hex": "#c0c2c7",
+          "coverage": 0.0533
+        },
+        {
+          "hex": "#8e979b",
+          "coverage": 0.0284
+        }
+      ],
+      "detail": {
+        "energy": 51.7398
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "username",
+      "kind": "control",
+      "note": "Username input field",
+      "grid": null,
+      "box": {
+        "x": 0.6316,
+        "y": 0.474,
+        "w": 0.2984,
+        "h": 0.0765
+      },
+      "px": {
+        "x": 1056,
+        "y": 446,
+        "w": 499,
+        "h": 72
+      },
+      "aspect": 6.9306,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.9967
+        },
+        {
+          "hex": "#a8a8b8",
+          "coverage": 0.0015
+        },
+        {
+          "hex": "#182838",
+          "coverage": 0.001
+        },
+        {
+          "hex": "#384858",
+          "coverage": 0.0008
+        }
+      ],
+      "detail": {
+        "energy": 6.8974
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": true
+      }
+    },
+    {
+      "id": "password-label",
+      "kind": "text",
+      "note": "Senha with lock label icon",
+      "grid": null,
+      "box": {
+        "x": 0.6322,
+        "y": 0.5898,
+        "w": 0.0682,
+        "h": 0.0276
+      },
+      "px": {
+        "x": 1057,
+        "y": 555,
+        "w": 114,
+        "h": 26
+      },
+      "aspect": 4.3846,
+      "palette": [
+        {
+          "hex": "#f7f7f7",
+          "coverage": 0.7835
+        },
+        {
+          "hex": "#2a3445",
+          "coverage": 0.0793
+        },
+        {
+          "hex": "#b2b9bf",
+          "coverage": 0.0488
+        },
+        {
+          "hex": "#f55b11",
+          "coverage": 0.0457
+        },
+        {
+          "hex": "#f8cdaf",
+          "coverage": 0.0427
+        }
+      ],
+      "detail": {
+        "energy": 27.846
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "recovery-link",
+      "kind": "control",
+      "note": "Esqueceu a senha recovery link",
+      "grid": null,
+      "box": {
+        "x": 0.8313,
+        "y": 0.5919,
+        "w": 0.0987,
+        "h": 0.0255
+      },
+      "px": {
+        "x": 1390,
+        "y": 557,
+        "w": 165,
+        "h": 24
+      },
+      "aspect": 6.875,
+      "palette": [
+        {
+          "hex": "#f8f7f6",
+          "coverage": 0.7275
+        },
+        {
+          "hex": "#e94f10",
+          "coverage": 0.1209
+        },
+        {
+          "hex": "#eb7334",
+          "coverage": 0.0592
+        },
+        {
+          "hex": "#f7d4c0",
+          "coverage": 0.0474
+        },
+        {
+          "hex": "#eb905a",
+          "coverage": 0.045
+        }
+      ],
+      "detail": {
+        "energy": 41.7535
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "password",
+      "kind": "control",
+      "note": "Password field with reveal control",
+      "grid": null,
+      "box": {
+        "x": 0.6316,
+        "y": 0.627,
+        "w": 0.2984,
+        "h": 0.0765
+      },
+      "px": {
+        "x": 1056,
+        "y": 590,
+        "w": 499,
+        "h": 72
+      },
+      "aspect": 6.9306,
+      "palette": [
+        {
+          "hex": "#f6f6f7",
+          "coverage": 0.9892
+        },
+        {
+          "hex": "#141414",
+          "coverage": 0.005
+        },
+        {
+          "hex": "#a3a3b3",
+          "coverage": 0.004
+        },
+        {
+          "hex": "#c1c1c1",
+          "coverage": 0.0018
+        }
+      ],
+      "detail": {
+        "energy": 9.6629
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "submit",
+      "kind": "control",
+      "note": "Orange Entrar no Sistema button with arrow",
+      "grid": null,
+      "box": {
+        "x": 0.6316,
+        "y": 0.7439,
+        "w": 0.2984,
+        "h": 0.0882
+      },
+      "px": {
+        "x": 1056,
+        "y": 700,
+        "w": 499,
+        "h": 83
+      },
+      "aspect": 6.012,
+      "palette": [
+        {
+          "hex": "#e84a08",
+          "coverage": 0.8536
+        },
+        {
+          "hex": "#f8f7f6",
+          "coverage": 0.125
+        },
+        {
+          "hex": "#ed783c",
+          "coverage": 0.0088
+        },
+        {
+          "hex": "#f8b895",
+          "coverage": 0.0082
+        },
+        {
+          "hex": "#f8d6c1",
+          "coverage": 0.0043
+        }
+      ],
+      "detail": {
+        "energy": 24.5185
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    }
+  ],
+  "compSha256": "5c8cbffe6b6e129acd779a4977823159d4a68d0d40d95fa8823128aee678e0ac",
+  "regionsSource": {
+    "path": ".impeccable/build/login-regions.json",
+    "sha256": "42efafa8151526e245e6f689f959298466be8b9fa08d97bebcafc72ea757267b"
+  }
+}
