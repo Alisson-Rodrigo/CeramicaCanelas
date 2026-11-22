@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { AssistantFloatingWidget } from "@/components/assistant/AssistantFloatingWidget";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased">
-        <ThemeProvider><ToastProvider>{children}</ToastProvider></ThemeProvider>
+        <ThemeProvider><ToastProvider>{children}<AssistantFloatingWidget /></ToastProvider></ThemeProvider>
       </body>
     </html>
   );
