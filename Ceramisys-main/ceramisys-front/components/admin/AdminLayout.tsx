@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { AdminSidebar } from './AdminSidebar';
 import { Menu } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 // --- IMPORTAÇÃO DAS VIEWS ---
 import { RegisterUser } from './views/RegisterUser';
@@ -97,10 +98,11 @@ export function AdminLayout({ onBackToMain }: AdminLayoutProps) {
             <Menu size={24} />
           </button>
           <span className="ml-4 font-bold text-gray-800">Administração</span>
+          <div className="ml-auto"><ThemeToggle /></div>
         </header>
 
         {/* Conteúdo Principal */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 lg:p-8">
+        <main className="app-content-enter flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 lg:p-8">
           {renderContent()}
         </main>
       </div>

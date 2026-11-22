@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { AlertCircle, ArrowRight, Eye, EyeOff, LockKeyhole, Loader2, UserRound } from 'lucide-react';
 import localFont from 'next/font/local';
 import { LoginBrandPanel } from '@/components/auth/LoginBrandPanel';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import styles from '@/components/auth/login.module.css';
 import { z } from 'zod';
 
@@ -89,9 +90,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className={styles.page + ' ' + loginFont.className}>
+    <main className={styles.page + ' ' + loginFont.className + ' app-page-enter'}>
       <LoginBrandPanel />
       <section className={styles.formPanel} aria-labelledby="login-form-title">
+        <div className={styles.themeControl}><ThemeToggle /></div>
         <svg className={styles.backgroundGeometry} viewBox="0 0 822 941" preserveAspectRatio="none" fill="none" aria-hidden="true">
           <path d="M625-35l-62 85q-19 33 13 33h116q18 0 30-17l67-93M835 0h-18q-15 0-26 14L653 202q-16 23 12 23h170M-20 706H93q29 0 14 28L-21 907M-10 955l60-78q12-17 33-17h77q30 0 17 27l-48 68" stroke="currentColor" strokeWidth="2.5" />
         </svg>

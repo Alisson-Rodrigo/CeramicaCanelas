@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { z } from 'zod';
-import { api } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/api-error';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 type FormErrors = {
   [key: string]: string | null | undefined;
@@ -66,12 +66,18 @@ function ResetPasswordContent() {
     }
 
     try {
-      await api.post(
-        `/api/auth/validation-reset?Token=${encodeURIComponent(token!)}&Password=${encodeURIComponent(form.password)}&ConfirmPassword=${encodeURIComponent(form.confirmPassword)}`
-      );
+      const response = await fetch('/api/auth/validation-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password: result.data.password, confirmPassword: result.data.confirmPassword }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { message?: string } | null;
+        throw new Error(payload?.message ?? 'Não foi possível redefinir a senha. Tente novamente.');
+      }
       setSuccess(true);
     } catch (err: unknown) {
-      setApiError(getApiErrorMessage(err, 'Não foi possível redefinir a senha. Tente novamente.'));
+      setApiError(err instanceof Error ? err.message : getApiErrorMessage(err, 'Não foi possível redefinir a senha. Tente novamente.'));
     } finally {
       setLoading(false);
     }
@@ -81,6 +87,7 @@ function ResetPasswordContent() {
   if (!token) {
     return (
       <div className="min-h-screen grid lg:grid-cols-2 bg-white overflow-hidden font-sans">
+        <div className="fixed right-6 top-6 z-50"><ThemeToggle /></div>
         <style>{`
           @keyframes morph {
             0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; transform: translate(0, 0) rotate(0deg); }
@@ -124,6 +131,7 @@ function ResetPasswordContent() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-white overflow-hidden font-sans">
+      <div className="fixed right-6 top-6 z-50"><ThemeToggle /></div>
 
       <style>{`
         @keyframes morph {

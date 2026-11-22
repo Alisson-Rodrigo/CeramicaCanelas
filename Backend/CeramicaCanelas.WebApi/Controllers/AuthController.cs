@@ -33,7 +33,7 @@ public class AuthController(IMediator mediator) : Controller {
     [HttpPost("validation-reset")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ValidateRecovery(ResetPasswordCommand resetRequest)
+    public async Task<IActionResult> ValidateRecovery([FromBody] ResetPasswordCommand resetRequest)
     {
         await _mediator.Send(resetRequest);
         return Ok();
