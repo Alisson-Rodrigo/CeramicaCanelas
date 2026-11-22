@@ -17,9 +17,19 @@ public sealed class NotificationsController(DefaultContext db) : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] bool unreadOnly = false, [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10, CancellationToken ct = default)
+        [FromQuery] int pageSize = 10, CancellationToken ct = default, [FromQuery] string? module = null,
+        [FromQuery] string? status = null, [FromQuery] DateTimeOffset? fromUtc = null,
+        [FromQuery] DateTimeOffset? toUtc = null, [FromQuery] string? search = null)
     {
         if (page < 1 || pageSize is < 1 or > 50) return BadRequest(new { message = "Paginação inválida." });
+        if (module is not null && !BusinessUpdateCatalog.DisplayModules.Contains(module, StringComparer.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Módulo inválido." });
+        if (status is not null && !new[] { "all", "unread", "read" }.Contains(status, StringComparer.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Status inválido." });
+        if (fromUtc is not null && toUtc is not null && fromUtc > toUtc)
+            return BadRequest(new { message = "O início do período deve ser anterior ao fim." });
+        if (search?.Length > 100) return BadRequest(new { message = "A busca deve ter até 100 caracteres." });
+
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(userId)) return Forbid();
         var roles = await db.UserRoles.AsNoTracking().Where(x => x.UserId == userId)
@@ -29,6 +39,10 @@ public sealed class NotificationsController(DefaultContext db) : ControllerBase
         if (roles.Contains("Almoxarifado", StringComparer.OrdinalIgnoreCase)) modules.Add("Almoxarifado");
         if (roles.Contains("Sales", StringComparer.OrdinalIgnoreCase)) modules.Add("Vendas");
         if (roles.Contains("Financial", StringComparer.OrdinalIgnoreCase)) modules.AddRange(["Vendas", "Financeiro", "Pagamentos"]);
+        var availableModules = isAdmin
+            ? BusinessUpdateCatalog.DisplayModules.ToArray()
+            : BusinessUpdateCatalog.DisplayModules.Where(displayModule =>
+                BusinessUpdateCatalog.GetAuditModules(displayModule).Any(modules.Contains)).ToArray();
         var allowedEventKeys = BusinessUpdateCatalog.AllowedEventKeys.ToArray();
         var visible = db.AdminNotifications.AsNoTracking().Where(n => n.RecipientUserId == userId)
             .Join(db.SystemAuditEvents.AsNoTracking(), n => n.AuditEventId, e => e.Id,
@@ -36,9 +50,38 @@ public sealed class NotificationsController(DefaultContext db) : ControllerBase
         visible = visible.Where(x => x.Event.Category == "BusinessAudit" && x.Event.Outcome == "Success" &&
             x.Event.HttpMethod != null && allowedEventKeys.Contains(x.Event.ResourceType + "|" + x.Event.Action + "|" + x.Event.HttpMethod));
         if (!isAdmin) visible = visible.Where(x => modules.Contains(x.Event.Module));
-        var unread = await visible.CountAsync(x => x.Notification.ReadAtUtc == null && x.Event.ActorUserId != userId, ct);
+        var unreadQuery = visible;
+        if (module is not null)
+        {
+            var auditModules = BusinessUpdateCatalog.GetAuditModules(module).ToArray();
+            visible = visible.Where(x => auditModules.Contains(x.Event.Module));
+        }
+        if (fromUtc is not null) visible = visible.Where(x => x.Event.OccurredAtUtc >= fromUtc.Value.UtcDateTime);
+        if (toUtc is not null) visible = visible.Where(x => x.Event.OccurredAtUtc <= toUtc.Value.UtcDateTime);
+
+        var terms = search?.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(x => x.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? [];
+        foreach (var term in terms)
+        {
+            var matchingEventKeys = BusinessUpdateCatalog.FindEventKeysForSearch(term).ToArray();
+            var matchingModules = BusinessUpdateCatalog.DisplayModules
+                .Where(x => x.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(BusinessUpdateCatalog.GetAuditModules).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            var normalizedTerm = term.ToLowerInvariant();
+            visible = visible.Where(x =>
+                (x.Event.ActorDisplayName != null && x.Event.ActorDisplayName.ToLower().Contains(normalizedTerm)) ||
+                matchingModules.Contains(x.Event.Module) ||
+                matchingEventKeys.Contains(x.Event.ResourceType + "|" + x.Event.Action + "|" + x.Event.HttpMethod));
+        }
+
+        var effectiveStatus = (status ?? (unreadOnly ? "unread" : "all")).ToLowerInvariant();
+        if (effectiveStatus == "unread")
+            visible = visible.Where(x => x.Notification.ReadAtUtc == null && x.Event.ActorUserId != userId);
+        else if (effectiveStatus == "read")
+            visible = visible.Where(x => x.Notification.ReadAtUtc != null || x.Event.ActorUserId == userId);
+
+        var unread = await unreadQuery.CountAsync(x => x.Notification.ReadAtUtc == null && x.Event.ActorUserId != userId, ct);
         var query = visible;
-        if (unreadOnly) query = query.Where(x => x.Notification.ReadAtUtc == null && x.Event.ActorUserId != userId);
         var total = await query.CountAsync(ct);
         var rows = await query.OrderByDescending(x => x.Event.OccurredAtUtc).ThenByDescending(x => x.Notification.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
@@ -56,7 +99,7 @@ public sealed class NotificationsController(DefaultContext db) : ControllerBase
             return new GlobalUpdate(row.Id, message.Message, message.Module, row.Priority, row.CreatedOn,
                 row.OccurredAtUtc, row.ActorUserId == userId ? row.ReadAtUtc ?? row.OccurredAtUtc : row.ReadAtUtc);
         }).Where(x => x is not null).ToList();
-        return Ok(new { items, total, unread, page, pageSize });
+        return Ok(new { items, total, unread, page, pageSize, availableModules });
     }
 
     [HttpPatch("{id:guid}/read")]

@@ -122,6 +122,19 @@ public static class BusinessUpdateCatalog
 
     public static IReadOnlyCollection<string> AllowedEventKeys => Definitions.Keys.ToArray();
 
+    public static IReadOnlyCollection<string> DisplayModules => Definitions.Values
+        .Select(x => x.DisplayModule).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+
+    public static IReadOnlyCollection<string> GetAuditModules(string displayModule) => Definitions.Values
+        .Where(x => string.Equals(x.DisplayModule, displayModule, StringComparison.OrdinalIgnoreCase))
+        .Select(x => x.AuditModule).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+
+    public static IReadOnlyCollection<string> FindEventKeysForSearch(string term) => Definitions
+        .Where(x => x.Value.Message.Replace("{format}", x.Value.ExportFormat ?? string.Empty, StringComparison.Ordinal)
+            .Contains(term, StringComparison.OrdinalIgnoreCase) ||
+            x.Value.DisplayModule.Contains(term, StringComparison.OrdinalIgnoreCase))
+        .Select(x => x.Key).ToArray();
+
     public static bool TryCreate(AuditEventData data, string? actorDisplayName, out BusinessUpdateText text)
     {
         text = default!;

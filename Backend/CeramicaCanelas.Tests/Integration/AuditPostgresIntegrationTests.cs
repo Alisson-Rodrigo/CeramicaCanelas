@@ -190,12 +190,22 @@ public sealed class AuditPostgresIntegrationTests
         var page = (OkObjectResult)await controller.Get(false, 1, 25, default);
         ReadValue<int>(page.Value, "total").Should().Be(1);
         ReadValue<int>(page.Value, "unread").Should().Be(0);
+        ReadValue<string[]>(page.Value, "availableModules").Should().ContainSingle().Which.Should().Be("Vendas");
         var pageItems = (IEnumerable)page.Value!.GetType().GetProperty("items")!.GetValue(page.Value)!;
         var update = pageItems.Cast<object>().Single();
         ReadValue<string>(update, "Message").Should().Be("Operador de vendas cadastrou uma nova venda");
         ReadValue<string>(update, "Module").Should().Be("Vendas");
         update.GetType().GetProperty("action").Should().BeNull();
         ReadValue<DateTime?>(update, "ReadAtUtc").Should().NotBeNull();
+        var filteredPage = (OkObjectResult)await controller.Get(false, 1, 25, default,
+            module: "Vendas", status: "read", search: "Operador venda");
+        ReadValue<int>(filteredPage.Value, "total").Should().Be(1);
+        var outsidePeriod = (OkObjectResult)await controller.Get(false, 1, 25, default,
+            fromUtc: DateTimeOffset.UtcNow.AddHours(1));
+        ReadValue<int>(outsidePeriod.Value, "total").Should().Be(0);
+        var technicalSearch = (OkObjectResult)await controller.Get(false, 1, 25, default, search: "GetDashboardIndicators");
+        ReadValue<int>(technicalSearch.Value, "total").Should().Be(0);
+        (await controller.Get(false, 1, 25, default, status: "technical")).Should().BeOfType<BadRequestObjectResult>();
         var notificationId = await verify.AdminNotifications.Where(n => n.AuditEventId == eventId && n.RecipientUserId == salesId).Select(n => n.Id).SingleAsync();
         (await verify.AdminNotifications.SingleAsync(n => n.Id == notificationId)).ReadAtUtc.Should().BeNull();
         (await controller.MarkRead(notificationId, default)).Should().BeOfType<NoContentResult>();
