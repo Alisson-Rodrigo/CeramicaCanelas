@@ -48,9 +48,12 @@ public sealed class AuditCaptureMiddleware(RequestDelegate next, ILogger<AuditCa
         var method = context.Request.Method;
         var mutation = method is "POST" or "PUT" or "PATCH" or "DELETE";
         var actionKey = descriptor is null ? string.Empty : $"{descriptor.ControllerName}Controller.{descriptor.ActionName}";
+        // Evita registrar conversas, que podem conter dados sensíveis. Só falhas de segurança/servidor ficam auditadas, sem corpo.
+        var isAssistantCall = descriptor?.ControllerName == "Assistant";
         var isRelevantRead = method == "GET" && RelevantReads.Contains(actionKey);
         var securityFailure = context.Response.StatusCode is 401 or 403;
         var serverFailure = context.Response.StatusCode >= 500;
+        if (isAssistantCall && !securityFailure && !serverFailure) return;
         if (!(identity && (mutation && !actionKey.Contains("Preview", StringComparison.OrdinalIgnoreCase) || isRelevantRead)) && !securityFailure && !serverFailure)
             return;
         var writer = context.RequestServices.GetService<IAuditEventWriter>();

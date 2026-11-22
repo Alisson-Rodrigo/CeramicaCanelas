@@ -4,11 +4,13 @@ using CeramicaCanelas.Application.Services.Reports;
 using CeramicaCanelas.Infrastructure.IoC;
 using CeramicaCanelas.Persistence.IoC;
 using CeramicaCanelas.WebApi.Middleware;
+using CeramicaCanelas.WebApi.Assistant;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace CeramicaCanelas.WebApi;
 
@@ -176,6 +178,14 @@ public class Program
             .InjectApplicationDependencies();
         builder.Services.AddSingleton<CeramicaCanelas.WebApi.Auditing.IAuditEventWriter, CeramicaCanelas.WebApi.Auditing.AuditEventWriter>();
         builder.Services.AddHostedService<CeramicaCanelas.WebApi.Auditing.AuditRetentionService>();
+        builder.Services.AddHttpClient<IAssistantChatService, AssistantChatService>(client => client.Timeout = TimeSpan.FromSeconds(45));
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy("assistant", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0, AutoReplenishment = true }));
+        });
 
 
         // Add Mediatr to program
@@ -208,6 +218,7 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthentication();
+        app.UseRateLimiter();
         app.UseAuthorization();
 
         app.MapControllers();

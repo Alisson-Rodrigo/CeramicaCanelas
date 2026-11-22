@@ -135,7 +135,10 @@ export default function DashboardPage() {
         // ========================================================
         const savedModule = localStorage.getItem('activeModule');
         if (savedModule === 'payments' || savedModule === 'employee-payments') { localStorage.setItem('activeModule', 'overview'); router.replace('/dashboard/payments'); return; }
-        if (savedModule) {
+        if (savedModule === 'assistant') {
+          localStorage.setItem('activeModule', 'overview');
+          setActiveModule('overview');
+        } else if (savedModule) {
           setActiveModule(savedModule);
         }
 
@@ -174,8 +177,6 @@ export default function DashboardPage() {
   if (activeModule === 'inventory') return <InventoryLayout onBackToMain={() => handleChangeModule('overview')} />;
   if (activeModule === 'sales') return <SalesLayout onBackToMain={() => handleChangeModule('overview')} />;
   if (activeModule === 'finance') return <FinanceLayout onBackToMain={() => handleChangeModule('overview')} />;
-
-  
   // --- MÓDULO ADMINISTRATIVO ---
   if (activeModule === 'admin' && userRole === 'Admin') {
       return <AdminLayout onBackToMain={() => handleChangeModule('overview')} />;
