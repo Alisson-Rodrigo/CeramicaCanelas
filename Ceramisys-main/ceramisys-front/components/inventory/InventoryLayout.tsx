@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { InventorySidebar } from './InventorySidebar';
 import { Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 // --- IMPORTAÇÃO DAS VIEWS ---
 import { DashboardHome } from './views/dashboards/DashboardHome';
@@ -116,7 +117,7 @@ export function InventoryLayout({ onBackToMain }: InventoryLayoutProps) {
             <Menu size={24} />
           </button>
           <span className="ml-4 font-bold text-gray-800">Almoxarifado</span>
-          <div className="ml-auto"><ThemeToggle /></div>
+          <div className="ml-auto flex items-center gap-2"><NotificationBell /><ThemeToggle /></div>
         </header>
 
         {/* Conteúdo com Scroll */}

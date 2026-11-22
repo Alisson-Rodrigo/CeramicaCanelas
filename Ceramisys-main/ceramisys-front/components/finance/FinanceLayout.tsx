@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { FinanceSidebar } from './FinanceSidebar';
 import { Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 // --- IMPORTAÇÕES CORRIGIDAS (Pasta 'Views' com V maiúsculo) ---
 
@@ -94,7 +95,7 @@ export function FinanceLayout({ onBackToMain }: FinanceLayoutProps) {
         <header className="bg-white border-b border-slate-200 h-16 flex items-center px-4 shrink-0">
           <button onClick={() => window.innerWidth < 768 ? setIsMobileMenuOpen((open) => !open) : setIsDesktopSidebarOpen((open) => !open)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg" aria-label="Alternar menu"><Menu size={24} /></button>
           <span className="ml-4 font-bold text-slate-800">Financeiro</span>
-          <div className="ml-auto"><ThemeToggle /></div>
+          <div className="ml-auto flex items-center gap-2"><NotificationBell /><ThemeToggle /></div>
         </header>
         <main className="app-content-enter flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-4 md:p-6 lg:p-8">{renderContent()}</main>
       </div>

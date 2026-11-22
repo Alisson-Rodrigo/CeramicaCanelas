@@ -5,7 +5,6 @@ using CeramicaCanelas.Infrastructure.IoC;
 using CeramicaCanelas.Persistence.IoC;
 using CeramicaCanelas.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
@@ -19,7 +18,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers();
+        builder.Services.AddScoped<CeramicaCanelas.WebApi.Auditing.AuditResourceIdFilter>();
+        builder.Services.AddControllers(options => options.Filters.AddService<CeramicaCanelas.WebApi.Auditing.AuditResourceIdFilter>());
         builder.Services.AddEndpointsApiExplorer();
         // Configure Swagger with JWT support
         builder.Services.AddSwaggerGen(c =>
@@ -147,7 +147,8 @@ public class Program
             {
                 OnAuthenticationFailed = context =>
                 {
-                    Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                    logger.LogWarning("JWT authentication failed. TraceId={TraceId} ExceptionType={ExceptionType}", context.HttpContext.TraceIdentifier, context.Exception.GetType().Name);
                     return Task.CompletedTask;
                 },
                 OnTokenValidated = context =>
@@ -173,6 +174,8 @@ public class Program
             .InjectPersistenceDependencies(builder.Configuration)
             .InjectInfrastructureDependencies()
             .InjectApplicationDependencies();
+        builder.Services.AddSingleton<CeramicaCanelas.WebApi.Auditing.IAuditEventWriter, CeramicaCanelas.WebApi.Auditing.AuditEventWriter>();
+        builder.Services.AddHostedService<CeramicaCanelas.WebApi.Auditing.AuditRetentionService>();
 
 
         // Add Mediatr to program
@@ -186,10 +189,7 @@ public class Program
 
         var app = builder.Build();
 
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
-        {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-        });
+        app.UseForwardedHeaders(CeramicaCanelas.WebApi.Auditing.TrustedForwardedHeadersOptions.Create(builder.Configuration));
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -203,6 +203,7 @@ public class Program
         app.UseCors("AllowSpecificOrigin");
 
         app.UseMiddleware<CustomExceptionMiddleware>();
+        app.UseMiddleware<AuditCaptureMiddleware>();
 
         app.UseHttpsRedirection();
 

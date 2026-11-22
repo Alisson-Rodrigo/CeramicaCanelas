@@ -38,6 +38,8 @@ public class DefaultContext : IdentityDbContext<User>
     public DbSet<VoucherCompetence> PaymentVoucherCompetences { get; set; } = null!;
     public DbSet<PaymentCalculation> PaymentCalculations { get; set; } = null!;
     public DbSet<PaymentCalculationItem> PaymentCalculationItems { get; set; } = null!;
+    public DbSet<SystemAuditEvent> SystemAuditEvents { get; set; } = null!;
+    public DbSet<AdminNotification> AdminNotifications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -49,6 +51,41 @@ public class DefaultContext : IdentityDbContext<User>
         {
             entity.HasKey(u => u.Id);
             entity.Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+        });
+
+        builder.Entity<SystemAuditEvent>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Category).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Action).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.Outcome).HasMaxLength(24).IsRequired();
+            entity.Property(x => x.Severity).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Module).HasMaxLength(80).IsRequired();
+            entity.Property(x => x.ResourceType).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.ActorUserId).HasMaxLength(450);
+            entity.Property(x => x.ActorDisplayName).HasMaxLength(160);
+            entity.Property(x => x.IpAddress).HasMaxLength(45);
+            entity.Property(x => x.HttpMethod).HasMaxLength(10);
+            entity.Property(x => x.Route).HasMaxLength(300);
+            entity.Property(x => x.TraceId).HasMaxLength(64);
+            entity.Property(x => x.TechnicalContext).HasMaxLength(300);
+            entity.HasIndex(x => x.OccurredAtUtc);
+            entity.HasIndex(x => new { x.Category, x.OccurredAtUtc });
+            entity.HasIndex(x => new { x.ActorUserId, x.OccurredAtUtc });
+            entity.HasIndex(x => new { x.Module, x.OccurredAtUtc });
+            entity.HasIndex(x => new { x.Action, x.OccurredAtUtc });
+        });
+
+        builder.Entity<AdminNotification>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RecipientUserId).HasMaxLength(450).IsRequired();
+            entity.Property(x => x.Priority).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(300).IsRequired();
+            entity.Property(x => x.Origin).HasMaxLength(100).IsRequired();
+            entity.HasOne<SystemAuditEvent>().WithMany().HasForeignKey(x => x.AuditEventId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.RecipientUserId, x.ReadAtUtc, x.CreatedOn });
         });
 
         // ================= PRODUCTS =================
@@ -242,5 +279,30 @@ public class DefaultContext : IdentityDbContext<User>
         builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserLogin<string>>().Property(x => x.ProviderKey).HasMaxLength(128);
         builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserToken<string>>().Property(x => x.LoginProvider).HasMaxLength(128);
         builder.Entity<Microsoft.AspNetCore.Identity.IdentityUserToken<string>>().Property(x => x.Name).HasMaxLength(128);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        PreventAuditMutation();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        PreventAuditMutation();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void PreventAuditMutation()
+    {
+        if (ChangeTracker.Entries<SystemAuditEvent>().Any(e => e.State != EntityState.Added && e.State != EntityState.Unchanged)
+            || ChangeTracker.Entries<AdminNotification>().Any(e => e.State == EntityState.Deleted || e.State == EntityState.Modified && e.Property(x => x.ReadAtUtc).IsModified == false))
+            throw new InvalidOperationException("Registros de auditoria são imutáveis; notificações só permitem atualização de leitura.");
+        foreach (var entry in ChangeTracker.Entries<AdminNotification>().Where(e => e.State == EntityState.Modified))
+        {
+            var changed = entry.Properties.Where(p => p.IsModified).Select(p => p.Metadata.Name).ToArray();
+            if (changed.Any(name => name != nameof(AdminNotification.ReadAtUtc) && name != nameof(AdminNotification.ModifiedOn)))
+                throw new InvalidOperationException("Somente o estado de leitura da notificação pode ser alterado.");
+        }
     }
 }

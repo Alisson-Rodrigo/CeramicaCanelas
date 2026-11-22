@@ -15,7 +15,7 @@ namespace CeramicaCanelas.WebApi.Controllers;
 public class UsersController(IMediator mediator) : Controller {
     private readonly IMediator _mediator = mediator;
 
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ProducesResponseType(typeof(CreateUserResult), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(CreateUserResult), StatusCodes.Status400BadRequest)]

@@ -1,5 +1,7 @@
 ﻿using CeramicaCanelas.Domain.Exception;
 using System.Net;
+using System.Security.Claims;
+using CeramicaCanelas.WebApi.Auditing;
 
 namespace CeramicaCanelas.WebApi.Middleware
 {
@@ -47,7 +49,18 @@ namespace CeramicaCanelas.WebApi.Middleware
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 context.Response.ContentType = "application/json";
 
-                Console.WriteLine(ex);
+                var logger = context.RequestServices.GetService<ILogger<CustomExceptionMiddleware>>();
+                logger?.LogError("Unhandled API exception. TraceId={TraceId} ExceptionType={ExceptionType}", context.TraceIdentifier, ex.GetType().Name);
+                var auditWriter = context.RequestServices.GetService<IAuditEventWriter>();
+                var endpoint = context.GetEndpoint()?.Metadata.GetMetadata<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>();
+                var routeResource = context.Request.RouteValues.FirstOrDefault(x => x.Key.Equals("id", StringComparison.OrdinalIgnoreCase) || x.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase)).Value?.ToString()
+                    ?? context.Items["AuditResourceId"]?.ToString();
+                if (auditWriter is not null) await auditWriter.WriteAsync(new AuditEventData("TechnicalDiagnostic", endpoint?.ActionName ?? context.Request.Method,
+                    "Failure", "Critical", endpoint?.ControllerName ?? "API", endpoint?.ControllerName ?? "Endpoint", routeResource,
+                    context.User.FindFirstValue(ClaimTypes.NameIdentifier), context.User.FindFirstValue(ClaimTypes.Name), DateTime.UtcNow,
+                    context.Connection.RemoteIpAddress?.ToString(), context.Request.Method, endpoint?.AttributeRouteInfo?.Template,
+                    (int)HttpStatusCode.InternalServerError, context.TraceIdentifier, ex.GetType().Name), context.RequestAborted);
+                context.Items["AuditExceptionWritten"] = true;
 
 
                 var result = new
