@@ -110,6 +110,16 @@ O writer mantém todas as gravações na auditoria, mas só cria atualização g
 
 ### Inventário HTTP instrumentado
 
+#### Controle de Fornos
+
+Detalhes do modelo, endpoints e validação estão em [`controle-de-fornos.md`](controle-de-fornos.md).
+
+O módulo registra as mutações confirmadas por eventos explícitos (`CreatedFiring`, `UpdatedQuality`, `CancelledFiring`) e usa a captura HTTP central para consultas paginadas/indicadores e downloads PDF. O `BusinessUpdateCatalog` traduz as mutações e exportações em notificações do módulo Almoxarifado, entregues a Admin e Almoxarifado. O histórico guarda o identificador do ator e horário UTC; exportações ficam no log central com trace/IP quando disponíveis. O contexto técnico das escritas contém apenas contagens, duração, classificação temporal e estado de conferência; não se registra payload, conteúdo do PDF nem justificativas/observações dentro do log técnico.
+
+As rotas `/api/kiln-firings` exigem Admin ou Almoxarifado. O relatório detalhado e o de período também são auditados como download PDF. A migration incremental `20261122190000_AddKilnFiringControl` cria as cinco tabelas do módulo, seus índices e chaves estrangeiras, mais as categorias iniciais “Primeira linha”, “Segunda linha” e “Caldeado”; não altera tabelas ou registros existentes. Ela foi aplicada no banco local `ceramicacanelas_local` e consta em `__EFMigrationsHistory`; verificação posterior não reaplicou migration. A retenção da auditoria técnica segue a política central definida abaixo; histórico de queimas e qualidade não tem expurgo automático. Cancelamento é lógico e exige motivo.
+
+Limites: o relatório de período está filtrado por intervalo (mês/ano são expressos como intervalos); somente o catálogo de produtos e empregados ativos na função `Queimador` é reutilizado. A classificação “enfurnado”, perdas e quebras não foi criada aguardando validação de significado. Não foi encontrada planilha mensal no repositório nem nos anexos acessíveis nesta tarefa; nenhuma linha foi importada. A categoria pode ser adicionada por Admin em `POST /api/kiln-firings/quality-categories`.
+
 Todas as operações autenticadas `POST`, `PUT`, `PATCH` e `DELETE` sob `/api` são capturadas centralmente, exceto ações `Preview`. Isso cobre criação, edição, cancelamento, exclusão e mudança de situação expostos nos controllers abaixo. Ações sem contexto suficiente usam o tipo do controller e o ID de rota ou a propriedade escalar `Id`; não se armazena o payload.
 
 | Módulo/rotas | Leituras e downloads explicitamente auditados | Situação |

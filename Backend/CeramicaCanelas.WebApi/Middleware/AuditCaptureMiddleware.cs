@@ -34,7 +34,9 @@ public sealed class AuditCaptureMiddleware(RequestDelegate next, ILogger<AuditCa
         "CustomerController.GetPagedCustomers", "ExtractController.GetPagedExtracts",
         "PaymentsController.GetPeople", "PaymentsController.GetVouchers", "PaymentsController.GetHistory", "PaymentsController.GetPreparation", "PaymentsController.GetAdjustments",
         "EmployeePaymentsController.People", "EmployeePaymentsController.Vouchers", "EmployeePaymentsController.Submissions", "EmployeePaymentsController.Monthly", "EmployeePaymentsController.History", "EmployeePaymentsController.GetPreparation", "EmployeePaymentsController.Adjustments",
-        "AuditAdministrationController.Events", "AuditAdministrationController.Export", "AuditAdministrationController.Notifications"
+        "AuditAdministrationController.Events", "AuditAdministrationController.Export", "AuditAdministrationController.Notifications",
+        "KilnFiringsController.List", "KilnFiringsController.Indicators", "KilnFiringsController.GetById",
+        "KilnFiringsController.ExportReport", "KilnFiringsController.ExportFiringReport", "KilnFiringsController.ExportSpreadsheet"
     };
 
     public async Task InvokeAsync(HttpContext context)
@@ -94,6 +96,7 @@ public sealed class AuditCaptureMiddleware(RequestDelegate next, ILogger<AuditCa
     private static string ModuleName(string? controller, PathString path) => controller switch
     {
         "Products" or "Categories" or "SupplierRepository" or "Employees" or "ProductsEntry" or "ProductsExit" => "Almoxarifado",
+        "KilnFirings" => "Produção",
         "EmployeePayments" or "Payments" => "Pagamentos",
         "Sales" => "Vendas",
         "Launch" or "LaunchCategories" or "LaunchCategoryGroups" or "Customer" or "DashboardFinancial" or "Extract" => "Financeiro",

@@ -8,8 +8,16 @@ using System.Threading.Tasks;
 
 namespace CeramicaCanelas.Application.Contracts.Application.Services
 {
+    public sealed record KilnReportRow(string FiringId, string Kiln, string StartedAt, string FinishedAt,
+        string Duration, string Product, int LoadedPieces, string QualityBreakdown, string QualityStatus, string Burners);
+
+    public sealed record KilnFiringReportDocument(string Title, string Period, DateTime GeneratedAtLocal,
+        IReadOnlyList<string> Filters, IReadOnlyList<string> Summary, IReadOnlyList<KilnReportRow> Rows);
+
     public interface IPdfReportService
     {
+        byte[] BuildKilnFiringReportPdf(string title, IEnumerable<string> lines);
+        byte[] BuildKilnFiringReportPdf(KilnFiringReportDocument report, string? logoPath = null);
         // ======================================================
         // 🔹 RELATÓRIO DE PRODUTOS
         // ======================================================
