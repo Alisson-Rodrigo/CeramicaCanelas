@@ -26,18 +26,21 @@ public sealed class KilnFiringTests
     }
 
     [Fact]
-    public void Quality_conference_remains_pending_until_each_product_reconciles_or_is_justified()
+    public void Quality_conference_remains_pending_until_each_product_reconciles()
     {
         var firing = new KilnFiring();
-        firing.Products.Add(new KilnFiringProduct { ProductType = ProductType.Brick1_6, Quantity = 100 });
+        // Fictitious illustration only; this does not create a production record.
+        firing.Products.Add(new KilnFiringProduct { ProductType = ProductType.Brick1_6, Quantity = 40_000 });
         firing.Products.Add(new KilnFiringProduct { ProductType = ProductType.Brick1_8, Quantity = 80 });
-        firing.Quality.Add(new KilnFiringQuality { ProductType = ProductType.Brick1_6, Quantity = 100 });
-        firing.Quality.Add(new KilnFiringQuality { ProductType = ProductType.Brick1_8, Quantity = 79 });
-        firing.LoadedTotal.Should().Be(180);
-        firing.ClassifiedTotal.Should().Be(179);
+        firing.Quality.Add(new KilnFiringQuality { ProductType = ProductType.Brick1_6, Quantity = 39_999 });
+        firing.Quality.Add(new KilnFiringQuality { ProductType = ProductType.Brick1_8, Quantity = 80 });
+        firing.LoadedTotal.Should().Be(40_080);
+        firing.ClassifiedTotal.Should().Be(40_079);
         firing.ConferenceStatus.Should().Be("Pendente");
 
         firing.DifferenceJustification = "Uma peça quebrada durante a abertura";
+        firing.ConferenceStatus.Should().Be("Pendente");
+        firing.Quality.Add(new KilnFiringQuality { ProductType = ProductType.Brick1_6, Quantity = 1 });
         firing.ConferenceStatus.Should().Be("Conferido");
     }
 

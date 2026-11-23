@@ -68,4 +68,25 @@ public sealed class SpreadsheetReportServiceTests
         worksheet.Should().Contain("<v>1200</v>");
         worksheet.Should().NotContain("<f>");
     }
+
+    [Fact]
+    public void Kiln_workbook_writes_live_formulas_and_percentage_formats()
+    {
+        var workbook = new SpreadsheetReportService().BuildKilnWorkbook(new[]
+        {
+            new SpreadsheetReportSheet("Resumo", new IReadOnlyList<object?>[]
+            {
+                new object?[] { "Indicador", "Valor" },
+                new object?[] { "Rendimento", new SpreadsheetFormula("B4/B3", .95, true) },
+                new object?[] { "Carregadas", 100 }, new object?[] { "Conferidas", 95 }
+            }, 1, new double[] { 24, 18 })
+        });
+
+        using var archive = new ZipArchive(new MemoryStream(workbook));
+        using var sheetReader = new StreamReader(archive.GetEntry("xl/worksheets/sheet1.xml")!.Open());
+        var sheet = sheetReader.ReadToEnd();
+        sheet.Should().Contain("<f>B4/B3</f>").And.Contain("<v>0.95</v>");
+        using var stylesReader = new StreamReader(archive.GetEntry("xl/styles.xml")!.Open());
+        stylesReader.ReadToEnd().Should().Contain("0.0%");
+    }
 }

@@ -185,7 +185,7 @@ export default function DashboardPage() {
 
   // --- ROTEAMENTO DOS MÓDULOS DE TELA CHEIA ---
   if (activeModule === 'inventory') return <InventoryLayout onBackToMain={() => handleChangeModule('overview')} />;
-  if (activeModule === 'kilns') return <KilnLayout onBackToMain={() => handleChangeModule('overview')} onManageEmployees={() => { localStorage.setItem('inventoryActiveScreen', 'employees'); handleChangeModule('inventory'); }} />;
+  if (activeModule === 'kilns') return <KilnLayout onBackToMain={() => handleChangeModule('overview')} onNavigateModule={handleChangeModule} onManageEmployees={() => { localStorage.setItem('inventoryActiveScreen', 'employees'); handleChangeModule('inventory'); }} />;
   if (activeModule === 'sales') return <SalesLayout onBackToMain={() => handleChangeModule('overview')} />;
   if (activeModule === 'finance') return <FinanceLayout onBackToMain={() => handleChangeModule('overview')} />;
   // --- MÓDULO ADMINISTRATIVO ---
