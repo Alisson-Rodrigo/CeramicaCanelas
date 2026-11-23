@@ -33,7 +33,8 @@ export function InventoryLayout({ onBackToMain }: InventoryLayoutProps) {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const savedScreen = localStorage.getItem('inventoryActiveScreen');
-      if (savedScreen) setActiveScreen(savedScreen);
+      if (savedScreen && savedScreen !== 'kilns') setActiveScreen(savedScreen);
+      else if (savedScreen === 'kilns') localStorage.setItem('inventoryActiveScreen', 'home');
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);

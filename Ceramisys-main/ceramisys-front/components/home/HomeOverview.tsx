@@ -10,6 +10,7 @@ import styles from './home.module.css';
 
 const descriptions: Record<string, string> = {
   inventory: 'Controle de insumos, materiais e movimentações de estoque.',
+  kilns: 'Acompanhe queimas, produtos carregados e conferência de qualidade.',
   sales: 'Pedidos, clientes e acompanhamento de vendas.',
   finance: 'Contas a pagar, contas a receber e fluxo de caixa.',
   payments: 'Funcionários, vales, quinzenas e fechamentos mensais.',

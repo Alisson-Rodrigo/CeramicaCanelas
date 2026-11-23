@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 // ADICIONEI O ÍCONE ShieldCheck
-import { LayoutDashboard, Box, ShoppingCart, Wallet, X, LogOut, ArrowLeft, LucideIcon, ShieldCheck, HandCoins } from 'lucide-react';
+import { LayoutDashboard, Box, ShoppingCart, Wallet, X, LogOut, ArrowLeft, LucideIcon, ShieldCheck, HandCoins, Factory } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
@@ -35,6 +35,7 @@ interface SidebarProps {
 export const GLOBAL_MENU_ITEMS: MenuItem[] = [
   { id: 'overview', icon: LayoutDashboard, label: 'Visão Geral', allowedRoles: ['Admin', 'Viewer', 'Financial', 'Almoxarifado', 'Sales'] },
   { id: 'inventory', icon: Box, label: 'Almoxarifado', allowedRoles: ['Admin', 'Almoxarifado'] },
+  { id: 'kilns', icon: Factory, label: 'Produção', allowedRoles: ['Admin', 'Almoxarifado'] },
   { id: 'sales', icon: ShoppingCart, label: 'Vendas', allowedRoles: ['Admin', 'Sales'] },
   { id: 'finance', icon: Wallet, label: 'Financeiro', allowedRoles: ['Admin', 'Financial'] },
   { id: 'payments', icon: HandCoins, label: 'Pagamentos', allowedRoles: ['Admin', 'Financial'] },

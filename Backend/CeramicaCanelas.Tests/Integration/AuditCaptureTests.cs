@@ -181,6 +181,17 @@ public sealed class AuditCaptureTests
         BusinessUpdateCatalog.TryCreate(Event("Vendas", "Sales", "GetProductItemsPdf", "GET", "ExportFormat=PDF"), "Carlos", out var download).Should().BeTrue();
         download.Message.Should().Be("Carlos baixou um relatório de itens de vendas em PDF");
 
+        BusinessUpdateCatalog.TryCreate(Event("Produção", "KilnFirings", "CreatedFiring", "POST"), "Alisson", out var firing).Should().BeTrue();
+        firing.Module.Should().Be("Produção");
+        firing.Message.Should().Be("Alisson registrou uma nova queima");
+        BusinessUpdateCatalog.TryCreate(Event("Produção", "KilnFirings", "UpdatedFiring", "PUT"), "Alisson", out var updatedFiring).Should().BeTrue();
+        updatedFiring.Message.Should().Be("Alisson editou os dados de uma queima");
+        BusinessUpdateCatalog.TryCreate(Event("Produção", "KilnFirings", "ExportFiringReport", "GET", "ExportFormat=PDF"), "Marina", out var kilnPdf).Should().BeTrue();
+        kilnPdf.Message.Should().Be("Marina baixou o relatório detalhado de uma queima em PDF");
+        BusinessUpdateCatalog.TryCreate(Event("Produção", "KilnFirings", "ExportSpreadsheet", "GET", "ExportFormat=XLSX"), "Marina", out var kilnSpreadsheet).Should().BeTrue();
+        kilnSpreadsheet.Message.Should().Be("Marina baixou uma planilha de queimas em XLSX");
+        BusinessUpdateCatalog.TryCreate(Event("Produção", "KilnFirings", "List", "GET"), "Sistema", out _).Should().BeFalse();
+
         BusinessUpdateCatalog.TryCreate(Event("Almoxarifado", "Dashboard", "GetDashboardIndicators", "GET"), "Sistema", out _).Should().BeFalse();
         BusinessUpdateCatalog.TryCreate(Event("Almoxarifado", "Categories", "GetCategories", "GET"), "Sistema", out _).Should().BeFalse();
         BusinessUpdateCatalog.TryCreate(Event("Notificações", "Notifications", "MarkRead", "PATCH"), "Alisson", out _).Should().BeFalse();

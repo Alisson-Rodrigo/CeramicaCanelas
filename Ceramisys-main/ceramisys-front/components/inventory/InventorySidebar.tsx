@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Home, BarChart2, Clock, AlertTriangle, Repeat, UserMinus, 
   Package, Users, Tags, Truck, ArrowDownCircle, ArrowUpCircle, 
-  Undo2, LogOut, X 
+  Undo2, LogOut, X
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -97,6 +97,7 @@ export function InventorySidebar({ currentScreen, onNavigate, onBackToMain, onCl
             <Undo2 size={18} /> <span>Devolução</span>
           </button>
         </div>
+
       </nav>
 
       {/* Rodapé */}

@@ -41,6 +41,10 @@ const AdminLayout = dynamic(
   () => import('@/components/admin/AdminLayout').then((module) => module.AdminLayout),
   { loading: ModuleLoading },
 );
+const KilnLayout = dynamic(
+  () => import('@/components/kilns/KilnLayout').then((module) => module.KilnLayout),
+  { loading: ModuleLoading },
+);
 
 // ==================================================================
 // TIPAGEM DO TOKEN
@@ -76,6 +80,7 @@ export default function DashboardPage() {
   // FUNÇÃO PARA ATUALIZAR O MÓDULO ATIVO E SALVAR NO localStorage
   // ========================================================
   const handleChangeModule = (module: string) => {
+    if (module === 'inventory' && localStorage.getItem('inventoryActiveScreen') === 'kilns') localStorage.setItem('inventoryActiveScreen', 'home');
     if (module === 'payments' || module === 'employee-payments') { localStorage.setItem('activeModule', 'overview'); router.push('/dashboard/payments'); return; }
     setActiveModule(module);
     localStorage.setItem('activeModule', module);
@@ -135,7 +140,12 @@ export default function DashboardPage() {
         // ========================================================
         const savedModule = localStorage.getItem('activeModule');
         if (savedModule === 'payments' || savedModule === 'employee-payments') { localStorage.setItem('activeModule', 'overview'); router.replace('/dashboard/payments'); return; }
-        if (savedModule === 'assistant') {
+        if (savedModule === 'inventory' && localStorage.getItem('inventoryActiveScreen') === 'kilns') {
+          localStorage.setItem('inventoryActiveScreen', 'home');
+          setActiveModule('kilns');
+        } else if (savedModule === 'kilns') {
+          setActiveModule('kilns');
+        } else if (savedModule === 'assistant') {
           localStorage.setItem('activeModule', 'overview');
           setActiveModule('overview');
         } else if (savedModule) {
@@ -175,6 +185,7 @@ export default function DashboardPage() {
 
   // --- ROTEAMENTO DOS MÓDULOS DE TELA CHEIA ---
   if (activeModule === 'inventory') return <InventoryLayout onBackToMain={() => handleChangeModule('overview')} />;
+  if (activeModule === 'kilns') return <KilnLayout onBackToMain={() => handleChangeModule('overview')} onManageEmployees={() => { localStorage.setItem('inventoryActiveScreen', 'employees'); handleChangeModule('inventory'); }} />;
   if (activeModule === 'sales') return <SalesLayout onBackToMain={() => handleChangeModule('overview')} />;
   if (activeModule === 'finance') return <FinanceLayout onBackToMain={() => handleChangeModule('overview')} />;
   // --- MÓDULO ADMINISTRATIVO ---

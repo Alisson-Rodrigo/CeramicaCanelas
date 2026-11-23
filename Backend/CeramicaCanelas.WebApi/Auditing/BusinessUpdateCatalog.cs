@@ -15,6 +15,13 @@ public static class BusinessUpdateCatalog
     private static readonly IReadOnlyDictionary<string, Definition> Definitions = new Dictionary<string, Definition>(StringComparer.OrdinalIgnoreCase)
     {
         // Almoxarifado
+        [Key("KilnFirings", "CreatedFiring", "POST")] = new("Produção", "Produção", "registrou uma nova queima"),
+        [Key("KilnFirings", "UpdatedFiring", "PUT")] = new("Produção", "Produção", "editou os dados de uma queima"),
+        [Key("KilnFirings", "UpdatedQuality", "PUT")] = new("Produção", "Produção", "atualizou a conferência de qualidade de uma queima"),
+        [Key("KilnFirings", "CancelledFiring", "POST")] = new("Produção", "Produção", "cancelou uma queima"),
+        [Key("KilnFirings", "ExportReport", "GET")] = new("Produção", "Produção", "baixou um relatório de queimas em {format}", "PDF"),
+        [Key("KilnFirings", "ExportFiringReport", "GET")] = new("Produção", "Produção", "baixou o relatório detalhado de uma queima em {format}", "PDF"),
+        [Key("KilnFirings", "ExportSpreadsheet", "GET")] = new("Produção", "Produção", "baixou uma planilha de queimas em {format}", "XLSX"),
         [Key("Products", "CreatedProduct", "POST")] = new("Almoxarifado", "Almoxarifado", "cadastrou um novo produto"),
         [Key("Products", "UpdateProduct", "PUT")] = new("Almoxarifado", "Almoxarifado", "editou o cadastro de um produto"),
         [Key("Products", "DeleteProduct", "DELETE")] = new("Almoxarifado", "Almoxarifado", "excluiu um produto"),
