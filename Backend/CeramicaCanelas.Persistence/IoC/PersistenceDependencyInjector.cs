@@ -16,8 +16,17 @@ public static class PersistenceDependencyInjector
         services.AddDbContext<DefaultContext>((serviceProvider, options) =>
         {
             var interceptor = serviceProvider.GetRequiredService<UtcDateInterceptor>();
+            var connectionString = Environment.GetEnvironmentVariable("POSTGRESQL_CONN")
+                ?? configuration.GetConnectionString("PostgreSQL");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "A conexão PostgreSQL não foi configurada. Defina POSTGRESQL_CONN ou ConnectionStrings:PostgreSQL.");
+            }
+
             options
-                .UseNpgsql(Environment.GetEnvironmentVariable("POSTGRESQL_CONN"))
+                .UseNpgsql(connectionString)
                 .AddInterceptors(interceptor); // ⬅️ Adiciona o interceptor
         });
 

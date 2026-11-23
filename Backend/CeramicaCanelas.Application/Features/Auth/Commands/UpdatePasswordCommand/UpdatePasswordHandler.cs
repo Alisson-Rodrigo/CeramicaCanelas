@@ -29,7 +29,13 @@ namespace CeramicaCanelas.Application.Features.Auth.Commands.UpdatePasswordComma
 
         public async Task<Unit> Handle(UpdatePasswordCommand command, CancellationToken cancellationToken)
         {
-            Domain.Entities.User user = await ValidateEmail(command, cancellationToken);
+            Domain.Entities.User? user = await ValidateEmail(command, cancellationToken);
+            if (user == null)
+            {
+                // Mantém a mesma resposta para e-mails cadastrados e não cadastrados.
+                return Unit.Value;
+            }
+
             bool responseEmail = await SendLinkEmail(command, user);
             if (responseEmail == false)
             {
@@ -39,7 +45,7 @@ namespace CeramicaCanelas.Application.Features.Auth.Commands.UpdatePasswordComma
             return Unit.Value;
         }
 
-        private async Task<Domain.Entities.User> ValidateEmail(UpdatePasswordCommand command, CancellationToken cancellationToken)
+        private async Task<Domain.Entities.User?> ValidateEmail(UpdatePasswordCommand command, CancellationToken cancellationToken)
         {
             // Validação do comando
             var validator = new UpdatePasswordValidation();
@@ -51,18 +57,8 @@ namespace CeramicaCanelas.Application.Features.Auth.Commands.UpdatePasswordComma
             }
 
             // Verifica se o usuário existe
-            var user = await _identityAbstractor.FindUserByEmailAsync(command.Email);
-            if (user == null)
-            {
-                throw new BadRequestException("User not found");
-            }
-
-            //Validar se o email pertence a um user
-            if (user.Email != command.Email.Trim())
-            {
-                throw new BadRequestException("Email does not match the user");
-            }
-
+            var email = command.Email.Trim();
+            var user = await _identityAbstractor.FindUserByEmailAsync(email);
             return user;
         }
 
@@ -76,7 +72,7 @@ namespace CeramicaCanelas.Application.Features.Auth.Commands.UpdatePasswordComma
             var baseUrl = _configuration.GetValue<string>("AppSettings:PasswordResetUrl");
             var recoveryLink = $"{baseUrl}?token={token}";
 
-            bool responseEmail = _send.SendRecoveryEmail(command.Email.Trim(), recoveryLink);
+            bool responseEmail = _send.SendRecoveryEmail(user.Email!, recoveryLink);
 
             return responseEmail;
         }

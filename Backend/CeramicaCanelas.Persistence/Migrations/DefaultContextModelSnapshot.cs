@@ -23,6 +23,58 @@ namespace CeramicaCanelas.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "uuid-ossp");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.AdminNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuditEventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RecipientUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditEventId");
+
+                    b.HasIndex("RecipientUserId", "ReadAtUtc", "CreatedOn");
+
+                    b.ToTable("AdminNotifications");
+                });
+
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Almoxarifado.Categories", b =>
                 {
                     b.Property<Guid>("Id")
@@ -487,6 +539,320 @@ namespace CeramicaCanelas.Persistence.Migrations
                     b.HasIndex("LaunchId");
 
                     b.ToTable("ProofImages");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiring", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DifferenceJustification")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("FinishedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("KilnName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("QualityConferenceObservations")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("QualityConferenceState")
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<DateTime?>("QualityConferencedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("QualityConferencedByName")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("QualityConferencedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("RegisteredByName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("RegisteredByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedAtUtc");
+
+                    b.HasIndex("KilnName", "StartedAtUtc");
+
+                    b.ToTable("KilnFirings");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringBurner", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EmployeeNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid>("FiringId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FiringId");
+
+                    b.HasIndex("EmployeeId", "FiringId")
+                        .IsUnique();
+
+                    b.ToTable("KilnFiringBurners");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringProduct", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FiringId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProductNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<int>("ProductType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FiringId");
+
+                    b.HasIndex("ProductType", "FiringId")
+                        .IsUnique();
+
+                    b.ToTable("KilnFiringProducts");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringQuality", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CategoryNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FiringId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProductType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("FiringId", "ProductType", "CategoryId")
+                        .IsUnique();
+
+                    b.ToTable("KilnFiringQualities");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringQualityRevision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ClassifiedTotal")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ConferencedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConferencedByName")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("ConferencedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DifferenceJustification")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("FiringId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("LoadedTotal")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Observations")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("RevisionNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<int>("UnclassifiedTotal")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FiringId", "RevisionNumber")
+                        .IsUnique();
+
+                    b.ToTable("KilnFiringQualityRevisions");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringQualityRevisionItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CategoryNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProductNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<int>("ProductType")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RevisionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("RevisionId", "ProductType", "CategoryId")
+                        .IsUnique();
+
+                    b.ToTable("KilnFiringQualityRevisionItems");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnQualityCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("KilnQualityCategories");
                 });
 
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.EmployeeAccountantSubmission", b =>
@@ -1483,6 +1849,100 @@ namespace CeramicaCanelas.Persistence.Migrations
                     b.ToTable("Suppliers");
                 });
 
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.SystemAuditEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("ActorDisplayName")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("ActorUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HttpMethod")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<DateTime>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("ResourceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResourceType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Route")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TechnicalContext")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("TraceId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAtUtc");
+
+                    b.HasIndex("Action", "OccurredAtUtc");
+
+                    b.HasIndex("ActorUserId", "OccurredAtUtc");
+
+                    b.HasIndex("Category", "OccurredAtUtc");
+
+                    b.HasIndex("Module", "OccurredAtUtc");
+
+                    b.ToTable("SystemAuditEvents");
+                });
+
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.User", b =>
                 {
                     b.Property<string>("Id")
@@ -1689,6 +2149,15 @@ namespace CeramicaCanelas.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.AdminNotification", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.SystemAuditEvent", null)
+                        .WithMany()
+                        .HasForeignKey("AuditEventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Almoxarifado.ProductEntry", b =>
                 {
                     b.HasOne("CeramicaCanelas.Domain.Entities.Almoxarifado.Products", "Product")
@@ -1783,6 +2252,83 @@ namespace CeramicaCanelas.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Launch");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringBurner", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CeramicaCanelas.Domain.Entities.KilnFiring", "Firing")
+                        .WithMany("Burners")
+                        .HasForeignKey("FiringId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Firing");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringProduct", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.KilnFiring", "Firing")
+                        .WithMany("Products")
+                        .HasForeignKey("FiringId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Firing");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringQuality", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.KilnQualityCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CeramicaCanelas.Domain.Entities.KilnFiring", "Firing")
+                        .WithMany("Quality")
+                        .HasForeignKey("FiringId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Firing");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringQualityRevision", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.KilnFiring", "Firing")
+                        .WithMany("QualityRevisions")
+                        .HasForeignKey("FiringId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Firing");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringQualityRevisionItem", b =>
+                {
+                    b.HasOne("CeramicaCanelas.Domain.Entities.KilnQualityCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CeramicaCanelas.Domain.Entities.KilnFiringQualityRevision", "Revision")
+                        .WithMany("Items")
+                        .HasForeignKey("RevisionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Revision");
                 });
 
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.EmployeeAccountantSubmission", b =>
@@ -2012,6 +2558,22 @@ namespace CeramicaCanelas.Persistence.Migrations
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Financial.LaunchCategoryGroup", b =>
                 {
                     b.Navigation("Categories");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiring", b =>
+                {
+                    b.Navigation("Burners");
+
+                    b.Navigation("Products");
+
+                    b.Navigation("Quality");
+
+                    b.Navigation("QualityRevisions");
+                });
+
+            modelBuilder.Entity("CeramicaCanelas.Domain.Entities.KilnFiringQualityRevision", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("CeramicaCanelas.Domain.Entities.Payments.PaymentCalculation", b =>

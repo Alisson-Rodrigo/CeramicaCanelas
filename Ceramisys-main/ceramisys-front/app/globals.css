@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: #f7f8fa;
+  --foreground: #192230;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-muted: #f3f5f8;
+  --text-primary: #192230;
+  --text-secondary: #586679;
+  --border-subtle: #e2e6eb;
+  --ambient-warm: rgb(240 111 48 / 9%);
+  --ambient-cool: rgb(92 130 171 / 5%);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0c121a;
+  --foreground: #edf2f7;
+  --surface: #141c26;
+  --surface-raised: #18222e;
+  --surface-muted: #1c2734;
+  --text-primary: #edf2f7;
+  --text-secondary: #a5b1bf;
+  --border-subtle: #2b3746;
+  --ambient-warm: rgb(220 104 48 / 12%);
+  --ambient-cool: rgb(73 127 184 / 10%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+}
+
+.toast-region {
+  position: fixed;
+  z-index: 10000;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  display: flex;
+  width: min(24rem, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid;
+  border-radius: 14px;
+  box-shadow: 0 14px 42px rgb(16 24 40 / 20%);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  animation: toast-enter 220ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.toast-card > div { min-width: 0; flex: 1; }
+.toast-card > button { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border: 0; border-radius: 7px; background: transparent; color: inherit; cursor: pointer; }
+.toast-card > button:hover { background: rgb(0 0 0 / 7%); }
+.toast-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; color: var(--text-secondary); font-size: 11px; pointer-events: auto; }
+.toast-toolbar > span { margin-right: auto; }
+.toast-toolbar button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface); color: var(--text-secondary); font: inherit; cursor: pointer; }
+.toast-toolbar button:hover { color: var(--text-primary); }
+
+@keyframes toast-enter { from { opacity: 0; transform: translate3d(12px, -6px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+
+html[data-theme="dark"] .toast-card { box-shadow: 0 16px 48px rgb(0 0 0 / 38%); }
+
+body {
+  position: relative;
+  isolation: isolate;
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 240ms ease, color 240ms ease;
+}
+
+body::before {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 100% 0%, var(--ambient-warm), transparent 36%),
+    radial-gradient(ellipse at 0% 100%, var(--ambient-cool), transparent 34%);
+  content: "";
+  transition: opacity 320ms ease, background 320ms ease;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Rolagem horizontal fluida para tabelas largas em telas de toque. */
+.overflow-x-auto {
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tema noturno para as classes utilitárias já usadas pelos módulos. */
+html[data-theme="dark"] .bg-white { background-color: var(--surface) !important; }
+html[data-theme="dark"] .bg-slate-50,
+html[data-theme="dark"] .bg-gray-50 { background-color: var(--background) !important; }
+html[data-theme="dark"] .bg-slate-100,
+html[data-theme="dark"] .bg-gray-100 { background-color: var(--surface-muted) !important; }
+html[data-theme="dark"] .bg-slate-200,
+html[data-theme="dark"] .bg-gray-200 { background-color: #273342 !important; }
+html[data-theme="dark"] [class~="hover:bg-slate-50"]:hover,
+html[data-theme="dark"] [class~="hover:bg-gray-50"]:hover,
+html[data-theme="dark"] [class~="hover:bg-slate-100"]:hover,
+html[data-theme="dark"] [class~="hover:bg-gray-100"]:hover { background-color: #202b38 !important; }
+html[data-theme="dark"] [class~="hover:bg-red-50"]:hover { background-color: rgb(153 40 50 / 24%) !important; }
+
+html[data-theme="dark"] .text-slate-900,
+html[data-theme="dark"] .text-slate-800,
+html[data-theme="dark"] .text-gray-900,
+html[data-theme="dark"] .text-gray-800 { color: #edf2f7 !important; }
+html[data-theme="dark"] .text-slate-700,
+html[data-theme="dark"] .text-slate-600,
+html[data-theme="dark"] .text-gray-700,
+html[data-theme="dark"] .text-gray-600 { color: #bac5d1 !important; }
+html[data-theme="dark"] .text-slate-500,
+html[data-theme="dark"] .text-slate-400,
+html[data-theme="dark"] .text-gray-500,
+html[data-theme="dark"] .text-gray-400 { color: #8e9bab !important; }
+
+html[data-theme="dark"] .border-slate-100,
+html[data-theme="dark"] .border-slate-200,
+html[data-theme="dark"] .border-slate-300,
+html[data-theme="dark"] .border-gray-100,
+html[data-theme="dark"] .border-gray-200,
+html[data-theme="dark"] .border-gray-300 { border-color: var(--border-subtle) !important; }
+
+html[data-theme="dark"] .bg-orange-50,
+html[data-theme="dark"] .bg-amber-50 { background-color: rgb(168 79 32 / 20%) !important; }
+html[data-theme="dark"] .bg-emerald-50,
+html[data-theme="dark"] .bg-green-50 { background-color: rgb(22 101 70 / 22%) !important; }
+html[data-theme="dark"] .bg-red-50,
+html[data-theme="dark"] .bg-rose-50 { background-color: rgb(153 40 50 / 20%) !important; }
+html[data-theme="dark"] .bg-blue-50,
+html[data-theme="dark"] .bg-sky-50 { background-color: rgb(35 91 143 / 22%) !important; }
+html[data-theme="dark"] .border-orange-100,
+html[data-theme="dark"] .border-orange-200,
+html[data-theme="dark"] .border-amber-200,
+html[data-theme="dark"] .border-red-200,
+html[data-theme="dark"] .border-emerald-200,
+html[data-theme="dark"] .border-blue-200 { border-color: #495363 !important; }
+html[data-theme="dark"] .text-orange-800,
+html[data-theme="dark"] .text-orange-700,
+html[data-theme="dark"] .text-amber-800,
+html[data-theme="dark"] .text-red-800 { color: #ffc08d !important; }
+html[data-theme="dark"] [class~="bg-[#fff1e6]"] { background-color: #30221b !important; }
+html[data-theme="dark"] [class~="bg-[#fff7ed]"] { background-color: #18222e !important; }
+html[data-theme="dark"] [class~="focus:bg-white"]:focus { background-color: #1c2734 !important; }
+html[data-theme="dark"] [class~="text-[#b93800]"] { color: #ffae7b !important; }
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder { color: #8491a1; }
+
+html[data-theme] .bg-white,
+html[data-theme] .bg-slate-50,
+html[data-theme] .bg-gray-50,
+html[data-theme] .border-slate-100,
+html[data-theme] .border-slate-200,
+html[data-theme] .border-gray-100,
+html[data-theme] .border-gray-200,
+html[data-theme] input,
+html[data-theme] select,
+html[data-theme] textarea {
+  transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease;
+}
+
+.theme-toggle {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 180ms ease, background-color 220ms ease, border-color 220ms ease, transform 180ms ease;
+}
+
+.theme-toggle:hover { color: #ea580c; transform: translateY(-1px); }
+.theme-toggle:focus-visible { outline: 2px solid #ea580c; outline-offset: 3px; }
+
+html[data-theme] :is(.h-dvh, .min-h-dvh, .min-h-screen).bg-slate-50,
+html[data-theme] :is(.h-dvh, .min-h-dvh, .min-h-screen).bg-gray-50 {
+  background-image:
+    radial-gradient(ellipse at 100% 0%, var(--ambient-warm), transparent 34%),
+    radial-gradient(ellipse at 0% 100%, var(--ambient-cool), transparent 32%);
+}
+
+@keyframes page-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.app-page-enter, .app-content-enter { animation: page-enter 280ms ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .toast-card { animation: none; }
+}
+
+@media (max-width: 640px) {
+  /* Evita que o Safari aplique zoom ao focar campos de formulário. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Modais ocupam a área útil e continuam roláveis com teclado aberto. */
+  [class*="fixed"][class*="inset-0"] > [class*="bg-white"] {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+  }
+}

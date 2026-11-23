@@ -4,7 +4,10 @@ using CeramicaCanelas.Application.Services.EnumExtensions;
 using CeramicaCanelas.Application.Services.Reports;
 using MigraDocCore.DocumentObjectModel;
 using MigraDocCore.DocumentObjectModel.Tables;
+using MigraDocCore.DocumentObjectModel.MigraDoc.DocumentObjectModel.Shapes;
 using MigraDocCore.Rendering;
+using PdfSharpCore.Utils;
+using SixLabors.ImageSharp.PixelFormats;
 using System.Globalization;
 using static CeramicaCanelas.Application.Contracts.Application.Services.IPdfReportService;
 
@@ -12,6 +15,151 @@ namespace CeramicaCanelas.Infrastructure.Reports
 {
     public partial class PdfReportService : IPdfReportService
     {
+        public byte[] BuildKilnFiringReportPdf(KilnFiringReportDocument report, string? logoPath = null)
+        {
+            ImageSource.ImageSourceImpl ??= new ImageSharpImageSource<Rgba32>();
+            var document = new Document();
+            document.Info.Title = report.Title;
+            document.Info.Subject = $"Período {report.Period}; registros do sistema";
+            document.DefaultPageSetup.PageFormat = PageFormat.A4;
+            document.DefaultPageSetup.Orientation = Orientation.Landscape;
+            document.DefaultPageSetup.LeftMargin = Unit.FromCentimeter(1.1);
+            document.DefaultPageSetup.RightMargin = Unit.FromCentimeter(1.1);
+            document.DefaultPageSetup.TopMargin = Unit.FromCentimeter(1.5);
+            document.DefaultPageSetup.BottomMargin = Unit.FromCentimeter(1.5);
+            var section = document.AddSection();
+
+            var masthead = section.AddTable();
+            masthead.Borders.Width = 0;
+            masthead.AddColumn(Unit.FromCentimeter(2.4));
+            masthead.AddColumn(Unit.FromCentimeter(23.4));
+            var mastheadRow = masthead.AddRow();
+            mastheadRow.VerticalAlignment = VerticalAlignment.Center;
+            if (!string.IsNullOrWhiteSpace(logoPath) && File.Exists(logoPath))
+            {
+                var logo = mastheadRow.Cells[0].AddImage(ImageSource.FromFile(logoPath));
+                logo.LockAspectRatio = true;
+                logo.Width = Unit.FromCentimeter(2.0);
+            }
+            var brand = mastheadRow.Cells[1].AddParagraph("CERÂMICA CANELAS");
+            brand.Format.Font.Size = 9;
+            brand.Format.Font.Bold = true;
+            brand.Format.Font.Color = Colors.DarkOrange;
+            var heading = mastheadRow.Cells[1].AddParagraph(report.Title);
+            heading.Format.Font.Size = 18;
+            heading.Format.Font.Bold = true;
+            heading.Format.SpaceAfter = Unit.FromPoint(3);
+            var period = mastheadRow.Cells[1].AddParagraph($"Período: {report.Period}   ·   Gerado em {report.GeneratedAtLocal:dd/MM/yyyy HH:mm}");
+            period.Format.Font.Size = 9;
+            period.Format.Font.Color = Colors.DarkSlateGray;
+
+            if (report.Filters.Count > 0)
+            {
+                var filters = section.AddParagraph($"Filtros: {string.Join(" · ", report.Filters)}");
+                filters.Format.Font.Size = 8;
+                filters.Format.Font.Color = Colors.Gray;
+                filters.Format.SpaceBefore = Unit.FromPoint(5);
+                filters.Format.SpaceAfter = Unit.FromPoint(6);
+            }
+
+            var summary = section.AddTable();
+            summary.Borders.Width = 0.5;
+            summary.Borders.Color = Colors.LightGray;
+            summary.AddColumn(Unit.FromCentimeter(25.8));
+            foreach (var item in report.Summary)
+            {
+                var row = summary.AddRow();
+                row.TopPadding = Unit.FromPoint(4);
+                row.BottomPadding = Unit.FromPoint(4);
+                row.Cells[0].AddParagraph(item).Format.Font.Size = 9;
+            }
+            summary.Rows.LeftIndent = 0;
+            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(5);
+
+            var table = section.AddTable();
+            table.Borders.Width = 0.35;
+            table.Borders.Color = Colors.LightGray;
+            table.Format.Font.Size = 7.5;
+            table.Rows.LeftIndent = 0;
+            foreach (var width in new[] { 2.3, 2.6, 4.2, 1.7, 3.4, 1.8, 6.0, 4.0 }) table.AddColumn(Unit.FromCentimeter(width));
+            var tableHeader = table.AddRow();
+            tableHeader.HeadingFormat = true;
+            tableHeader.Shading.Color = Colors.DarkOrange;
+            tableHeader.Format.Font.Bold = true;
+            tableHeader.Format.Font.Color = Colors.White;
+            tableHeader.TopPadding = Unit.FromPoint(5);
+            tableHeader.BottomPadding = Unit.FromPoint(5);
+            foreach (var (label, index) in new[] { "ID da queima", "Forno", "Início / fim", "Duração", "Produto", "Carregadas", "Qualidade pós-abertura", "Queimadores" }.Select((label, index) => (label, index)))
+                tableHeader.Cells[index].AddParagraph(label);
+
+            var alternate = false;
+            foreach (var item in report.Rows)
+            {
+                var row = table.AddRow();
+                row.Shading.Color = alternate ? Colors.White : new Color(248, 249, 250);
+                row.TopPadding = Unit.FromPoint(4);
+                row.BottomPadding = Unit.FromPoint(4);
+                var values = new[] { item.FiringId, item.Kiln, $"{item.StartedAt}\n{item.FinishedAt}", item.Duration,
+                    item.Product, item.LoadedPieces.ToString("N0", CultureInfo.GetCultureInfo("pt-BR")),
+                    $"{item.QualityStatus}\n{item.QualityBreakdown}", item.Burners };
+                for (var i = 0; i < values.Length; i++)
+                {
+                    var paragraph = row.Cells[i].AddParagraph(values[i]);
+                    paragraph.Format.Font.Size = 7.5;
+                    if (i == 0) paragraph.Format.Font.Color = Colors.Gray;
+                    if (i == 6 && item.QualityStatus.Contains("Pendente", StringComparison.OrdinalIgnoreCase)) paragraph.Format.Font.Color = Colors.DarkOrange;
+                }
+                alternate = !alternate;
+            }
+            if (report.Rows.Count == 0)
+            {
+                var empty = table.AddRow();
+                empty.Cells[0].MergeRight = 7;
+                empty.Cells[0].AddParagraph("Nenhum registro encontrado para os filtros informados.").Format.Font.Italic = true;
+            }
+
+            var footer = section.Footers.Primary.AddParagraph();
+            footer.Format.Font.Size = 8;
+            footer.Format.Font.Color = Colors.Gray;
+            footer.Format.Alignment = ParagraphAlignment.Center;
+            footer.AddText($"Fonte: Registros do sistema · {report.Rows.Select(x => x.FiringId).Distinct().Count()} queimas · Página ");
+            footer.AddPageField();
+            return RenderPdf(document);
+        }
+
+        private static byte[] RenderPdf(Document document)
+        {
+            var renderer = new PdfDocumentRenderer(unicode: true) { Document = document };
+            renderer.RenderDocument();
+            using var stream = new MemoryStream();
+            renderer.PdfDocument.Save(stream, false);
+            return stream.ToArray();
+        }
+
+        public byte[] BuildKilnFiringReportPdf(string title, IEnumerable<string> lines)
+        {
+            var document = new Document();
+            document.Info.Title = title;
+            document.DefaultPageSetup.PageFormat = PageFormat.A4;
+            var section = document.AddSection();
+            var heading = section.AddParagraph(title);
+            heading.Format.Font.Size = 18;
+            heading.Format.Font.Bold = true;
+            heading.Format.Font.Color = Colors.DarkOrange;
+            heading.Format.SpaceAfter = Unit.FromPoint(12);
+            section.AddParagraph($"Gerado em {DateTime.UtcNow:dd/MM/yyyy HH:mm} UTC").Format.SpaceAfter = Unit.FromPoint(10);
+            foreach (var line in lines)
+            {
+                var paragraph = section.AddParagraph(line);
+                paragraph.Format.Font.Size = 9;
+                paragraph.Format.SpaceAfter = Unit.FromPoint(4);
+            }
+            var renderer = new PdfDocumentRenderer(unicode: true) { Document = document };
+            renderer.RenderDocument();
+            using var stream = new MemoryStream();
+            renderer.PdfDocument.Save(stream, false);
+            return stream.ToArray();
+        }
         public byte[] BuildProductItemsReportPdf(
             CompanyProfile company,
             (DateOnly start, DateOnly end) period,

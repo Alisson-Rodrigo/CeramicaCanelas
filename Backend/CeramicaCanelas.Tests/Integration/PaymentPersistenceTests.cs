@@ -18,6 +18,17 @@ public sealed class PaymentPersistenceTests
         sql.Should().NotContain("DROP TABLE").And.NotContain("DROP COLUMN").And.NotContain("AspNetUser");
     }
     [Fact]
+    public void AuditMigrationAddsOnlyNewTablesAndIndexes()
+    {
+        using var context = Context();
+        var sql = context.GetService<IMigrator>().GenerateScript("20261114114955_CentralizePaymentAbsencesAndClosings", "20261122174554_AddCentralAuditAndNotifications");
+        sql.Should().Contain("CREATE TABLE \"SystemAuditEvents\"")
+            .And.Contain("CREATE TABLE \"AdminNotifications\"")
+            .And.Contain("IX_SystemAuditEvents_OccurredAtUtc")
+            .And.Contain("IX_AdminNotifications_RecipientUserId_ReadAtUtc_CreatedOn")
+            .And.NotContain("DROP TABLE").And.NotContain("DROP COLUMN");
+    }
+    [Fact]
     public void SnapshotMatchesCurrentModel()
     {
         using var context = Context();
