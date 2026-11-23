@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Menu } from 'lucide-react';
-import { Sidebar, GLOBAL_MENU_ITEMS } from '@/components/Sidebar';
+import { Sidebar } from '@/components/Sidebar';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { KilnControl } from './KilnControl';
 import styles from '@/components/home/home.module.css';
 
-const productionMenuItems = GLOBAL_MENU_ITEMS.filter(item => item.id === 'kilns');
-
-export function KilnLayout({ onBackToMain, onManageEmployees }: { onBackToMain: () => void; onManageEmployees: () => void }) {
+export function KilnLayout({ onBackToMain, onManageEmployees, onNavigateModule }: { onBackToMain: () => void; onManageEmployees: () => void; onNavigateModule: (module: string) => void }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
@@ -25,9 +23,11 @@ export function KilnLayout({ onBackToMain, onManageEmployees }: { onBackToMain: 
     <div className={styles.shell}>
       <Sidebar
         variant="overview"
-        customMenuItems={productionMenuItems}
         activeSection="kilns"
-        onChangeSection={section => { if (section === 'overview') onBackToMain(); }}
+        onChangeSection={section => {
+          if (section === 'overview') onBackToMain();
+          else onNavigateModule(section);
+        }}
         isOpen={isSidebarOpen}
         toggleSidebar={() => setIsSidebarOpen(value => !value)}
       />

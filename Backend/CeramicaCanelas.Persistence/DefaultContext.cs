@@ -45,6 +45,8 @@ public class DefaultContext : IdentityDbContext<User>
     public DbSet<KilnFiringBurner> KilnFiringBurners { get; set; } = null!;
     public DbSet<KilnQualityCategory> KilnQualityCategories { get; set; } = null!;
     public DbSet<KilnFiringQuality> KilnFiringQualities { get; set; } = null!;
+    public DbSet<KilnFiringQualityRevision> KilnFiringQualityRevisions { get; set; } = null!;
+    public DbSet<KilnFiringQualityRevisionItem> KilnFiringQualityRevisionItems { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -124,11 +126,16 @@ public class DefaultContext : IdentityDbContext<User>
             entity.Property(x => x.RegisteredByName).HasMaxLength(160).IsRequired();
             entity.Property(x => x.Notes).HasMaxLength(1000);
             entity.Property(x => x.DifferenceJustification).HasMaxLength(1000);
+            entity.Property(x => x.QualityConferencedByUserId).HasMaxLength(450);
+            entity.Property(x => x.QualityConferencedByName).HasMaxLength(160);
+            entity.Property(x => x.QualityConferenceObservations).HasMaxLength(1000);
+            entity.Property(x => x.QualityConferenceState).HasMaxLength(24);
             entity.HasIndex(x => x.StartedAtUtc);
             entity.HasIndex(x => new { x.KilnName, x.StartedAtUtc });
             entity.HasMany(x => x.Products).WithOne(x => x.Firing).HasForeignKey(x => x.FiringId).OnDelete(DeleteBehavior.Restrict);
             entity.HasMany(x => x.Burners).WithOne(x => x.Firing).HasForeignKey(x => x.FiringId).OnDelete(DeleteBehavior.Restrict);
             entity.HasMany(x => x.Quality).WithOne(x => x.Firing).HasForeignKey(x => x.FiringId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasMany(x => x.QualityRevisions).WithOne(x => x.Firing).HasForeignKey(x => x.FiringId).OnDelete(DeleteBehavior.Restrict);
         });
         builder.Entity<KilnFiringProduct>(entity =>
         {
@@ -157,6 +164,26 @@ public class DefaultContext : IdentityDbContext<User>
             entity.Property(x => x.CategoryNameSnapshot).HasMaxLength(80).IsRequired();
             entity.HasIndex(x => new { x.FiringId, x.ProductType, x.CategoryId }).IsUnique();
             entity.HasOne(x => x.Category).WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<KilnFiringQualityRevision>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ConferencedByUserId).HasMaxLength(450);
+            entity.Property(x => x.ConferencedByName).HasMaxLength(160);
+            entity.Property(x => x.Observations).HasMaxLength(1000);
+            entity.Property(x => x.DifferenceJustification).HasMaxLength(1000);
+            entity.Property(x => x.State).HasMaxLength(24).IsRequired();
+            entity.HasIndex(x => new { x.FiringId, x.RevisionNumber }).IsUnique();
+            entity.HasMany(x => x.Items).WithOne(x => x.Revision).HasForeignKey(x => x.RevisionId).OnDelete(DeleteBehavior.Restrict);
+        });
+        builder.Entity<KilnFiringQualityRevisionItem>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProductType).HasConversion<int>();
+            entity.Property(x => x.ProductNameSnapshot).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.CategoryNameSnapshot).HasMaxLength(80).IsRequired();
+            entity.HasIndex(x => new { x.RevisionId, x.ProductType, x.CategoryId }).IsUnique();
+            entity.HasOne<KilnQualityCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<ProductEntry>(entity =>

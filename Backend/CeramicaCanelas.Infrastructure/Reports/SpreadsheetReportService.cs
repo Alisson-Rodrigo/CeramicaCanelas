@@ -125,6 +125,7 @@ public sealed class SpreadsheetReportService : ISpreadsheetReportService
                     if (value is null) continue;
                     var reference = ColumnName(columnIndex + 1) + rowNumber.ToString(CultureInfo.InvariantCulture);
                     var style = rowNumber == 1 ? 1 : rowNumber == 2 || rowNumber == 3 ? 2 : rowNumber == sheet.HeaderRow ? 3 : 0;
+                    if (value is SpreadsheetFormula { IsPercentage: true }) style = 8;
                     if (value is DateTime) style = 5;
                     else if (value is DateOnly) style = 4;
                     else if (IsNumber(value)) style = 6;
@@ -132,7 +133,13 @@ public sealed class SpreadsheetReportService : ISpreadsheetReportService
                     if (rowNumber > sheet.HeaderRow && Convert.ToString(value, CultureInfo.InvariantCulture) is { } text &&
                         (text.Contains("Pendente", StringComparison.OrdinalIgnoreCase) || text.Contains("Acima do tempo", StringComparison.OrdinalIgnoreCase))) style = 7;
                     writer.WriteStartElement("c", SpreadsheetNamespace); writer.WriteAttributeString("r", reference); writer.WriteAttributeString("s", style.ToString(CultureInfo.InvariantCulture));
-                    if (value is DateTime dateTime) writer.WriteElementString("v", SpreadsheetNamespace, dateTime.ToOADate().ToString(CultureInfo.InvariantCulture));
+                    if (value is SpreadsheetFormula formula)
+                    {
+                        writer.WriteAttributeString("t", "n");
+                        writer.WriteElementString("f", SpreadsheetNamespace, formula.Formula.TrimStart('='));
+                        if (formula.CachedValue.HasValue) writer.WriteElementString("v", SpreadsheetNamespace, formula.CachedValue.Value.ToString(CultureInfo.InvariantCulture));
+                    }
+                    else if (value is DateTime dateTime) writer.WriteElementString("v", SpreadsheetNamespace, dateTime.ToOADate().ToString(CultureInfo.InvariantCulture));
                     else if (value is DateOnly dateOnly) writer.WriteElementString("v", SpreadsheetNamespace, dateOnly.ToDateTime(TimeOnly.MinValue).ToOADate().ToString(CultureInfo.InvariantCulture));
                     else if (IsNumber(value)) { writer.WriteAttributeString("t", "n"); writer.WriteElementString("v", SpreadsheetNamespace, Convert.ToString(value, CultureInfo.InvariantCulture)); }
                     else
@@ -170,8 +177,8 @@ public sealed class SpreadsheetReportService : ISpreadsheetReportService
     private static void WriteKilnStyles(ZipArchive archive) => WriteXml(archive, "xl/styles.xml", writer =>
     {
         writer.WriteStartElement("styleSheet", SpreadsheetNamespace);
-        writer.WriteStartElement("numFmts", SpreadsheetNamespace); writer.WriteAttributeString("count", "3");
-        WriteNumberFormat(writer, "164", "dd/mm/yyyy"); WriteNumberFormat(writer, "165", "dd/mm/yyyy hh:mm"); WriteNumberFormat(writer, "166", "#,##0.##"); writer.WriteEndElement();
+        writer.WriteStartElement("numFmts", SpreadsheetNamespace); writer.WriteAttributeString("count", "4");
+        WriteNumberFormat(writer, "164", "dd/mm/yyyy"); WriteNumberFormat(writer, "165", "dd/mm/yyyy hh:mm"); WriteNumberFormat(writer, "166", "#,##0.##"); WriteNumberFormat(writer, "167", "0.0%"); writer.WriteEndElement();
         writer.WriteStartElement("fonts", SpreadsheetNamespace); writer.WriteAttributeString("count", "3");
         WriteFont(writer, false, null, "FF1F2937", 11); WriteFont(writer, true, "FFB9380A", "FFFFFFFF", 15); WriteFont(writer, true, null, "FFFFFFFF", 10); writer.WriteEndElement();
         writer.WriteStartElement("fills", SpreadsheetNamespace); writer.WriteAttributeString("count", "4");
@@ -179,9 +186,9 @@ public sealed class SpreadsheetReportService : ISpreadsheetReportService
         writer.WriteStartElement("borders", SpreadsheetNamespace); writer.WriteAttributeString("count", "2"); writer.WriteStartElement("border", SpreadsheetNamespace); writer.WriteEndElement();
         writer.WriteStartElement("border", SpreadsheetNamespace); WriteBorderSide(writer, "left"); WriteBorderSide(writer, "right"); WriteBorderSide(writer, "top"); WriteBorderSide(writer, "bottom"); writer.WriteStartElement("diagonal", SpreadsheetNamespace); writer.WriteEndElement(); writer.WriteEndElement(); writer.WriteEndElement();
         writer.WriteStartElement("cellStyleXfs", SpreadsheetNamespace); writer.WriteAttributeString("count", "1"); writer.WriteStartElement("xf", SpreadsheetNamespace); writer.WriteAttributeString("numFmtId", "0"); writer.WriteAttributeString("fontId", "0"); writer.WriteAttributeString("fillId", "0"); writer.WriteAttributeString("borderId", "0"); writer.WriteEndElement(); writer.WriteEndElement();
-        writer.WriteStartElement("cellXfs", SpreadsheetNamespace); writer.WriteAttributeString("count", "8");
+        writer.WriteStartElement("cellXfs", SpreadsheetNamespace); writer.WriteAttributeString("count", "9");
         WriteXf(writer, 0, 0, 0, 0); WriteXf(writer, 0, 1, 2, 0, true); WriteXf(writer, 0, 0, 0, 0); WriteXf(writer, 0, 2, 2, 1, true);
-        WriteXf(writer, 164, 0, 0, 1); WriteXf(writer, 165, 0, 0, 1); WriteXf(writer, 166, 0, 0, 1); WriteXf(writer, 0, 0, 3, 1, true);
+        WriteXf(writer, 164, 0, 0, 1); WriteXf(writer, 165, 0, 0, 1); WriteXf(writer, 166, 0, 0, 1); WriteXf(writer, 0, 0, 3, 1, true); WriteXf(writer, 167, 0, 0, 1);
         writer.WriteEndElement(); writer.WriteStartElement("cellStyles", SpreadsheetNamespace); writer.WriteAttributeString("count", "1");
         writer.WriteStartElement("cellStyle", SpreadsheetNamespace); writer.WriteAttributeString("name", "Normal"); writer.WriteAttributeString("xfId", "0"); writer.WriteAttributeString("builtinId", "0"); writer.WriteEndElement(); writer.WriteEndElement();
         writer.WriteStartElement("dxfs", SpreadsheetNamespace); writer.WriteAttributeString("count", "2");
