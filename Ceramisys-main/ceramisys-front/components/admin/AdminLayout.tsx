@@ -10,6 +10,7 @@ import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { RegisterUser } from './views/RegisterUser';
 import { AdminDashboard } from './views/AdminDashboard'; 
 import { AuditCenter } from './views/AuditCenter';
+import { ServerStatus } from './views/ServerStatus';
 
 // --- PLACEHOLDERS (Para as telas que ainda faltam) ---
 const RoleList = () => <div className="p-4"><h1>Permissões e Cargos</h1></div>;
@@ -54,6 +55,8 @@ export function AdminLayout({ onBackToMain }: AdminLayoutProps) {
       case 'settings': return <SystemSettings />;
       case 'logs': return <AuditCenter />;
       case 'notifications': return <AuditCenter mode="notifications" />;
+      case 'database':
+      case 'server-status': return <ServerStatus />;
 
       default: return <AdminDashboard />;
     }

@@ -4,6 +4,7 @@ using CeramicaCanelas.Application.Services.Reports;
 using CeramicaCanelas.Infrastructure.IoC;
 using CeramicaCanelas.Persistence.IoC;
 using CeramicaCanelas.WebApi.Middleware;
+using CeramicaCanelas.WebApi.Monitoring;
 using CeramicaCanelas.WebApi.Assistant;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -178,6 +179,19 @@ public class Program
             .InjectApplicationDependencies();
         builder.Services.AddSingleton<CeramicaCanelas.WebApi.Auditing.IAuditEventWriter, CeramicaCanelas.WebApi.Auditing.AuditEventWriter>();
         builder.Services.AddHostedService<CeramicaCanelas.WebApi.Auditing.AuditRetentionService>();
+        builder.Services.AddOptions<ServerStatusOptions>()
+            .BindConfiguration(ServerStatusOptions.Section)
+            .Validate(options => options.SampleIntervalSeconds is >= 1 and <= 300 &&
+                options.BackupStaleAfterHours is >= 1 and <= 168 &&
+                options.BackupRunningStaleAfterHours is >= 1 and <= 168, "Intervalos inválidos para o status do servidor.")
+            .ValidateOnStart();
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddSingleton<IHostMetricsProvider>(_ =>
+            OperatingSystem.IsLinux() ? new LinuxHostMetrics() :
+            OperatingSystem.IsWindows() ? new WindowsHostMetrics() : new UnavailableHostMetrics());
+        builder.Services.AddSingleton<HostMetricsCollector>();
+        builder.Services.AddHostedService(services => services.GetRequiredService<HostMetricsCollector>());
+        builder.Services.AddSingleton<BackupStatusReader>();
         builder.Services.AddHttpClient<IAssistantChatService, AssistantChatService>(client => client.Timeout = TimeSpan.FromSeconds(45));
         builder.Services.AddRateLimiter(options =>
         {

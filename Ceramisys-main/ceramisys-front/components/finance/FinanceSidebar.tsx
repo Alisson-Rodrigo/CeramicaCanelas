@@ -17,10 +17,10 @@ export function FinanceSidebar({ currentScreen, onNavigate, onBackToMain, onClos
   
   const getButtonClass = (screenName: string) => {
     const isActive = currentScreen === screenName;
-    return `w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
+    return `w-full flex items-center gap-3 px-4 py-2.5 text-sm rounded-lg transition-all duration-200 group ${
       isActive 
-        ? 'bg-emerald-50 text-emerald-600 border-r-4 border-emerald-500' 
-        : 'text-gray-600 hover:bg-gray-50 hover:text-emerald-500'
+        ? 'bg-emerald-50 font-semibold text-emerald-700 [html[data-theme=dark]_&]:text-emerald-300'
+        : 'font-medium text-gray-600 hover:bg-gray-50 hover:text-emerald-500'
     }`;
   };
 
