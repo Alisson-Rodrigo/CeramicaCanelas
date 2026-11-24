@@ -16,10 +16,10 @@ export function AdminSidebar({ currentScreen, onNavigate, onBackToMain, onCloseM
   
   const getButtonClass = (screenName: string) => {
     const isActive = currentScreen === screenName;
-    return `w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
+    return `w-full flex items-center gap-3 px-4 py-2.5 text-sm rounded-lg transition-all duration-200 group ${
       isActive 
-        ? 'bg-gray-100 text-gray-800 border-r-4 border-gray-700' 
-        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+        ? 'bg-gray-100 font-semibold text-gray-800'
+        : 'font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800'
     }`;
   };
 
@@ -74,8 +74,10 @@ export function AdminSidebar({ currentScreen, onNavigate, onBackToMain, onCloseM
           <button onClick={() => onNavigate('notifications')} className={getButtonClass('notifications')}>
             <Bell size={18} /> <span>Notificações</span>
           </button>
-          <button onClick={() => onNavigate('database')} className={getButtonClass('database')}>
-            <Server size={18} /> <span>Backup & Banco</span>
+          <button type="button" onClick={() => onNavigate('server-status')} aria-label="Status do Servidor"
+            aria-current={currentScreen === 'server-status' || currentScreen === 'database' ? 'page' : undefined}
+            className={getButtonClass(currentScreen === 'database' ? 'database' : 'server-status')}>
+            <Server size={18} aria-hidden="true" /> <span>Status do Servidor</span>
           </button>
         </div>
 
