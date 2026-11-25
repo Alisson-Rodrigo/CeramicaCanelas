@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 Backend/CeramicaCanelas.WebApi/appsettings.json
 Backend/CeramicaCanelas.WebApi/appsettings.Development.json
+
+# Local environment
+/Backend/.env.local
