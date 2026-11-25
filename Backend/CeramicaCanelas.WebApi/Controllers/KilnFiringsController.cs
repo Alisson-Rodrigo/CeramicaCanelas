@@ -17,10 +17,26 @@ namespace CeramicaCanelas.WebApi.Controllers;
 [ApiController]
 [Route("api/kiln-firings")]
 [Authorize(Roles = "Admin,Almoxarifado")]
-public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter audit, IPdfReportService pdf, ISpreadsheetReportService spreadsheet, IWebHostEnvironment environment) : ControllerBase
+public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter audit, IPdfReportService pdf,
+    ISpreadsheetReportService spreadsheet, IWebHostEnvironment environment, IConfiguration? configuration = null) : ControllerBase
 {
     private const string KilnMigrationId = "20261122190000_AddKilnFiringControl";
     private const string QualityHistoryMigrationId = "20261123010822_AddKilnFiringQualityHistory";
+    private readonly KilnBurnerRosterEntry[] _burnerRoster =
+        configuration?.GetSection("KilnBurnerRoster").Get<KilnBurnerRosterEntry[]>() ?? [];
+
+    private sealed record KilnBurnerRosterEntry(Guid EmployeeId, bool Enabled, string? DisplayName = null);
+
+    private IQueryable<Employee> AvailableBurners()
+    {
+        var included = _burnerRoster.Where(entry => entry.Enabled).Select(entry => entry.EmployeeId).ToArray();
+        var excluded = _burnerRoster.Where(entry => !entry.Enabled).Select(entry => entry.EmployeeId).ToArray();
+        return db.Employees.Where(employee => employee.IsActive && !excluded.Contains(employee.Id) &&
+            (employee.Positiions == Positiions.Queimador || included.Contains(employee.Id)));
+    }
+
+    private string BurnerName(Guid employeeId, string fallback) =>
+        _burnerRoster.FirstOrDefault(entry => entry.Enabled && entry.EmployeeId == employeeId)?.DisplayName ?? fallback;
     private static readonly CategoryOption[] InitialCategories =
     [
         new(Guid.Parse("d14b63f9-3a57-4637-90ac-e12ce2510001"), "Primeira linha"),
@@ -81,8 +97,9 @@ public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter a
     {
         var migrationPending = await IsKilnMigrationPending(ct);
         var products = KilnProductCatalog.Options();
-        var burners = await db.Employees.AsNoTracking().Where(x => x.IsActive && x.Positiions == Positiions.Queimador)
-            .OrderBy(x => x.Name).Select(x => new { x.Id, x.Name }).ToListAsync(ct);
+        var employees = await AvailableBurners().AsNoTracking().Select(employee => new { employee.Id, employee.Name }).ToListAsync(ct);
+        var burners = employees.Select(employee => new { employee.Id, Name = BurnerName(employee.Id, employee.Name) })
+            .OrderBy(employee => employee.Name).ToList();
         if (!migrationPending)
         {
             var existingNames = await db.KilnQualityCategories.Select(x => x.Name).ToListAsync(ct);
@@ -237,7 +254,7 @@ public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter a
         if (await IsKilnMigrationPending(ct)) return MigrationRequired();
         var validationError = ValidateFiringInput(input);
         if (validationError is not null) return BadRequest(validationError);
-        var employees = await db.Employees.Where(x => input.BurnerIds.Contains(x.Id) && x.IsActive && x.Positiions == Positiions.Queimador).ToListAsync(ct);
+        var employees = await AvailableBurners().Where(x => input.BurnerIds.Contains(x.Id)).ToListAsync(ct);
         if (employees.Count != input.BurnerIds.Distinct().Count()) return BadRequest("Queimador inválido ou inativo.");
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("nameid") ?? string.Empty;
         var display = User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue("unique_name") ?? "Usuário";
@@ -251,7 +268,8 @@ public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter a
             var productType = KilnProductCatalog.Canonicalize(item.ProductType);
             firing.Products.Add(new KilnFiringProduct { ProductType = productType, Quantity = item.Quantity, ProductNameSnapshot = KilnProductCatalog.Name(productType) });
         }
-        foreach (var employee in employees) firing.Burners.Add(new KilnFiringBurner { EmployeeId = employee.Id, EmployeeNameSnapshot = employee.Name });
+        foreach (var employee in employees)
+            firing.Burners.Add(new KilnFiringBurner { EmployeeId = employee.Id, EmployeeNameSnapshot = BurnerName(employee.Id, employee.Name) });
         db.KilnFirings.Add(firing);
         await db.SaveChangesAsync(ct);
         await WriteAudit("CreatedFiring", firing.Id, "POST", ct, 201,
@@ -269,8 +287,10 @@ public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter a
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsCancelled, ct);
         if (firing is null || IsDemoFiring(firing)) return NotFound();
         if (firing.Quality.Count > 0 || !string.IsNullOrWhiteSpace(firing.DifferenceJustification)) return Conflict("Não é possível editar uma queima após a conferência de qualidade. Consulte o histórico e registre uma correção com a administração.");
-        var employees = await db.Employees.Where(x => input.BurnerIds.Contains(x.Id) && x.IsActive && x.Positiions == Positiions.Queimador).ToListAsync(ct);
-        if (employees.Count != input.BurnerIds.Distinct().Count()) return BadRequest("Queimador inválido ou inativo.");
+        var previousBurners = firing.Burners.Select(burner => burner.EmployeeId).ToHashSet();
+        var addedBurnerIds = input.BurnerIds.Distinct().Where(employeeId => !previousBurners.Contains(employeeId)).ToArray();
+        var employees = await AvailableBurners().Where(employee => addedBurnerIds.Contains(employee.Id)).ToListAsync(ct);
+        if (employees.Count != addedBurnerIds.Length) return BadRequest("Queimador inválido ou inativo.");
 
         firing.KilnName = input.KilnName.Trim();
         firing.StartedAtUtc = input.StartedAt.UtcDateTime;
@@ -278,9 +298,10 @@ public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter a
         firing.Notes = input.Notes?.Trim();
         firing.ModifiedOn = DateTime.UtcNow;
         db.KilnFiringProducts.RemoveRange(firing.Products);
-        db.KilnFiringBurners.RemoveRange(firing.Burners);
+        var removedBurners = firing.Burners.Where(burner => !input.BurnerIds.Contains(burner.EmployeeId)).ToArray();
+        db.KilnFiringBurners.RemoveRange(removedBurners);
+        foreach (var burner in removedBurners) firing.Burners.Remove(burner);
         firing.Products = new List<KilnFiringProduct>();
-        firing.Burners = new List<KilnFiringBurner>();
         foreach (var item in input.Products)
         {
             var type = KilnProductCatalog.Canonicalize(item.ProductType);
@@ -290,7 +311,7 @@ public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter a
         }
         foreach (var employee in employees)
         {
-            var burner = new KilnFiringBurner { Firing = firing, EmployeeId = employee.Id, EmployeeNameSnapshot = employee.Name };
+            var burner = new KilnFiringBurner { Firing = firing, EmployeeId = employee.Id, EmployeeNameSnapshot = BurnerName(employee.Id, employee.Name) };
             db.KilnFiringBurners.Add(burner);
             firing.Burners.Add(burner);
         }
