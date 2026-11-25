@@ -167,28 +167,30 @@ export function FinanceHome() {
               <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={data.monthlyChart} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9"/>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-subtle)" />
                           <XAxis 
                             dataKey="month" 
                             tickFormatter={formatMonth} 
                             axisLine={false} 
                             tickLine={false} 
-                            tick={{fontSize: 12, fill: '#64748b'}}
+                            tick={{fontSize: 12, fill: 'var(--text-secondary)'}}
                             dy={10}
                           />
                           <YAxis 
                             axisLine={false} 
                             tickLine={false} 
-                            tick={{fontSize: 12, fill: '#64748b'}}
+                            tick={{fontSize: 12, fill: 'var(--text-secondary)'}}
                             tickFormatter={(val) => `R$ ${val/1000}k`}
                           />
                           <Tooltip 
                             formatter={(value: number | undefined) => value !== undefined ? formatMoney(value) : ''}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                            contentStyle={{ borderRadius: '8px', borderColor: 'var(--border-subtle)', backgroundColor: 'var(--surface-raised)' }}
+                            labelStyle={{ color: 'var(--text-primary)' }}
+                            itemStyle={{ color: 'var(--text-primary)' }}
                             labelFormatter={formatMonth}
-                            cursor={{ fill: '#f8fafc' }}
+                            cursor={{ fill: 'var(--surface-muted)' }}
                           />
-                          <Legend wrapperStyle={{ paddingTop: '20px' }}/>
+                          <Legend wrapperStyle={{ paddingTop: '20px' }} formatter={name => <span className="text-slate-700">{name}</span>} />
                           <Bar name="Receitas" dataKey="totalIncome" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
                           <Bar name="Despesas" dataKey="totalExpense" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
                       </BarChart>

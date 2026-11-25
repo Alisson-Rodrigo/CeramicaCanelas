@@ -139,6 +139,11 @@
 :global(html[data-theme="dark"]) .consentIcon { border-color: #57451f; background: #282317; color: #f4d28c; }
 :global(html[data-theme="dark"]) .error { border-color: #63352f; background: #2b1b1b; color: #ffc1b5; }
 :global(html[data-theme="dark"]) .consentDialog .privacyWarning { color: #ffb083; }
+:global(html[data-theme="dark"]) :is(.suggestions button:hover:not(:disabled), .toolButton:hover:not(:disabled),
+  .messageMeta button, .minimizedPill span svg) { color: var(--tone-orange-text); }
+:global(html[data-theme="dark"]) :is(.attachment > button, .recordingBar, .recordingButton) { color: var(--tone-red-text); }
+:global(html[data-theme="dark"]) .recordingButton { background: var(--tone-red-surface); }
+:global(html[data-theme="dark"]) .sendButton:disabled { background: var(--surface-muted); color: var(--text-secondary); }
 
 @media (max-width: 560px) {
   .widget { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); }
