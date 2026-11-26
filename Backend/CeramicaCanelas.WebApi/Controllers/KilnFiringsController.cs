@@ -516,88 +516,168 @@ public sealed class KilnFiringsController(DefaultContext db, IAuditEventWriter a
         var culture = CultureInfo.GetCultureInfo("pt-BR");
         var zone = TimeZoneInfo.FindSystemTimeZoneById("America/Fortaleza");
         DateTime Local(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), zone);
-        var generated = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone);
+        var generated = Local(DateTime.UtcNow);
         var period = $"{(from.HasValue ? Local(from.Value.UtcDateTime).ToString("dd/MM/yyyy", culture) : "Desde o início")} a {(to.HasValue ? Local(to.Value.UtcDateTime).ToString("dd/MM/yyyy", culture) : "Até hoje")}";
-        var percentagesValid = firings.Count > 0 && firings.All(x => x.ConferenceStatus == "Conferido") && firings.Sum(x => x.ClassifiedTotal) > 0;
-        var detailRows = new List<object?[]>
+        const string noData = "Indisponível";
+        const string noRows = "Nenhum registro no período.";
+        var detail = new List<IReadOnlyList<object?>>
         {
-            new object?[] { "Relatório detalhado de queimas" }, new object?[] { "Período", period }, new object?[] { "Gerado em", generated },
-            new object?[] { "Identificador", "Forno", "Início", "Finalização", "Duração (horas)", "Limite de 27h", "Produto", "Peças carregadas", "Qualidade pós-abertura", "Conferência", "Queimadores", "Conferido por", "Data da conferência", "Observações da conferência" }
+            new object?[] { null, "Controle de Fornos | Queimas" },
+            new object?[] { null, $"Período: {period}" },
+            new object?[] { null, "Gerado em", generated },
+            new object?[] { "UUID", "Forno", "Início", "Finalização", "Duração", "Limite de\n27 h", "Produto", "Peças\ncarregadas", "Queimadores", "Qualidade pós-abertura", "Conferência", "Conferido por", "Data da conferência", "Observações" }
         };
+        var quality = new List<IReadOnlyList<object?>>
+        {
+            new object?[] { null, "Controle de Fornos | Qualidade pós-abertura" },
+            new object?[] { null, $"Período: {period}" },
+            new object?[] { null, "Gerado em", generated, "A carga é exibida uma vez por produto, na primeira categoria." },
+            new object?[] { "UUID", "Forno", "Início da queima", "Produto", "Peças carregadas", "Categoria", "Peças classificadas", "Conferência", "Conferido por", "Data da conferência", "Observações" }
+        };
+
         foreach (var firing in firings)
-        foreach (var product in firing.Products)
         {
-            var quality = firing.Quality.Where(x => x.ProductType == product.ProductType).ToArray();
-            var classified = quality.Sum(x => x.Quantity);
-            var reconciled = classified == product.Quantity;
-            detailRows.Add(new object?[] { firing.Id.ToString(), firing.KilnName, Local(firing.StartedAtUtc), Local(firing.FinishedAtUtc),
-                Math.Round(firing.Duration.TotalHours, 2), firing.DurationClass, product.ProductNameSnapshot, product.Quantity,
-                string.Join(" · ", quality.Select(x => $"{x.CategoryNameSnapshot}: {x.Quantity.ToString("N0", culture)}")),
-                reconciled ? "Conferido" : "Pendente", string.Join(", ", firing.Burners.Select(x => x.EmployeeNameSnapshot)),
-                firing.QualityConferencedByName ?? "", firing.QualityConferencedAtUtc.HasValue ? Local(firing.QualityConferencedAtUtc.Value) : null,
-                firing.QualityConferenceObservations ?? "" });
+            var id = firing.Id.ToString();
+            var start = Local(firing.StartedAtUtc);
+            var finish = Local(firing.FinishedAtUtc);
+            DateTime? conferenceDate = firing.QualityConferencedAtUtc is DateTime date ? Local(date) : null;
+            var burners = string.Join("\n", firing.Burners.Select(x => x.EmployeeNameSnapshot));
+            var observations = string.Join("\n", new[]
+            {
+                firing.Notes,
+                firing.QualityConferenceObservations,
+                string.IsNullOrWhiteSpace(firing.DifferenceJustification) ? null : $"Justificativa: {firing.DifferenceJustification}"
+            }.Where(text => !string.IsNullOrWhiteSpace(text)));
+
+            foreach (var product in firing.Products)
+            {
+                var categories = firing.Quality.Where(x => x.ProductType == product.ProductType).ToArray();
+                var breakdown = categories.Length == 0 ? "Sem classificação" :
+                    string.Join("\n", categories.Select(x => $"{x.CategoryNameSnapshot}: {x.Quantity.ToString("N0", culture)}"));
+                detail.Add(new object?[] { id, firing.KilnName, start, finish, firing.Duration, firing.DurationClass,
+                    product.ProductNameSnapshot, product.Quantity, burners, breakdown,
+                    categories.Sum(x => x.Quantity) == product.Quantity ? "Conferido" : "Pendente",
+                    firing.QualityConferencedByName, conferenceDate, observations });
+
+                if (categories.Length == 0)
+                    quality.Add(new object?[] { id, firing.KilnName, start, product.ProductNameSnapshot,
+                        product.Quantity, "Sem classificação", 0, "Pendente", firing.QualityConferencedByName, conferenceDate, observations });
+
+                for (var index = 0; index < categories.Length; index++)
+                {
+                    var category = categories[index];
+                    quality.Add(new object?[] { id, firing.KilnName, start, product.ProductNameSnapshot,
+                        index == 0 ? (int?)product.Quantity : null, category.CategoryNameSnapshot, category.Quantity, firing.ConferenceStatus,
+                        firing.QualityConferencedByName, conferenceDate, observations });
+                }
+            }
         }
 
-        var qualityRows = new List<object?[]>
+        var lastDetail = Math.Max(5, detail.Count);
+        var lastQuality = Math.Max(5, quality.Count);
+        var loaded = firings.Sum(f => (long)f.LoadedTotal);
+        var classified = firings.Sum(f => (long)f.ClassifiedTotal);
+        var pending = firings.Count(f => f.ConferenceStatus == "Pendente");
+        var above = firings.Count(f => f.Duration.TotalHours > 27);
+        var canShowYield = firings.Count > 0 && pending == 0 && loaded > 0 && classified > 0;
+        var rows = new List<IReadOnlyList<object?>>();
+        var bands = new Dictionary<int, SpreadsheetBand>();
+        var merges = new List<string>();
+        void Add(SpreadsheetBand? band, object?[] values, params (char Start, char End)[] spans)
         {
-            new object?[] { "Conferência de qualidade após abertura" }, new object?[] { "Período", period }, new object?[] { "Gerado em", generated },
-            new object?[] { "Identificador", "Forno", "Data da queima", "Produto", "Peças carregadas", "Categoria", "Peças classificadas", "Estado", "Conferido por", "Data da conferência", "Observações" }
+            rows.Add(values);
+            if (band.HasValue) bands.Add(rows.Count, band.Value);
+            foreach (var span in spans) merges.Add($"{span.Start}{rows.Count}:{span.End}{rows.Count}");
+        }
+        void Cards(SpreadsheetBand band, object first, object second, object third) =>
+            Add(band, [first, null, second, null, third], ('A', 'B'), ('C', 'D'), ('E', 'F'));
+        void Section(string title) => Add(SpreadsheetBand.Section, [title], ('A', 'F'));
+        void TableRow(SpreadsheetBand? band, object name, object? number, object? amount) =>
+            Add(band, [name, null, null, number, amount], ('A', 'C'), ('E', 'F'));
+        void Empty() => Add(SpreadsheetBand.Note, [noRows], ('A', 'F'));
+
+        Add(SpreadsheetBand.Title, [null, null, "Relatório de Controle de Fornos"], ('C', 'F'));
+        Add(SpreadsheetBand.Metadata, [null, null, "Cerâmica Canelas"], ('C', 'F'));
+        Add(SpreadsheetBand.Metadata, [null, null, $"Período: {period}"], ('C', 'F'));
+        Add(SpreadsheetBand.Metadata, [null, null, "Gerado em", generated], ('D', 'F'));
+        Add(null, []);
+        Cards(SpreadsheetBand.Label, "Total de queimas", "Peças carregadas", "Peças classificadas");
+        Cards(SpreadsheetBand.Value, firings.Count,
+            new SpreadsheetFormula($"SUM('Queimas'!H5:H{lastDetail})", loaded),
+            new SpreadsheetFormula($"SUM('Qualidade'!G5:G{lastQuality})", classified));
+        Add(null, []);
+        Cards(SpreadsheetBand.Label, "Conferências pendentes", "Rendimento", "Perdas e quebras");
+        Cards(SpreadsheetBand.Value, pending,
+            canShowYield ? new SpreadsheetFormula("IF(AND(C7>0,E7>0),E7/C7,\"Indisponível\")", (double)classified / loaded, true) : noData,
+            "Não mensuradas");
+        Add(null, []);
+        Cards(SpreadsheetBand.Label, "Até 27 h", "Acima de 27 h", "Tempo médio de queima");
+        Cards(SpreadsheetBand.Value, firings.Count - above, above,
+            firings.Count == 0 ? noData : TimeSpan.FromMinutes(firings.Average(f => f.Duration.TotalMinutes)));
+        Add(null, []);
+        Add(SpreadsheetBand.Note, [canShowYield
+            ? "Rendimento = peças classificadas ÷ peças carregadas. Perdas e quebras não são mensuradas."
+            : "Rendimento indisponível sem produção conferida e conciliada. Peças sem classificação não representam perdas."], ('A', 'F'));
+
+        Section("Produção por forno");
+        TableRow(SpreadsheetBand.Header, "Forno", "Queimas", "Peças carregadas");
+        foreach (var kiln in firings.GroupBy(f => f.KilnName).OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase))
+            TableRow(null, kiln.Key, kiln.Count(), kiln.Sum(f => (long)f.LoadedTotal));
+        if (firings.Count == 0) Empty();
+
+        Section("Volume por produto");
+        TableRow(SpreadsheetBand.Header, "Produto", null, "Peças carregadas");
+        var firstProductRow = rows.Count + 1;
+        var products = firings.SelectMany(f => f.Products).GroupBy(p => p.ProductNameSnapshot, StringComparer.OrdinalIgnoreCase).OrderBy(g => g.Key).ToArray();
+        foreach (var product in products)
+            TableRow(null, product.Key, null, new SpreadsheetFormula(
+                $"SUMIF('Queimas'!G5:G{lastDetail},{Criteria(rows.Count + 1)},'Queimas'!H5:H{lastDetail})", product.Sum(p => (long)p.Quantity)));
+        var lastProductRow = rows.Count;
+        if (products.Length == 0) Empty();
+
+        Section("Distribuição da qualidade");
+        TableRow(SpreadsheetBand.Header, "Categoria", "Classificadas", "Participação");
+        var categoriesByName = firings.SelectMany(f => f.Quality).GroupBy(q => q.CategoryNameSnapshot, StringComparer.OrdinalIgnoreCase).OrderBy(g => g.Key).ToArray();
+        foreach (var category in categoriesByName)
+        {
+            var row = rows.Count + 1;
+            var count = category.Sum(q => (long)q.Quantity);
+            TableRow(null, category.Key,
+                new SpreadsheetFormula($"SUMIF('Qualidade'!F5:F{lastQuality},{Criteria(row)},'Qualidade'!G5:G{lastQuality})", count),
+                canShowYield ? new SpreadsheetFormula($"IF(E$7>0,D{row}/E$7,\"Indisponível\")", (double)count / classified, true)
+                    : "Indisponível enquanto houver pendências");
+        }
+        if (categoriesByName.Length == 0) Empty();
+
+        var conference = new Dictionary<string, SpreadsheetStatus>
+        {
+            ["Conferido"] = SpreadsheetStatus.Regular, ["Pendente"] = SpreadsheetStatus.Pending
         };
-        foreach (var firing in firings)
-        foreach (var product in firing.Products)
-        {
-            var rows = firing.Quality.Where(x => x.ProductType == product.ProductType).ToArray();
-            if (rows.Length == 0)
-                qualityRows.Add(new object?[] { firing.Id.ToString(), firing.KilnName, Local(firing.StartedAtUtc), product.ProductNameSnapshot,
-                    product.Quantity, "Sem classificação", 0, "Pendente", firing.QualityConferencedByName ?? "",
-                    firing.QualityConferencedAtUtc.HasValue ? Local(firing.QualityConferencedAtUtc.Value) : null, firing.QualityConferenceObservations ?? "" });
-            foreach (var quality in rows)
-                qualityRows.Add(new object?[] { firing.Id.ToString(), firing.KilnName, Local(firing.StartedAtUtc), product.ProductNameSnapshot,
-                    product.Quantity, quality.CategoryNameSnapshot, quality.Quantity, firing.ConferenceStatus,
-                    firing.QualityConferencedByName ?? "", firing.QualityConferencedAtUtc.HasValue ? Local(firing.QualityConferencedAtUtc.Value) : null,
-                    firing.QualityConferenceObservations ?? "" });
-        }
-
-        var lastDetail = Math.Max(5, detailRows.Count);
-        var lastQuality = Math.Max(5, qualityRows.Count);
-        var summaryRows = new List<object?[]>
-        {
-            new object?[] { "", "", "", "Relatório de Controle de Fornos" }, new object?[] { "", "", "", "Cerâmica Canelas" },
-            new object?[] { "", "", "", "Período", period }, new object?[] { "", "", "", "Gerado em", generated }, new object?[] { "" },
-            new object?[] { "Indicador", "Valor" }, new object?[] { "Queimas", firings.Count },
-            new object?[] { "Peças carregadas", new SpreadsheetFormula($"SUM('Queimas'!H5:H{lastDetail})", firings.Sum(x => x.LoadedTotal)) },
-            new object?[] { "Peças classificadas", new SpreadsheetFormula($"SUM('Qualidade'!G5:G{lastQuality})", firings.Sum(x => x.ClassifiedTotal)) },
-            new object?[] { "Conferências pendentes", firings.Count(x => x.ConferenceStatus == "Pendente") },
-            new object?[] { "Rendimento", percentagesValid ? new SpreadsheetFormula("IFERROR(B9/B8,0)", (double)firings.Sum(x => x.ClassifiedTotal) / firings.Sum(x => x.LoadedTotal), true) : "Indisponível: existem conferências pendentes" },
-            new object?[] { "Perdas/quebras", "Não mensuradas; categorias aguardam validação da empresa" },
-            new object?[] { "Total por produto", "Peças carregadas" }
-        };
-        var loadedProducts = firings.SelectMany(x => x.Products).GroupBy(x => x.ProductNameSnapshot).OrderBy(x => x.Key).ToArray();
-        foreach (var product in loadedProducts)
-        {
-            var rowNumber = summaryRows.Count + 1;
-            var total = product.Sum(x => x.Quantity);
-            summaryRows.Add(new object?[] { product.Key, new SpreadsheetFormula($"SUMIF('Queimas'!G5:G{lastDetail},A{rowNumber},'Queimas'!H5:H{lastDetail})", total) });
-        }
-        summaryRows.Add(new object?[] { "Total por categoria", "Peças classificadas", "Percentual da produção conferida" });
-        foreach (var category in firings.SelectMany(x => x.Quality).GroupBy(x => x.CategoryNameSnapshot).OrderBy(x => x.Key))
-        {
-            var rowNumber = summaryRows.Count + 1;
-            var total = category.Sum(x => x.Quantity);
-            var amount = new SpreadsheetFormula($"SUMIF('Qualidade'!F5:F{lastQuality},A{rowNumber},'Qualidade'!G5:G{lastQuality})", total);
-            object? percentage = percentagesValid
-                ? new SpreadsheetFormula($"IFERROR(B{rowNumber}/$B$9,0)", (double)total / firings.Sum(x => x.ClassifiedTotal), true)
-                : "Indisponível enquanto houver pendências";
-            summaryRows.Add(new object?[] { category.Key, amount, percentage });
-        }
-
-        static IReadOnlyList<IReadOnlyList<object?>> AsRows(IEnumerable<object?[]> rows) => rows.Select(x => (IReadOnlyList<object?>)x).ToArray();
+        var unclassified = new Dictionary<string, SpreadsheetStatus> { ["Sem classificação"] = SpreadsheetStatus.Unavailable };
         return
         [
-            new SpreadsheetReportSheet("Resumo", AsRows(summaryRows), 6, [34, 24, 34, 32, 24], false),
-            new SpreadsheetReportSheet("Queimas", AsRows(detailRows), 4, [38, 24, 21, 21, 17, 24, 32, 20, 52, 18, 34, 26, 22, 42]),
-            new SpreadsheetReportSheet("Qualidade", AsRows(qualityRows), 4, [38, 24, 21, 32, 20, 26, 22, 18, 26, 22, 42])
+            new SpreadsheetReportSheet("Resumo", rows, 0, [16, 17, 16, 16, 17, 19], false)
+            {
+                Bands = bands, MergedRanges = merges,
+                DataBarRange = products.Length > 1 ? $"E{firstProductRow}:E{lastProductRow}" : null
+            },
+            new SpreadsheetReportSheet("Queimas", detail, 4, [37, 15, 17, 17, 13, 12, 17, 12, 16, 17, 12, 15, 17, 25])
+            {
+                HideIdentifier = true, MergedRanges = ["B1:N1", "B2:N2"],
+                StatusColumns = new Dictionary<int, IReadOnlyDictionary<string, SpreadsheetStatus>>
+                {
+                    [6] = new Dictionary<string, SpreadsheetStatus> { ["Dentro do tempo"] = SpreadsheetStatus.Regular, ["Acima do tempo"] = SpreadsheetStatus.Critical },
+                    [10] = unclassified, [11] = conference
+                }
+            },
+            new SpreadsheetReportSheet("Qualidade", quality, 4, [37, 15, 17, 19, 13, 17, 13, 13, 16, 17, 28])
+            {
+                HideIdentifier = true, MergedRanges = ["B1:K1", "B2:K2", "D3:K3"],
+                StatusColumns = new Dictionary<int, IReadOnlyDictionary<string, SpreadsheetStatus>> { [6] = unclassified, [8] = conference }
+            }
         ];
+
+        static string Criteria(int row) => $"\"=\"&SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(A{row},\"~\",\"~~\"),\"*\",\"~*\"),\"?\",\"~?\")";
     }
 
     private Task WriteAudit(string action, Guid id, string method, CancellationToken ct, int statusCode, string? context = null) => audit.WriteAsync(new AuditEventData(

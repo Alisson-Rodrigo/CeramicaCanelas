@@ -37,7 +37,8 @@ public sealed class SpreadsheetReportServiceTests
         archive.Entries.Select(x => x.FullName).Should().Contain(new[] { "xl/styles.xml", "xl/worksheets/sheet2.xml", "xl/worksheets/sheet3.xml", "xl/drawings/drawing1.xml", "xl/media/logo.png" });
         using var reader = new StreamReader(archive.GetEntry("xl/worksheets/sheet2.xml")!.Open());
         var detail = reader.ReadToEnd();
-        detail.Should().Contain("autoFilter").And.Contain("ySplit=\"4\"").And.Contain("t=\"n\"").And.Contain("s=\"7\"");
+        detail.Should().Contain("autoFilter").And.Contain("ySplit=\"4\"").And.Contain("t=\"n\"")
+            .And.Contain("showGridLines=\"0\"").And.Contain("paperSize=\"9\"");
         using var styleReader = new StreamReader(archive.GetEntry("xl/styles.xml")!.Open());
         styleReader.ReadToEnd().Should().Contain("dd/mm/yyyy hh:mm").And.Contain("FFB9380A");
         foreach (var entry in archive.Entries.Where(x => x.FullName.EndsWith(".xml", StringComparison.Ordinal)))
@@ -87,6 +88,6 @@ public sealed class SpreadsheetReportServiceTests
         var sheet = sheetReader.ReadToEnd();
         sheet.Should().Contain("<f>B4/B3</f>").And.Contain("<v>0.95</v>");
         using var stylesReader = new StreamReader(archive.GetEntry("xl/styles.xml")!.Open());
-        stylesReader.ReadToEnd().Should().Contain("0.0%");
+        stylesReader.ReadToEnd().Should().Contain("0.00%");
     }
 }
