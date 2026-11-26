@@ -179,22 +179,24 @@ export function ExpensesByCategory() {
               {data?.pagedData.items.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.pagedData.items} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-subtle)" />
                     <XAxis 
                       dataKey="categoryName" 
-                      tick={{fill: '#64748b', fontSize: 12}} 
+                      tick={{fill: 'var(--text-secondary)', fontSize: 12}}
                       axisLine={false} 
                       tickLine={false}
                     />
                     <YAxis 
-                      tick={{fill: '#64748b', fontSize: 12}} 
+                      tick={{fill: 'var(--text-secondary)', fontSize: 12}}
                       axisLine={false} 
                       tickLine={false}
                       tickFormatter={(value) => `R$ ${value}`}
                     />
                     <Tooltip 
-                      cursor={{fill: '#f8fafc'}}
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      cursor={{fill: 'var(--surface-muted)'}}
+                      contentStyle={{ borderRadius: '8px', borderColor: 'var(--border-subtle)', backgroundColor: 'var(--surface-raised)' }}
+                      labelStyle={{ color: 'var(--text-primary)' }}
+                      itemStyle={{ color: 'var(--text-primary)' }}
                       formatter={(value: number | undefined) => [formatCurrency(value || 0), 'Custo Total']}
                     />
                     <Bar 

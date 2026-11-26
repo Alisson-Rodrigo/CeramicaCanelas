@@ -66,7 +66,7 @@
 .labelRow a { font-size: calc(17 * var(--login-unit)); font-weight: 550; color: #c64000; text-decoration: none; text-underline-offset: 4px; }
 .labelRow a:hover { text-decoration: underline; }
 .inputWrap { position: relative; }
-.input { display: block; width: 100%; height: calc(69 * var(--login-unit)); padding: 0 calc(27 * var(--login-unit)); border: 2px solid var(--border-subtle); border-radius: calc(18 * var(--login-unit)); background: var(--surface-muted); color: var(--login-ink); font: inherit; font-size: calc(21 * var(--login-unit)); caret-color: #c64000; transition: border-color 150ms ease, background-color 150ms ease; }
+.input { display: block; width: 100%; height: calc(69 * var(--login-unit)); padding: 0 calc(27 * var(--login-unit)); border: 2px solid var(--border-control); border-radius: calc(18 * var(--login-unit)); background: var(--surface-muted); color: var(--login-ink); font: inherit; font-size: calc(21 * var(--login-unit)); caret-color: #c64000; transition: border-color 150ms ease, background-color 150ms ease; }
 .input::placeholder { color: #737984; }
 .input:focus { border-color: var(--login-orange); background: #fff; outline: 2px solid #ffd5bc; outline-offset: 2px; }
 .input[aria-invalid='true'] { border-color: #b42318; }
@@ -101,7 +101,16 @@
 
 :global(html[data-theme="dark"]) .card { border-color: #2f3a48; box-shadow: 0 24px 64px rgb(0 0 0 / 32%); }
 :global(html[data-theme="dark"]) .lockTile { background: #30221b; }
-:global(html[data-theme="dark"]) .input:focus { background: #1c2734; outline-color: #75472e; }
+:global(html[data-theme="dark"]) .input { caret-color: var(--tone-orange-text); }
+:global(html[data-theme="dark"]) .input:focus { background: var(--surface-muted); outline-color: var(--tone-orange-text); }
+:global(html[data-theme="dark"]) .input[aria-invalid='true'] { border-color: var(--tone-red-text); }
+:global(html[data-theme="dark"]) :is(.labelRow a, .labelRow label svg, .backLink a, .resend, .lockTile) {
+  color: var(--tone-orange-text);
+}
+:global(html[data-theme="dark"]) .passwordToggle { color: var(--text-secondary); }
+:global(html[data-theme="dark"]) .passwordToggle:hover { background: var(--surface-hover); color: var(--text-primary); }
+:global(html[data-theme="dark"]) :is(.fieldError, .error) { color: var(--tone-red-text); }
+:global(html[data-theme="dark"]) .error { background: var(--tone-red-surface); border-color: var(--border-subtle); }
 :global(html[data-theme="dark"]) .backgroundGeometry { color: #503321; }
 :global(html[data-theme="dark"]) .successIcon { border-color: #285a43; background: #153126; color: #72d6a0; }
 @keyframes login-spin { to { transform: rotate(360deg); } }
